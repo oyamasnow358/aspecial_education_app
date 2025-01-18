@@ -33,20 +33,22 @@ elif menu == "フィードバック追加":
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
     if st.button("フィードバックを保存"):
-        if feedback_content:
-            new_feedback = pd.DataFrame([{
-                "カテゴリー": feedback_category,
-                "項目": feedback_subcategory,
-                "追加内容": feedback_content
-            }])
-            feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
-            try:
-                feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
-                st.success("フィードバックが保存されました！")
-            except Exception as e:
-                st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
-        else:
-            st.warning("フィードバック内容を入力してください。")
+    if feedback_content:
+        new_feedback = pd.DataFrame([{
+            "カテゴリー": feedback_category,
+            "項目": feedback_subcategory,
+            "追加内容": feedback_content
+        }])
+        feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
+        try:
+            feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
+            st.success("フィードバックが保存されました！")
+            st.text(f"保存先: {feedback_file}")
+        except Exception as e:
+            st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
+    else:
+        st.warning("フィードバック内容を入力してください。")
+
 
 elif menu == "フィードバック集計と削除":
     st.subheader("📊 フィードバック集計と削除")
@@ -61,9 +63,10 @@ elif menu == "フィードバック集計と削除":
         
         # 削除ボタン
         if st.button("選択したフィードバックを削除"):
-            feedback_data.reset_index(drop=True, inplace=True)
-            feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
-            st.success("選択したフィードバックを削除しました！")
+    feedback_data = feedback_data[~feedback_data.index.isin([i for i, row in feedback_data.iterrows() if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}")])]
+    feedback_data.reset_index(drop=True, inplace=True)
+    feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
+    st.success("選択したフィードバックを削除しました！")
  # EXCEL 保存問題
 try:
     feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
