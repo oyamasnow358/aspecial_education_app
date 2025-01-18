@@ -1,18 +1,65 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # フィードバック保存用のExcelファイル
 feedback_file = "feedback.xlsx"
 
 # 初期データの読み込み
-try:
+if os.path.exists(feedback_file):
     feedback_data = pd.read_excel(feedback_file)
-except FileNotFoundError:
+else:
     feedback_data = pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
 
 # アプリの基本構造
 st.title("🌟 自立活動の参考指導 🌟")
-st.write("以下の選択肢から生徒の実態を選び、各項目を入力していってください。")
+
+# メニュー選択
+menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
+
+# メニューごとの処理
+if menu == "指導支援内容":
+    st.subheader("📚 指導支援内容の参照")
+    # カテゴリー・項目選択
+    selected_category = st.selectbox("カテゴリーを選択:", ["例：日常生活における実態", "障害の種類"])
+    selected_subcategory = st.selectbox("項目を選択:", ["例：身辺自立が未熟な生徒", "聴覚障害"])
+    st.text("具体的な内容の選択肢は割愛（ユーザーデータ依存）")
+
+elif menu == "フィードバック追加":
+    st.subheader("📝 フィードバック追加")
+    feedback_category = st.selectbox("カテゴリーを選択:", ["例：日常生活における実態", "障害の種類"])
+    feedback_subcategory = st.selectbox("項目を選択:", ["例：身辺自立が未熟な生徒", "聴覚障害"])
+    feedback_content = st.text_area("追加するフィードバックを入力してください:")
+
+    if st.button("フィードバックを保存"):
+        if feedback_content:
+            new_feedback = pd.DataFrame([{
+                "カテゴリー": feedback_category,
+                "項目": feedback_subcategory,
+                "追加内容": feedback_content
+            }])
+            feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
+            feedback_data.to_excel(feedback_file, index=False)  # 保存
+            st.success("フィードバックが保存されました！")
+        else:
+            st.warning("フィードバック内容を入力してください。")
+
+elif menu == "フィードバック集計と削除":
+    st.subheader("📊 フィードバック集計と削除")
+    if feedback_data.empty:
+        st.info("現在、保存されているフィードバックはありません。")
+    else:
+        # フィードバックの表示
+        for i, row in feedback_data.iterrows():
+            st.write(f"{i + 1}. 【カテゴリー】{row['カテゴリー']} / 【項目】{row['項目']} / 【内容】{row['追加内容']}")
+            if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}"):
+                feedback_data.drop(index=i, inplace=True)
+        
+        # 削除ボタン
+        if st.button("選択したフィードバックを削除"):
+            feedback_data.reset_index(drop=True, inplace=True)
+            feedback_data.to_excel(feedback_file, index=False)  # 保存
+            st.success("選択したフィードバックを削除しました！")
 
 # 指導データ
 guidance_data = {
