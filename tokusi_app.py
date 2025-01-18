@@ -3,8 +3,9 @@ import pandas as pd
 import os
 
 # フィードバック保存用のExcelファイル
-script_dir = os.path.dirname(os.path.abspath(__file__))
-feedback_file = os.path.join(script_dir, "feedback.xlsx")
+feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\フィードバックデータ"
+feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
+
 
 # 初期データの読み込み
 if os.path.exists(feedback_file):
@@ -67,7 +68,7 @@ elif menu == "フィードバック集計と削除":
             feedback_data.reset_index(drop=True, inplace=True)
             feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
             st.success("選択したフィードバックを削除しました！")
-            
+
  # EXCEL 保存問題
 try:
     feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
