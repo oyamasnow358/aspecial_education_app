@@ -289,6 +289,3 @@ elif menu == "フィードバック集計と削除":
             feedback_data.to_excel(feedback_file, index=False)  # 保存
             st.success("選択したフィードバックを削除しました！")
 
-
-
-   
