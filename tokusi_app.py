@@ -4,15 +4,16 @@ import os
 
 # フィードバック保存用のExcelファイル
 feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app\feedback.xlsx"
-feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
+
 
 # ディレクトリが存在しない場合、作成する
 if not os.path.exists(feedback_dir):
-    os.makedirs(feedback_dir)
+    pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"]).to_excel(feedback_dir, index=False, engine='openpyxl')
+feedback_data = pd.read_excel(feedback_dir, engine='openpyxl')
 
 # 初期データの読み込み
-if os.path.exists(feedback_file):
-    feedback_data = pd.read_excel(feedback_file, engine='openpyxl')
+if os.path.exists(feedback_dir):
+    feedback_data = pd.read_excel(feedback_dir, engine='openpyxl')
 else:
     feedback_data = pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
 
@@ -50,9 +51,9 @@ if menu == "フィードバック追加":
             feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
             try:
                 # フィードバックの保存
-                feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
+                feedback_data.to_excel(feedback_dir, index=False, engine='openpyxl')
                 st.success("フィードバックが保存されました！")
-                st.text(f"保存先: {feedback_file}")
+                st.text(f"保存先: {feedback_dir}")
             except Exception as e:
                 st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
         else:
