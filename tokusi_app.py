@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # フィードバック保存用のExcelファイル
-feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app"
+feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app\feedback.xlsx"
 feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
 
 # ディレクトリが存在しない場合、作成する
