@@ -28,10 +28,11 @@ if menu == "指導支援内容":
 
 elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
-    menu = st.selectbox("メニューを選択してください", ["例：日常生活における実態", "障害の種類"])
-    feedback_category = st.selectbox("カテゴリーを選択:", ["例：日常生活における実態", "障害の種類"])
-    feedback_subcategory = st.selectbox("項目を選択:", ["例：身辺自立が未熟な生徒", "聴覚障害"])
+    
+    feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
+    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害""ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
+
 
     if st.button("フィードバックを保存"):
         if feedback_content:
