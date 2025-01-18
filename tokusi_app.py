@@ -63,10 +63,11 @@ elif menu == "フィードバック集計と削除":
         
         # 削除ボタン
         if st.button("選択したフィードバックを削除"):
-    feedback_data = feedback_data[~feedback_data.index.isin([i for i, row in feedback_data.iterrows() if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}")])]
-    feedback_data.reset_index(drop=True, inplace=True)
-    feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
-    st.success("選択したフィードバックを削除しました！")
+            feedback_data = feedback_data[~feedback_data.index.isin([i for i, row in feedback_data.iterrows() if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}")])]
+            feedback_data.reset_index(drop=True, inplace=True)
+            feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
+            st.success("選択したフィードバックを削除しました！")
+            
  # EXCEL 保存問題
 try:
     feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
