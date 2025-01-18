@@ -6,7 +6,6 @@ import os
 feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\フィードバックデータ"
 feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
 
-
 # 初期データの読み込み
 if os.path.exists(feedback_file):
     feedback_data = pd.read_excel(feedback_file)
@@ -34,7 +33,7 @@ elif menu == "フィードバック追加":
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
     if st.button("フィードバックを保存"):
-        if feedback_content:  # インデントを追加
+        if feedback_content:
             new_feedback = pd.DataFrame([{
                 "カテゴリー": feedback_category,
                 "項目": feedback_subcategory,
@@ -42,6 +41,7 @@ elif menu == "フィードバック追加":
             }])
             feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
             try:
+                # フィードバックの保存
                 feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
                 st.success("フィードバックが保存されました！")
                 st.text(f"保存先: {feedback_file}")
@@ -50,26 +50,22 @@ elif menu == "フィードバック追加":
         else:
             st.warning("フィードバック内容を入力してください。")
 
-
 elif menu == "フィードバック集計と削除":
     st.subheader("📊 フィードバック集計と削除")
     if feedback_data.empty:
         st.info("現在、保存されているフィードバックはありません。")
     else:
-        # フィードバックの表示
         for i, row in feedback_data.iterrows():
             st.write(f"{i + 1}. 【カテゴリー】{row['カテゴリー']} / 【項目】{row['項目']} / 【内容】{row['追加内容']}")
             if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}"):
                 feedback_data.drop(index=i, inplace=True)
         
-        # 削除ボタン
         if st.button("選択したフィードバックを削除"):
             feedback_data = feedback_data[~feedback_data.index.isin([i for i, row in feedback_data.iterrows() if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}")])]
             feedback_data.reset_index(drop=True, inplace=True)
             feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
             st.success("選択したフィードバックを削除しました！")
-
- # EXCEL 保存問題
+            
 try:
     feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
     st.success("フィードバックが保存されました！")
@@ -77,8 +73,9 @@ except Exception as e:
     st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
     st.text(f"保存先: {feedback_file}")
 
-    if not os.path.exists(script_dir):
-        os.makedirs(script_dir)  # この行がインデントされていることを確認
+# ディレクトリが存在しない場合、作成する
+if not os.path.exists(feedback_dir):
+    os.makedirs(feedback_dir)  # この行で保存先ディレクトリを作成
 
 
 # 指導データ
