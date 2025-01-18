@@ -3,7 +3,8 @@ import pandas as pd
 import os
 
 # フィードバック保存用のExcelファイル
-feedback_file = os.path.join(os.getcwd(), "feedback.xlsx")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+feedback_file = os.path.join(script_dir, "feedback.xlsx")
 
 # 初期データの読み込み
 if os.path.exists(feedback_file):
