@@ -20,7 +20,9 @@ menu = st.sidebar.selectbox("メニューを選択してください", ["指導�
 # メニューごとの処理
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
-  elif menu == "フィードバック追加":
+    st.text("具体的な内容の選択肢は割愛（ユーザーデータ依存）")
+
+elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
     feedback_category = st.selectbox("カテゴリーを選択:", ["例：日常生活における実態", "障害の種類"])
     feedback_subcategory = st.selectbox("項目を選択:", ["例：身辺自立が未熟な生徒", "聴覚障害"])
