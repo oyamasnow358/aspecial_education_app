@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # フィードバック保存用のExcelファイル
-feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\フィードバックデータ"
+feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app\フィードバックデータ"
 feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
 
 # 初期データの読み込み
@@ -25,8 +25,8 @@ def new_func():
 # メニューによって表示を制御
 if menu not in ["フィードバック追加", "フィードバック集計と削除"]:
     # 'フィードバック追加' または 'フィードバック集計と削除' 以外のメニューが選ばれた場合にのみ表示
-    st.write("指導データ guidance_data =")
-    guidance_data = []  # 指導データの実際の内容
+    
+    guidance_data =   # 指導データの実際の内容
     st.write(guidance_data)
 
 if menu == "指導支援内容":
