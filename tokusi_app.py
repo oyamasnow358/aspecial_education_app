@@ -22,6 +22,13 @@ menu = st.sidebar.selectbox("メニューを選択してください", ["指導�
 def new_func():
     st.experimental_rerun()
 
+# メニューによって表示を制御
+if menu not in ["フィードバック追加", "フィードバック集計と削除"]:
+    # 'フィードバック追加' または 'フィードバック集計と削除' 以外のメニューが選ばれた場合にのみ表示
+    st.write("指導データ guidance_data =")
+    guidance_data = []  # 指導データの実際の内容
+    st.write(guidance_data)
+
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
     st.text("1から順番に選択して下さい")
@@ -73,8 +80,7 @@ if not os.path.exists(feedback_dir):
     os.makedirs(feedback_dir)  # この行で保存先ディレクトリを作成
 
 
-# 「指導データ」部分を非表示にする条件
-if menu == "指導支援内容":
+
     
 # 指導データ
 guidance_data = {
@@ -304,7 +310,7 @@ guidance_data = {
         },
     },
 }
-st.write("指導データを表示する準備が整っています。")
+
 
 # メインメニュー
 #menu = st.selectbox("メニューを選択してください", ["指導支援内容"])
