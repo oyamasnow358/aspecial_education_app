@@ -4,7 +4,7 @@ import os
 
 # フィードバック保存用のExcelファイル
 feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\フィードバックデータ"
-feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
+#feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
 
 # 初期データの読み込み
 if os.path.exists(feedback_file):
@@ -24,7 +24,7 @@ def new_func():
 
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
-    st.text("具体的な内容の選択肢は割愛（ユーザーデータ依存）")
+    st.text("1から順番に選択して下さい")
 
 elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
@@ -73,6 +73,9 @@ if not os.path.exists(feedback_dir):
     os.makedirs(feedback_dir)  # この行で保存先ディレクトリを作成
 
 
+# 「指導データ」部分を非表示にする条件
+if menu == "指導支援内容":
+    
 # 指導データ
 guidance_data = {
     "日常生活における実態": {
@@ -303,27 +306,27 @@ guidance_data = {
 }
 
 # メインメニュー
-menu = st.selectbox("メニューを選択してください", ["指導支援内容"])
+#menu = st.selectbox("メニューを選択してください", ["指導支援内容"])
 
 # 指導支援内容表示
 if menu == "指導支援内容":
     # カテゴリー選択
-    selected_category = st.selectbox("カテゴリーを選択してください:", list(guidance_data.keys()))
+    selected_category = st.selectbox("1.カテゴリーを選択してください:", list(guidance_data.keys()))
     # 項目選択
     selected_subcategory = st.selectbox(
-        "該当する項目を選択してください:",
+        "2.該当する項目を選択してください:",
         list(guidance_data[selected_category].keys())
     )
     
     # 辞書かリストかを確認して処理
     if isinstance(guidance_data[selected_category][selected_subcategory], dict):
         selected_detail = st.selectbox(
-            "具体的な支援内容を選択してください:",
+            "3.具体的な支援内容を選択してください:",
             list(guidance_data[selected_category][selected_subcategory].keys())
         )
     elif isinstance(guidance_data[selected_category][selected_subcategory], list):
         selected_detail = st.selectbox(
-            "具体的な支援内容を選択してください:",
+            "3.具体的な支援内容を選択してください:",
             guidance_data[selected_category][selected_subcategory]
         )
     else:
