@@ -64,7 +64,16 @@ elif menu == "フィードバック集計と削除":
             feedback_data.reset_index(drop=True, inplace=True)
             feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
             st.success("選択したフィードバックを削除しました！")
+ # EXCEL 保存問題
+try:
+    feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
+    st.success("フィードバックが保存されました！")
+except Exception as e:
+    st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
+    st.text(f"保存先: {feedback_file}")
 
+    if not os.path.exists(script_dir):
+    os.makedirs(script_dir)
 
 
 # 指導データ
