@@ -20,10 +20,7 @@ menu = st.sidebar.selectbox("メニューを選択してください", ["指導�
 # メニューごとの処理
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
-    # カテゴリー・項目選択
-    selected_category = st.selectbox("カテゴリーを選択:", ["例：日常生活における実態", "障害の種類"])
-    selected_subcategory = st.selectbox("項目を選択:", ["例：身辺自立が未熟な生徒", "聴覚障害"])
-    st.text("具体的な内容の選択肢は割愛（ユーザーデータ依存）")
+  
 
 
 # 指導データ
@@ -337,5 +334,24 @@ elif menu == "フィードバック集計と削除":
             feedback_data.reset_index(drop=True, inplace=True)
             feedback_data.to_excel(feedback_file, index=False)  # 保存
             st.success("選択したフィードバックを削除しました！")
+            # フィードバック編集
+elif menu == "フィードバック編集":
+    st.subheader("📝 フィードバックを追加する")
+    feedback_category = st.selectbox("カテゴリーを選択してください:", list(guidance_data.keys()))
+    feedback_subcategory = st.selectbox("項目を選択してください:", list(guidance_data[feedback_category].keys()))
+    feedback_content = st.text_area("この指導・支援に追加する内容を入力してください:")
+
+    if st.button("フィードバックを保存"):
+        if feedback_content:
+            new_feedback = pd.DataFrame([{
+                "カテゴリー": feedback_category,
+                "項目": feedback_subcategory,
+                "追加内容": feedback_content
+            }])
+            feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
+            feedback_data.to_excel(feedback_file, index=False)
+            st.success("フィードバックが保存されました！")
+        else:
+            st.warning("フィードバック内容を入力してください。")
 
    
