@@ -26,7 +26,7 @@ def new_func():
 if menu not in ["フィードバック追加", "フィードバック集計と削除"]:
     # 'フィードバック追加' または 'フィードバック集計と削除' 以外のメニューが選ばれた場合にのみ表示
     
-    guidance_data = [""]  # 指導データの実際の内容
+   
     st.write(guidance_data)
 
 if menu == "指導支援内容":
