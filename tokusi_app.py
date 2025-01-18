@@ -3,14 +3,19 @@ import pandas as pd
 import os
 
 # フィードバック保存用のExcelファイル
-feedback_dir = r"C:\Users\taka\デスクトップ\GitHub\special_education_app\フィードバックデータ"
+feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app"
 feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
+
+# ディレクトリが存在しない場合、作成する
+if not os.path.exists(feedback_dir):
+    os.makedirs(feedback_dir)
 
 # 初期データの読み込み
 if os.path.exists(feedback_file):
-    feedback_data = pd.read_excel(feedback_file)
+    feedback_data = pd.read_excel(feedback_file, engine='openpyxl')
 else:
     feedback_data = pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
+
 
 # アプリの基本構造
 st.title("🌟 自立活動の参考指導 🌟")
