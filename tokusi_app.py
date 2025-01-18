@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # フィードバック保存用のExcelファイル
-feedback_file = "feedback.xlsx"
+feedback_file = os.path.join(os.getcwd(), "feedback.xlsx")
 
 # 初期データの読み込み
 if os.path.exists(feedback_file):
@@ -18,6 +18,9 @@ st.title("🌟 自立活動の参考指導 🌟")
 menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
 
 # メニューごとの処理
+def new_func():
+    st.experimental_rerun()
+
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
     st.text("具体的な内容の選択肢は割愛（ユーザーデータ依存）")
@@ -37,7 +40,8 @@ elif menu == "フィードバック追加":
         }])
         feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
         try:
-            feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
+           feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
+            new_func()
             st.success("フィードバックが保存されました！")
         except Exception as e:
             st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
