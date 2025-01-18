@@ -23,9 +23,7 @@ st.title("🌟 自立活動の参考指導 🌟")
 # メニュー選択
 menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
 
-# メニューごとの処理
-def new_func():
-    st.experimental_rerun()
+
 
 # メニューによって表示を制御
 if menu not in ["フィードバック追加", "フィードバック集計と削除"]:
@@ -33,21 +31,17 @@ if menu not in ["フィードバック追加", "フィードバック集計と�
     
     guidance_data = []  # 指導データの実際の内容
     st.write(guidance_data)
-
-if menu == "指導支援内容":
-    st.subheader("📚 指導支援内容の参照")
-    st.text("1から順番に選択して下さい")
-
-elif menu == "フィードバック追加":
+# メニューごとの処理
+if menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
     
     feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
     feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
-
     if st.button("フィードバックを保存"):
         if feedback_content:
+            # 新しいフィードバックのデータフレーム
             new_feedback = pd.DataFrame([{
                 "カテゴリー": feedback_category,
                 "項目": feedback_subcategory,
@@ -63,6 +57,12 @@ elif menu == "フィードバック追加":
                 st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
         else:
             st.warning("フィードバック内容を入力してください。")
+
+if menu == "指導支援内容":
+    st.subheader("📚 指導支援内容の参照")
+    st.text("1から順番に選択して下さい")
+
+
 
 elif menu == "フィードバック集計と削除":
     st.subheader("📊 フィードバック集計と削除")
