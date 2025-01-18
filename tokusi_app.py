@@ -73,7 +73,7 @@ except Exception as e:
     st.text(f"保存先: {feedback_file}")
 
     if not os.path.exists(script_dir):
-    os.makedirs(script_dir)
+        os.makedirs(script_dir)  # この行がインデントされていることを確認
 
 
 # 指導データ
