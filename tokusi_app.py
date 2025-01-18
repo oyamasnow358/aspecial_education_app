@@ -41,7 +41,6 @@ elif menu == "フィードバック追加":
         feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
         try:
            feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
-            new_func()
             st.success("フィードバックが保存されました！")
         except Exception as e:
             st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
