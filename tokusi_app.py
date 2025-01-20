@@ -7,10 +7,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # クライアントIDとクライアントシークレットが含まれるJSONファイルのパス
-CLIENT_SECRET_FILE = 'path/to/your/client_secret_file.json'
+CLIENT_SECRET_FILE = "C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app\client_secret.json"
 
-# 認証スコープ
-SCOPES = ["https://www.googleapis.com/oauth2/v1/certs"]
+# 認証スコープ Google Drive APIの利用とする
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 # OAuth 2.0 認証フローの開始
 flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
@@ -21,7 +21,7 @@ credentials = flow.run_local_server(port=0)
 def authenticate_gdrive():
     creds = None
     if not creds:
-        creds = Credentials.from_authorized_user_file("credentials.json", scopes=["https://www.googleapis.com/oauth2/v1/certs"])
+        creds = Credentials.from_authorized_user_file("credentials.json", scopes=["https://www.googleapis.com/auth/drive"])
     return build("drive", "v3", credentials=creds)
 
 
