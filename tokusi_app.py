@@ -6,27 +6,27 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # 環境変数からGoogle Drive APIの認証情報を取得
-def authenticate_gdrive():
+#def authenticate_gdrive():
     # 環境変数を設定している場合のみ読み込む
-    creds = Credentials.from_service_account_file(
-        os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
-        scopes=["https://www.googleapis.com/auth/drive"]
-    )
-    return build("drive", "v3", credentials=creds)
+    #creds = Credentials.from_service_account_file(
+        #os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+        #scopes=["https://www.googleapis.com/auth/drive"]
+   # )
+    #return build("drive", "v3", credentials=creds)
 
 # Google Driveのファイルリンクを取得する関数
-def get_file_link(file_id):
-    return f"https://drive.google.com/uc?id={file_id}"
+#def get_file_link(file_id):
+    #return f"https://drive.google.com/uc?id={file_id}"
 
 # Google Driveの画像を取得して表示
-file_id1 = "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR"  # 画像1のファイルID
-file_id2 = "14S9vje6JPIkqcUTwW4gD_tmJq2tBTmVt"  # 画像2のファイルID
+#file_id1 = "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR"  # 画像1のファイルID
+#file_id2 = "14S9vje6JPIkqcUTwW4gD_tmJq2tBTmVt"  # 画像2のファイルID
 
-image_url1 = get_file_link(file_id1)
-image_url2 = get_file_link(file_id2)
+#image_url1 = get_file_link(file_id1)
+#image_url2 = get_file_link(file_id2)
 
-st.image(image_url1, caption="画像1: 衣服の着脱練習", use_column_width=True)
-st.image(image_url2, caption="画像2: その他の活動", use_column_width=True)
+#st.image(image_url1, caption="画像1: 衣服の着脱練習", use_column_width=True)
+#st.image(image_url2, caption="画像2: その他の活動", use_column_width=True)
 
 
 
