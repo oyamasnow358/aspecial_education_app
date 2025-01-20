@@ -5,35 +5,25 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# クライアントIDとクライアントシークレットが含まれるJSONファイルのパス
-# Google Drive APIの認証情報を環境変数から取得
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]  = "C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app\client_secret.json"
-
-# 認証スコープ Google Drive APIの利用とする
-# SCOPES = ["https://www.googleapis.com/auth/drive"]
-
-# OAuth 2.0 認証フローの開始
-# flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-# credentials = flow.run_local_server(port=0)
-
-# Google Drive API認証
+# 環境変数からGoogle Drive APIの認証情報を取得
 def authenticate_gdrive():
+    # 環境変数を設定している場合のみ読み込む
     creds = Credentials.from_service_account_file(
         os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
         scopes=["https://www.googleapis.com/auth/drive"]
     )
     return build("drive", "v3", credentials=creds)
 
-
 # Google Driveのファイルリンクを取得する関数
 def get_file_link(file_id):
     return f"https://drive.google.com/uc?id={file_id}"
-# Google Drive の画像を定義
-    file_id1 = "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR"  # 1つ目の画像ファイルID
-    file_id2 = "14S9vje6JPIkqcUTwW4gD_tmJq2tBTmVt"  # 2つ目の画像ファイルID
-# 画像リンクを取得
-    image_url1 = get_file_link(file_id1)
-    image_url2 = get_file_link(file_id2)
+
+# Google Driveの画像を取得して表示
+file_id1 = "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR"  # 画像1のファイルID
+file_id2 = "14S9vje6JPIkqcUTwW4gD_tmJq2tBTmVt"  # 画像2のファイルID
+
+image_url1 = get_file_link(file_id1)
+image_url2 = get_file_link(file_id2)
 
 st.image(image_url1, caption="画像1: 衣服の着脱練習", use_column_width=True)
 st.image(image_url2, caption="画像2: その他の活動", use_column_width=True)
