@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
 import os
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+
+
+#from google.oauth2.credentials import Credentials
+#from googleapiclient.discovery import build
+#from googleapiclient.errors import HttpError
 
 # 環境変数からGoogle Drive APIの認証情報を取得
 #def authenticate_gdrive():
