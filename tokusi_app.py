@@ -1,6 +1,22 @@
 import streamlit as st
 import pandas as pd
 import os
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+# Google Drive APIの認証と初期化
+def authenticate_gdrive():
+    creds = None
+    if not creds:
+        creds = Credentials.from_authorized_user_file("credentials.json", scopes=["https://www.googleapis.com/auth/drive.readonly"])
+    return build("drive", "v3", credentials=creds)
+
+def get_file_link(file_id):
+    """Google Driveの共有リンクを生成"""
+    return f"https://drive.google.com/uc?id={file_id}"
+
+
 
 # フィードバック保存用のExcelファイル
 feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app\feedback.xlsx"
@@ -93,7 +109,7 @@ guidance_data = {
     "日常生活における実態": {
         "身辺自立が未熟な生徒": {
             "衣服の着脱練習": [
-                         "ボタンやファスナーを練習するための専用教材を使用。"
+                         "ボタンやファスナーを練習するための専用教材を使用。","ファイルID": "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR/view?usp=drive_link"
               ],
             "食事の練習": [
                           "スプーンやフォークの使い方、食器を片付ける練習。"
@@ -172,7 +188,7 @@ guidance_data = {
     "障害の種類": {
         "聴覚障害": {
             "コミュニケーション支援": [
-                "手話の練習: 手話を使って、自己紹介や日常会話を学ぶ。",
+                "手話の練習: 手話を使って、自己紹介や日常会話を学ぶ。","ファイルID": "14S9vje6JPIkqcUTwW4gD_tmJq2tBTmVt/view?usp=drive_link",
                 "ジェスチャー活用: 視覚的な動きで意思を伝える練習（例: 「飲みたい」「行きたい」など）。",
                 "指文字練習: 手話に加え、指文字を活用する場面を設定。",
                 "タブレットでのコミュニケーション: 音声入力から文字表示を活用したアプリでの意思疎通。",
