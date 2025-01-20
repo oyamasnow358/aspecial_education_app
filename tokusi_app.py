@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path_to_your_credentials.json"
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
