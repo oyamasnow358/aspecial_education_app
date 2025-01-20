@@ -12,6 +12,13 @@ def authenticate_gdrive():
         creds = Credentials.from_authorized_user_file("credentials.json", scopes=["https://www.googleapis.com/auth/drive.readonly"])
     return build("drive", "v3", credentials=creds)
 
+# Google Drive の画像を定義
+    file_id1 = "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR"  # 1つ目の画像ファイルID
+    file_id2 = "14S9vje6JPIkqcUTwW4gD_tmJq2tBTmVt"  # 2つ目の画像ファイルID
+# 画像リンクを取得
+    image_url1 = get_file_link(file_id1)
+    image_url2 = get_file_link(file_id2)
+
 def get_file_link(file_id):
     """Google Driveの共有リンクを生成"""
     return f"https://drive.google.com/uc?id={file_id}"
@@ -109,7 +116,7 @@ guidance_data = {
     "日常生活における実態": {
         "身辺自立が未熟な生徒": {
             "衣服の着脱練習": [
-                         "ボタンやファスナーを練習するための専用教材を使用。","ファイルID": "1tQMqjPNYvQMwQo1GIXJSeJOs4NtgrBHR/view?usp=drive_link"
+                         "ボタンやファスナーを練習するための専用教材を使用。",st.image(image_url1, caption="画像1: 衣服の着脱練習", use_column_width=True),
               ],
             "食事の練習": [
                           "スプーンやフォークの使い方、食器を片付ける練習。"
