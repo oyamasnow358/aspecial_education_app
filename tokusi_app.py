@@ -49,44 +49,33 @@ if menu == "指導支援内容":
     )
 
     # 辞書かリストかを確認して処理
-    if isinstance(guidance_data[selected_category][selected_subcategory], dict):
+    subcategory_data = guidance_data[selected_category][selected_subcategory]
+
+    if isinstance(subcategory_data, dict):
         selected_detail = st.selectbox(
             "3. 具体的な支援内容を選択してください:",
-            list(guidance_data[selected_category][selected_subcategory].keys())
+            list(subcategory_data.keys())
         )
-    elif isinstance(guidance_data[selected_category][selected_subcategory], list):
-        selected_detail = st.selectbox(
-            "3. 具体的な支援内容を選択してください:",
-            guidance_data[selected_category][selected_subcategory]
-        )
+        detail_data = subcategory_data[selected_detail]
+    elif isinstance(subcategory_data, list):
+        detail_data = subcategory_data
     else:
         st.error("不明なデータ形式です。")
-        selected_detail = None
+        detail_data = None
 
     # 内容表示
-    if selected_detail and st.button("適した指導・支援を表示"):
+    if detail_data and st.button("適した指導・支援を表示"):
         st.subheader("📌 適した指導・支援")
-        # 結果の整形
-        if isinstance(guidance_data[selected_category][selected_subcategory], dict):
-            detail = guidance_data[selected_category][selected_subcategory][selected_detail]
+
+        # リストの場合、要素の内容を整形して表示
+        if isinstance(detail_data, list):
+            for item in detail_data:
+                if isinstance(item, dict):  # 辞書の場合
+                    st.markdown(f"**{item.get('title', 'タイトルなし')}**")
+                    details = item.get("details", [])
+                    for detail in details:
+                        st.write(f"- {detail}")
+                else:  # 文字列の場合
+                    st.write(f"- {item}")
         else:
-            detail = selected_detail
-
-        # リスト形式であれば改行して表示
-        if isinstance(detail, list):
-            formatted_detail = "\n".join([f"- {item}" for item in detail])
-        else:
-            formatted_detail = detail
-
-        # 直接表示
-        st.markdown(f"**{selected_detail}**:  \n{formatted_detail}")
-
-    # 具体的な支援内容の表示（詳細ボタン付き）
-    for item in guidance_data[selected_category][selected_subcategory]:
-        if isinstance(item, dict):  # 詳細を持つ項目の場合
-            st.markdown(f"**{item['title']}**")
-            with st.expander("詳細を見る"):
-                for detail in item["details"]:
-                    st.write(f"- {detail}")
-        else:  # 文字列の項目の場合
-            st.write(f"- {item}")
+            st.write(detail_data)
