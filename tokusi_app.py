@@ -1,3 +1,5 @@
+import streamlit as st
+
 # 指導データ
 guidance_data = {
     "日常生活における実態": {
@@ -34,6 +36,7 @@ st.title("指導支援内容の参照")
 
 menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容"])
 
+# 指導支援内容表示
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
     st.text("1から順番に選択してください")
@@ -45,7 +48,40 @@ if menu == "指導支援内容":
         "2. 該当する項目を選択してください:", list(guidance_data[selected_category].keys())
     )
 
-    # 具体的な支援内容の表示
+    # 辞書かリストかを確認して処理
+    if isinstance(guidance_data[selected_category][selected_subcategory], dict):
+        selected_detail = st.selectbox(
+            "3. 具体的な支援内容を選択してください:",
+            list(guidance_data[selected_category][selected_subcategory].keys())
+        )
+    elif isinstance(guidance_data[selected_category][selected_subcategory], list):
+        selected_detail = st.selectbox(
+            "3. 具体的な支援内容を選択してください:",
+            guidance_data[selected_category][selected_subcategory]
+        )
+    else:
+        st.error("不明なデータ形式です。")
+        selected_detail = None
+
+    # 内容表示
+    if selected_detail and st.button("適した指導・支援を表示"):
+        st.subheader("📌 適した指導・支援")
+        # 結果の整形
+        if isinstance(guidance_data[selected_category][selected_subcategory], dict):
+            detail = guidance_data[selected_category][selected_subcategory][selected_detail]
+        else:
+            detail = selected_detail
+
+        # リスト形式であれば改行して表示
+        if isinstance(detail, list):
+            formatted_detail = "\n".join([f"- {item}" for item in detail])
+        else:
+            formatted_detail = detail
+
+        # 直接表示
+        st.markdown(f"**{selected_detail}**:  \n{formatted_detail}")
+
+    # 具体的な支援内容の表示（詳細ボタン付き）
     for item in guidance_data[selected_category][selected_subcategory]:
         if isinstance(item, dict):  # 詳細を持つ項目の場合
             st.markdown(f"**{item['title']}**")
