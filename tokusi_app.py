@@ -74,7 +74,9 @@ if menu == "指導支援内容":
                     st.markdown(f"**{item.get('title', 'タイトルなし')}**")
                     details = item.get("details", [])
                     for detail in details:
-                        st.write(f"- {detail}")
+                        # 各詳細をエクスパンダーで表示
+                        with st.expander(detail.split(":")[0]):  # 冒頭をタイトルに
+                            st.write(detail)
                 else:  # 文字列の場合
                     st.write(f"- {item}")
         else:
