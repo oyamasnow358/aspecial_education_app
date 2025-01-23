@@ -369,47 +369,59 @@ if menu == "指導支援内容":
         list(guidance_data[selected_category].keys())
     )
     
-    # 辞書かリストかを確認して処理
-    if isinstance(guidance_data[selected_category][selected_subcategory], dict):
+   # guidance_data の形式をチェックして処理
+try:
+    subcategory_data = guidance_data[selected_category][selected_subcategory]
+
+    # 辞書型の場合
+    if isinstance(subcategory_data, dict):
         selected_detail = st.selectbox(
             "3. 具体的な支援内容を選択してください:",
-            list(guidance_data[selected_category][selected_subcategory].keys())
+            list(subcategory_data.keys())
         )
-    elif isinstance(guidance_data[selected_category][selected_subcategory], list):
-        selected_detail = st.selectbox(
-            "3. 具体的な支援内容を選択してください:",
-            guidance_data[selected_category][selected_subcategory]
-        )
+    # リスト型の場合
+    elif isinstance(subcategory_data, list):
+        # リストの要素が文字列のみか確認
+        if all(isinstance(item, str) for item in subcategory_data):
+            selected_detail = st.selectbox(
+                "3. 具体的な支援内容を選択してください:",
+                subcategory_data
+            )
+        # リスト内に辞書が含まれる場合
+        elif all(isinstance(item, dict) for item in subcategory_data):
+            selected_detail = st.selectbox(
+                "3. 具体的な支援内容を選択してください:",
+                [item.get('title', '不明なタイトル') for item in subcategory_data]
+            )
+        else:
+            st.error("リストの形式が不正です。")
+            selected_detail = None
     else:
         st.error("不明なデータ形式です。")
         selected_detail = None
 
-    # 内容表示
+    # 内容表示処理
     if selected_detail and st.button("適した指導・支援を表示"):
         st.subheader("📌 適した指導・支援")
-        # 結果の整形
-        if isinstance(guidance_data[selected_category][selected_subcategory], dict):
-            detail = guidance_data[selected_category][selected_subcategory][selected_detail]
+        if isinstance(subcategory_data, dict):
+            detail = subcategory_data[selected_detail]
+        elif isinstance(subcategory_data, list):
+            # 選択されたタイトルに一致する辞書を検索
+            if all(isinstance(item, dict) for item in subcategory_data):
+                detail = next((item for item in subcategory_data if item.get('title') == selected_detail), None)
+                if detail:
+                    formatted_detail = "\n".join([f"- {d}" for d in detail.get('details', [])])
+                else:
+                    formatted_detail = "詳細情報が見つかりません。"
+            else:
+                detail = selected_detail
+                formatted_detail = detail
         else:
-            detail = selected_detail
+            formatted_detail = "不明なデータ形式です。"
 
-        # リスト形式であれば改行して表示
-        if isinstance(detail, list):
-            formatted_detail = "\n".join([f"- {item}" for item in detail])
-        else:
-            formatted_detail = detail
-
-        # 直接表示
         st.markdown(f"**{selected_detail}**:  \n{formatted_detail}")
 
-    # 具体的な支援内容の表示（詳細ボタン付き）
-    for item in guidance_data[selected_category][selected_subcategory]:
-        if isinstance(item, dict):  # 詳細を持つ項目の場合
-            st.markdown(f"**{item['title']}**")
-            with st.expander("詳細を見る"):
-                for detail in item["details"]:
-                    st.write(f"- {detail}")
-        else:  # 文字列の項目の場合
-            st.write(f"- {item}")
-
-   
+except KeyError as e:
+    st.error(f"データが見つかりません: {e}")
+except Exception as e:
+    st.error(f"エラーが発生しました: {e}")
