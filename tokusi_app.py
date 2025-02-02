@@ -777,3 +777,22 @@ if menu == "指導支援内容":
                     st.write(f"- {item}")
         else:
             st.write(detail_data)
+            detail = selected_detail
+        
+        # リスト形式であれば改行して表示
+        if isinstance(detail, list):
+            formatted_detail = "\n".join([f"- {item}" for item in detail])
+        else:
+            formatted_detail = detail
+        
+        # 直接表示
+        st.markdown(f"**{selected_detail}**:  \n{formatted_detail}")
+
+ # **区切り線**
+    st.markdown("---")
+
+    # **別のWebアプリへのリンク**
+    st.markdown("関連Webアプリに移動する")
+    st.markdown("[発達段階能力チャート作成](https://specialexcel2apppy-bo6jrng9gyqw5dmfcgwbl5.streamlit.app/)")
+
+   
