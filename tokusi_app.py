@@ -799,5 +799,6 @@ if menu == "指導支援内容":
     st.markdown("分析ツール")
     st.markdown("[応用行動分析ツール](https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/)")
     st.markdown("[多変量回帰分析ツール](https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/)")
+    st.markdown("[機能的行動評価分析ツール](https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/)")
 
    
