@@ -796,9 +796,10 @@ if menu == "指導支援内容":
     st.markdown("[発達段階能力チャート作成](https://specialexcel2apppy-bo6jrng9gyqw5dmfcgwbl5.streamlit.app/)")
     st.markdown("[特別支援教育サポート分析法・心療法](https://bunnsekiapppy-6zctfql94fk2x3ghmu5pmx.streamlit.app/)")
     st.markdown("---") 
-    st.markdown("分析ツール")
+    st.markdown("📁分析ツール")
     st.markdown("[応用行動分析ツール](https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/)")
     st.markdown("[多変量回帰分析ツール](https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/)")
     st.markdown("[機能的行動評価分析ツール](https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/)")
+    st.markdown("[機能的行動評価分析ツール](https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/)")
 
    
