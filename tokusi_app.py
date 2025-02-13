@@ -802,5 +802,6 @@ if menu == "指導支援内容":
     st.markdown("[相関分析ツール](https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/)")
     st.markdown("[多変量回帰分析ツール](https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/)")    
     st.markdown("[ロジスティック回帰分析ツール](https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/)")
+    st.markdown("[ノンパラメトリック統計分析ツール](https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/)")
 
    
