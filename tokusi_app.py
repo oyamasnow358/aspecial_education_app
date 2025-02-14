@@ -1,19 +1,13 @@
 import streamlit as st
 import pandas as pd
-import os
+import io
 
-# 一時ディレクトリを使用
-feedback_file = os.path.join(tempfile.gettempdir(), "feedback.xlsx")
+# セッション内のフィードバックデータを管理
+if "feedback_data" not in st.session_state:
+    st.session_state.feedback_data = pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
 
-# Excelファイルが存在しない場合、作成する
-if not os.path.exists(feedback_file):
-    pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"]).to_excel(feedback_file, index=False, engine='openpyxl')
-
-# 初期データの読み込み
-if os.path.exists(feedback_file):
-    feedback_data = pd.read_excel(feedback_file, engine='openpyxl')
-else:
-    feedback_data = pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
+# 初期データを読み込み
+feedback_data = st.session_state.feedback_data
 
 
 # アプリの基本構造
@@ -22,62 +16,59 @@ st.title("🌟 自立活動の参考指導 🌟")
 # メニュー選択
 menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
 
-
+if menu == "指導支援内容":
+    st.subheader("📚 指導支援内容の参照")
+    st.text("1から順番に選択して下さい")
 
 # メニューによって表示を制御
-if menu not in ["フィードバック追加", "フィードバック集計と削除"]:
-    # 'フィードバック追加' または 'フィードバック集計と削除' 以外のメニューが選ばれた場合にのみ表示
-    
-    guidance_data = []  # 指導データの実際の内容
-    st.write(guidance_data)
-# メニューごとの処理
 if menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
-    
+
     feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
-    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
+    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒", "コミュニケーションが苦手な生徒"])
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
     if st.button("フィードバックを保存"):
         if feedback_content:
-            # 新しいフィードバックのデータフレーム
             new_feedback = pd.DataFrame([{
                 "カテゴリー": feedback_category,
                 "項目": feedback_subcategory,
                 "追加内容": feedback_content
             }])
-            feedback_data = pd.concat([feedback_data, new_feedback], ignore_index=True)
-            try:
-                # フィードバックの保存
-                feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')
-                st.success("フィードバックが保存されました！")
-                st.text(f"保存先: {feedback_file}")
-            except Exception as e:
-                st.error(f"フィードバックの保存中にエラーが発生しました: {e}")
+            st.session_state.feedback_data = pd.concat([st.session_state.feedback_data, new_feedback], ignore_index=True)
+            st.success("フィードバックが保存されました！")
         else:
             st.warning("フィードバック内容を入力してください。")
 
-if menu == "指導支援内容":
-    st.subheader("📚 指導支援内容の参照")
-    st.text("1から順番に選択して下さい")
-
-
-
 elif menu == "フィードバック集計と削除":
     st.subheader("📊 フィードバック集計と削除")
+
     if feedback_data.empty:
         st.info("現在、保存されているフィードバックはありません。")
     else:
         for i, row in feedback_data.iterrows():
             st.write(f"{i + 1}. 【カテゴリー】{row['カテゴリー']} / 【項目】{row['項目']} / 【内容】{row['追加内容']}")
-            if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}"):
-                feedback_data.drop(index=i, inplace=True)
+            if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
+                st.session_state.feedback_data.drop(index=i, inplace=True)
+                st.session_state.feedback_data.reset_index(drop=True, inplace=True)
+                st.experimental_rerun()
+
         
         if st.button("選択したフィードバックを削除"):
             feedback_data = feedback_data[~feedback_data.index.isin([i for i, row in feedback_data.iterrows() if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}")])]
             feedback_data.reset_index(drop=True, inplace=True)
             feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
             st.success("選択したフィードバックを削除しました！")
+            
+# データをエクスポートするためのダウンロード機能
+st.subheader("📥 フィードバックのダウンロード")
+buffer = io.BytesIO()
+st.session_state.feedback_data.to_excel(buffer, index=False, engine='openpyxl')
+st.download_button(
+    label="Excelファイルをダウンロード",
+    data=buffer,
+    file_name="feedback.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 # ディレクトリが存在しない場合、作成する
 if not os.path.exists(feedback_dir):
