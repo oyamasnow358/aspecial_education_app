@@ -2,13 +2,8 @@ import streamlit as st
 import pandas as pd
 import os
 
-# フィードバック保存用のExcelファイル
-feedback_dir = r"C:\Users\taka\OneDrive\デスクトップ\GitHub\special_education_app"
-feedback_file = os.path.join(feedback_dir, "feedback.xlsx")
-
-# ディレクトリが存在しない場合、作成する
-if not os.path.exists(feedback_dir):  # feedback_dir を確認する
-    os.makedirs(feedback_dir)
+# 一時ディレクトリを使用
+feedback_file = os.path.join(tempfile.gettempdir(), "feedback.xlsx")
 
 # Excelファイルが存在しない場合、作成する
 if not os.path.exists(feedback_file):
@@ -809,6 +804,6 @@ if menu == "指導支援内容":
 
     st.markdown("---")  # 区切り線  
     st.markdown("🗨️自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください") 
-    st.markdown("※埼玉県の学校教育関係者のみＳＴアカウントで回答できます。") 
+    st.markdown("    ※埼玉県の学校教育関係者のみＳＴアカウントで回答できます。") 
     st.markdown("[アンケート](https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview)")
    
