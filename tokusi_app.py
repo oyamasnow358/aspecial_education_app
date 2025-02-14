@@ -741,28 +741,25 @@ if menu == "指導支援内容":
 
         # リストの場合、要素の内容を整形して表示
         if isinstance(detail_data, list):
-            for item in detail_data:
-                if isinstance(item, dict):  # 辞書の場合
-                    st.markdown(f"**{item.get('title', 'タイトルなし')}**")
-                    details = item.get("details", [])
-                    for detail in details:
-                        # 各詳細をエクスパンダーで表示
-                        with st.expander(detail.split(":")[0]):  # 冒頭をタイトルに
-                            st.write(detail)
-                else:  # 文字列の場合
-                    st.write(f"- {item}")
+           formatted_detail = "\n".join([
+           f"- {item}" if isinstance(item, str) else f"- **{item.get('title', 'タイトルなし')}**: {', '.join(item.get('details', []))}"
+           for item in detail_data
+        ])
         else:
-            st.write(detail_data)
-            detail = selected_detail
-        
-        # リスト形式であれば改行して表示
-        if isinstance(detail, list):
-            formatted_detail = "\n".join([f"- {item}" for item in detail])
-        else:
-            formatted_detail = detail
-        
-        # 直接表示
-        st.markdown(f"**{selected_detail}**:  \n{formatted_detail}")
+           formatted_detail = detail_data
+
+# 直接表示する部分を削除し、エクスパンダー内だけで表示
+        if detail_data:
+           st.subheader("📌 適した指導・支援")
+
+    # 詳細データをエクスパンダーで表示
+        for item in detail_data:
+            if isinstance(item, dict):
+               with st.expander(item.get('title', 'タイトルなし')):
+                for detail in item.get('details', []):
+                    st.write(f"- {detail}")
+            else:
+              st.write(f"- {item}")  # 文字列データのリストならそのまま表示
 
  # **区切り線**
     st.markdown("---")
