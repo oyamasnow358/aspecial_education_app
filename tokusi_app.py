@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
+import os  # osをインポート
 
 # セッション内のフィードバックデータを管理
 if "feedback_data" not in st.session_state:
@@ -8,7 +9,6 @@ if "feedback_data" not in st.session_state:
 
 # 初期データを読み込み
 feedback_data = st.session_state.feedback_data
-
 
 # アプリの基本構造
 st.title("🌟 自立活動の参考指導 🌟")
@@ -53,13 +53,6 @@ elif menu == "フィードバック集計と削除":
                 st.session_state.feedback_data.reset_index(drop=True, inplace=True)
                 st.experimental_rerun()
 
-        
-        if st.button("選択したフィードバックを削除"):
-            feedback_data = feedback_data[~feedback_data.index.isin([i for i, row in feedback_data.iterrows() if st.checkbox(f"削除: {i + 1}", key=f"delete_{i}")])]
-            feedback_data.reset_index(drop=True, inplace=True)
-            feedback_data.to_excel(feedback_file, index=False, engine='openpyxl')  # 保存
-            st.success("選択したフィードバックを削除しました！")
-            
 # データをエクスポートするためのダウンロード機能
 st.subheader("📥 フィードバックのダウンロード")
 buffer = io.BytesIO()
@@ -69,10 +62,7 @@ st.download_button(
     data=buffer,
     file_name="feedback.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-
-# ディレクトリが存在しない場合、作成する
-if not os.path.exists(feedback_dir):
-    os.makedirs(feedback_dir)  # この行で保存先ディレクトリを作成
+) 
 
 # 指導データ
 guidance_data = {
