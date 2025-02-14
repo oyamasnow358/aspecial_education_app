@@ -808,7 +808,7 @@ if menu == "指導支援内容":
 
 
     st.markdown("---")  # 区切り線  
-    st.markdown("##🗨️自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください**") 
+    st.markdown("🗨️自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください") 
     st.markdown("※埼玉県の学校教育関係者のみＳＴアカウントで回答できます。") 
     st.markdown("[アンケート](https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview)")
    
