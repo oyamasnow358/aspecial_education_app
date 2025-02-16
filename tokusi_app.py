@@ -18,7 +18,7 @@ menu = st.sidebar.selectbox("メニューを選択してください", ["指導�
 
 if menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
-    st.text("1から順番に選択して下さい")
+    st.text("１から順番に選択して下さい")
 
 # メニューによって表示を制御
 if menu == "フィードバック追加":
@@ -716,10 +716,10 @@ guidance_data = {
 if menu == "指導支援内容":
     
     # カテゴリー選択
-    selected_category = st.selectbox("1. カテゴリーを選択してください:", list(guidance_data.keys()))
+    selected_category = st.selectbox("１. カテゴリーを選択してください:", list(guidance_data.keys()))
     # サブカテゴリー選択
     selected_subcategory = st.selectbox(
-        "2. 該当する項目を選択してください:", list(guidance_data[selected_category].keys())
+        "２. 該当する項目を選択してください:", list(guidance_data[selected_category].keys())
     )
 
     # 辞書かリストかを確認して処理
@@ -727,7 +727,7 @@ if menu == "指導支援内容":
 
     if isinstance(subcategory_data, dict):
         selected_detail = st.selectbox(
-            "3. 具体的な支援内容を選択してください:",
+            "３. 具体的な支援内容を選択してください:",
             list(subcategory_data.keys())
         )
         detail_data = subcategory_data[selected_detail]
