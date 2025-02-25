@@ -38,8 +38,8 @@ if menu == "指導支援内容":
 elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
 
-    feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
-    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒", "コミュニケーションが苦手な生徒"])
+     feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
+    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
     if st.button("フィードバックを保存"):
@@ -75,19 +75,15 @@ elif menu == "フィードバック集計と削除":
         if st.session_state.feedback_data.empty:
             st.info("現在、保存されているフィードバックはありません。")
         else:
-            st.write(st.session_state.feedback_data)
+            st.dataframe(st.session_state.feedback_data)
 
-            # 削除ボタン
-            delete_indices = []
-            for i, row in st.session_state.feedback_data.iterrows():
-                if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
-                    delete_indices.append(i)
+             # **削除機能**
+            delete_index = st.number_input("削除する行の番号を入力（1から）", min_value=1, max_value=len(st.session_state.feedback_data), step=1) - 1
 
-            if delete_indices:
-                st.session_state.feedback_data.drop(index=delete_indices, inplace=True)
-                st.session_state.feedback_data.reset_index(drop=True, inplace=True)
-                save_feedback(st.session_state.feedback_data)
-                st.experimental_rerun()  # 削除後に即時反映
+            if st.button("選択した行を削除"):
+             st.session_state.feedback_data = st.session_state.feedback_data.drop(delete_index).reset_index(drop=True)
+             save_feedback(st.session_state.feedback_data)
+             st.experimental_rerun()  # 最新のデータを反映
 
             # データをCSVとしてダウンロード
             st.subheader("📥 フィードバックのダウンロード")
