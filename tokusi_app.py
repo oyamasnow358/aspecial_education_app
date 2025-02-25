@@ -43,15 +43,36 @@ if menu == "フィードバック追加":
 elif menu == "フィードバック集計と削除":
     st.subheader("📊 フィードバック集計と削除")
 
-    if feedback_data.empty:
-        st.info("現在、保存されているフィードバックはありません。")
-    else:
-        for i, row in feedback_data.iterrows():
-            st.write(f"{i + 1}. 【カテゴリー】{row['カテゴリー']} / 【項目】{row['項目']} / 【内容】{row['追加内容']}")
-            if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
-                st.session_state.feedback_data.drop(index=i, inplace=True)
-                st.session_state.feedback_data.reset_index(drop=True, inplace=True)
+    # セッションにログイン状態を保存
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    # パスワードの入力フォーム
+    if not st.session_state.authenticated:
+        password_input = st.text_input("パスワードを入力してください:", type="password")
+
+        # `st.secrets` からパスワードを取得（Streamlit Cloud専用）
+        correct_password = st.secrets["auth"]["password"]
+
+        if st.button("ログイン"):
+            if password_input == correct_password:
+                st.session_state.authenticated = True
                 st.experimental_rerun()
+            else:
+                st.error("パスワードが間違っています！")
+
+    # 認証成功時のみ表示
+    if st.session_state.authenticated:
+        if feedback_data.empty:
+            st.info("現在、保存されているフィードバックはありません。")
+        else:
+            for i, row in feedback_data.iterrows():
+                st.write(f"{i + 1}. 【カテゴリー】{row['カテゴリー']} / 【項目】{row['項目']} / 【内容】{row['追加内容']}")
+                if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
+                    st.session_state.feedback_data.drop(index=i, inplace=True)
+                    st.session_state.feedback_data.reset_index(drop=True, inplace=True)
+                    st.experimental_rerun()
+                    
     # データをエクスポートするためのダウンロード機能
     st.subheader("📥 フィードバックのダウンロード")
     buffer = io.BytesIO()
