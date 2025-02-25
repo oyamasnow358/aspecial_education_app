@@ -5,9 +5,6 @@ import os  # osをインポート
 
 
 
-# 初期データを読み込み
-feedback_data = st.session_state.feedback_data
-
 # CSVのファイル名
 CSV_FILE = "feedback_data.csv"
 
