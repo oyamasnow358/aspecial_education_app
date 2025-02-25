@@ -47,17 +47,14 @@ elif menu == "フィードバック集計と削除":
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
 
-    # パスワードの入力フォーム
+    # パスワード入力フォーム（初回のみ）
     if not st.session_state.authenticated:
         password_input = st.text_input("パスワードを入力してください:", type="password")
-
-        # `st.secrets` からパスワードを取得（Streamlit Cloud専用）
-        correct_password = st.secrets["auth"]["password"]
-
         if st.button("ログイン"):
+            correct_password = st.secrets["auth"]["password"]
             if password_input == correct_password:
-                st.session_state.authenticated = True
-                st.experimental_rerun()
+                st.session_state.authenticated = True  # 認証成功
+                st.success("ログイン成功！")
             else:
                 st.error("パスワードが間違っています！")
 
@@ -71,19 +68,17 @@ elif menu == "フィードバック集計と削除":
                 if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
                     st.session_state.feedback_data.drop(index=i, inplace=True)
                     st.session_state.feedback_data.reset_index(drop=True, inplace=True)
-                    st.experimental_rerun()
-                    
-    # データをエクスポートするためのダウンロード機能
-    st.subheader("📥 フィードバックのダウンロード")
-    buffer = io.BytesIO()
-    st.session_state.feedback_data.to_excel(buffer, index=False, engine='openpyxl')
-    st.download_button(
-    label="Excelファイルをダウンロード",
-    data=buffer,
-    file_name="feedback.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    ) 
 
+        # データをエクスポートするためのダウンロード機能
+        st.subheader("📥 フィードバックのダウンロード")
+        buffer = io.BytesIO()
+        st.session_state.feedback_data.to_excel(buffer, index=False, engine='openpyxl')
+        st.download_button(
+            label="Excelファイルをダウンロード",
+            data=buffer,
+            file_name="feedback.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 # 指導データ
 guidance_data = {
