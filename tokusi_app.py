@@ -37,7 +37,7 @@ if menu == "指導支援内容":
     st.text("１から順番に選択して下さい")
 
 # メニューによって表示を制御
-if menu == "フィードバック追加":
+elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
 
     feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
@@ -59,14 +59,16 @@ if menu == "フィードバック追加":
 
 elif menu == "フィードバック集計と削除":
     # 🔐 パスワード認証を追加
-    st.subheader("🔑 パスワード認証")
+    st.subheader("🔑 フィードバック集計と削除（管理者専用）")
 
     password_input = st.text_input("パスワードを入力してください", type="password")
-    correct_password = st.secrets["admin_password"]  # StreamlitのSecretsに保存
+    
+    # パスワードを `st.secrets` から取得（設定がない場合は "default_password"）
+    correct_password = st.secrets.get("admin_password", "default_password")
 
     if password_input == correct_password:
         st.success("認証成功！")
-        
+
         st.subheader("📊 フィードバック集計と削除")
         if st.session_state.feedback_data.empty:
             st.info("現在、保存されているフィードバックはありません。")
@@ -85,7 +87,7 @@ elif menu == "フィードバック集計と削除":
                 save_feedback(st.session_state.feedback_data)
                 st.experimental_rerun()  # 削除後に即時反映
 
-            # データをExcelとしてダウンロード
+            # データをCSVとしてダウンロード
             st.subheader("📥 フィードバックのダウンロード")
             csv = st.session_state.feedback_data.to_csv(index=False).encode('utf-8')
             st.download_button(
