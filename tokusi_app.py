@@ -3,12 +3,28 @@ import pandas as pd
 import io
 import os  # osをインポート
 
-# セッション内のフィードバックデータを管理
-if "feedback_data" not in st.session_state:
-    st.session_state.feedback_data = pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
+
 
 # 初期データを読み込み
 feedback_data = st.session_state.feedback_data
+
+# CSVのファイル名
+CSV_FILE = "feedback_data.csv"
+
+# CSVからデータを読み込む関数
+def load_feedback():
+    if os.path.exists(CSV_FILE):
+        return pd.read_csv(CSV_FILE)
+    return pd.DataFrame(columns=["カテゴリー", "項目", "追加内容"])
+
+# CSVにデータを保存する関数
+def save_feedback(data):
+    data.to_csv(CSV_FILE, index=False)
+
+# フィードバックデータの読み込み
+if "feedback_data" not in st.session_state:
+    st.session_state.feedback_data = load_feedback()
+
 
 # アプリの基本構造
 st.title("🌟 自立活動の参考指導 🌟")
@@ -25,7 +41,7 @@ if menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
 
     feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
-    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
+    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒", "コミュニケーションが苦手な生徒"])
     feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
     if st.button("フィードバックを保存"):
@@ -36,50 +52,50 @@ if menu == "フィードバック追加":
                 "追加内容": feedback_content
             }])
             st.session_state.feedback_data = pd.concat([st.session_state.feedback_data, new_feedback], ignore_index=True)
+            save_feedback(st.session_state.feedback_data)  # CSVに保存
             st.success("フィードバックが保存されました！")
         else:
             st.warning("フィードバック内容を入力してください。")
 
 elif menu == "フィードバック集計と削除":
-    st.subheader("📊 フィードバック集計と削除")
+    # 🔐 パスワード認証を追加
+    st.subheader("🔑 パスワード認証")
 
-    # セッションにログイン状態を保存
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
+    password_input = st.text_input("パスワードを入力してください", type="password")
+    correct_password = st.secrets["admin_password"]  # StreamlitのSecretsに保存
 
-    # パスワード入力フォーム（初回のみ）
-    if not st.session_state.authenticated:
-        password_input = st.text_input("パスワードを入力してください:", type="password")
-        if st.button("ログイン"):
-            correct_password = st.secrets["auth"]["password"]
-            if password_input == correct_password:
-                st.session_state.authenticated = True  # 認証成功
-                st.success("ログイン成功！")
-                st.experimental_rerun()  # **ここでリロード**
-            else:
-                st.error("パスワードが間違っています！")
-
-    # 認証成功時のみ表示
-    if st.session_state.authenticated:
-        if feedback_data.empty:
+    if password_input == correct_password:
+        st.success("認証成功！")
+        
+        st.subheader("📊 フィードバック集計と削除")
+        if st.session_state.feedback_data.empty:
             st.info("現在、保存されているフィードバックはありません。")
         else:
-            for i, row in feedback_data.iterrows():
-                st.write(f"{i + 1}. 【カテゴリー】{row['カテゴリー']} / 【項目】{row['項目']} / 【内容】{row['追加内容']}")
-                if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
-                    st.session_state.feedback_data.drop(index=i, inplace=True)
-                    st.session_state.feedback_data.reset_index(drop=True, inplace=True)
+            st.write(st.session_state.feedback_data)
 
-        # データをエクスポートするためのダウンロード機能
-        st.subheader("📥 フィードバックのダウンロード")
-        buffer = io.BytesIO()
-        st.session_state.feedback_data.to_excel(buffer, index=False, engine='openpyxl')
-        st.download_button(
-            label="Excelファイルをダウンロード",
-            data=buffer,
-            file_name="feedback.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+            # 削除ボタン
+            delete_indices = []
+            for i, row in st.session_state.feedback_data.iterrows():
+                if st.button(f"削除 {i + 1}", key=f"delete_{i}"):
+                    delete_indices.append(i)
+
+            if delete_indices:
+                st.session_state.feedback_data.drop(index=delete_indices, inplace=True)
+                st.session_state.feedback_data.reset_index(drop=True, inplace=True)
+                save_feedback(st.session_state.feedback_data)
+                st.experimental_rerun()  # 削除後に即時反映
+
+            # データをExcelとしてダウンロード
+            st.subheader("📥 フィードバックのダウンロード")
+            csv = st.session_state.feedback_data.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="CSVファイルをダウンロード",
+                data=csv,
+                file_name="feedback.csv",
+                mime="text/csv"
+            )
+    else:
+        st.error("パスワードが違います。")
 
 # 指導データ
 guidance_data = {
