@@ -55,6 +55,7 @@ elif menu == "フィードバック集計と削除":
             if password_input == correct_password:
                 st.session_state.authenticated = True  # 認証成功
                 st.success("ログイン成功！")
+                st.experimental_rerun()  # **ここでリロード**
             else:
                 st.error("パスワードが間違っています！")
 
