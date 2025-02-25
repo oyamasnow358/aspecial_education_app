@@ -87,7 +87,7 @@ elif menu == "フィードバック集計と削除":
 
             # データをCSVとしてダウンロード
             st.subheader("📥 フィードバックのダウンロード")
-            csv = st.session_state.feedback_data.to_csv(index=False).encode('utf-8')
+            csv = st.session_state.feedback_data.to_csv(index=False, encoding="utf-8-sig") 
             st.download_button(
                 label="CSVファイルをダウンロード",
                 data=csv,
