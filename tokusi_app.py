@@ -3,8 +3,6 @@ import pandas as pd
 import io
 import os  # osをインポート
 
-
-
 # CSVのファイル名
 CSV_FILE = "feedback_data.csv"
 
@@ -22,6 +20,9 @@ def save_feedback(data):
 if "feedback_data" not in st.session_state:
     st.session_state.feedback_data = load_feedback()
 
+# 🔐 ログイン状態を管理する
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False  # 初期状態はログアウト
 
 # アプリの基本構造
 st.title("🌟 自立活動の参考指導 🌟")
@@ -55,18 +56,22 @@ elif menu == "フィードバック追加":
             st.warning("フィードバック内容を入力してください。")
 
 elif menu == "フィードバック集計と削除":
-    # 🔐 パスワード認証を追加
-    st.subheader("🔑 フィードバック集計と削除（管理者専用）")
+    # 🔐 ログイン機能
+    if not st.session_state.logged_in:
+        st.subheader("🔑 パスワード認証（管理者専用）")
+        password_input = st.text_input("パスワードを入力してください", type="password")
+        correct_password = st.secrets.get("admin_password", "default_password")
 
-    password_input = st.text_input("パスワードを入力してください", type="password")
-    
-    # パスワードを `st.secrets` から取得（設定がない場合は "default_password"）
-    correct_password = st.secrets.get("admin_password", "default_password")
-
-    if password_input == correct_password:
-        st.success("認証成功！")
-
+        if st.button("ログイン"):
+            if password_input == correct_password:
+                st.session_state.logged_in = True  # ログイン成功！
+                st.success("認証成功！")
+                st.experimental_rerun()  # 画面を更新
+            else:
+                st.error("パスワードが違います。")
+    else:
         st.subheader("📊 フィードバック集計と削除")
+        
         if st.session_state.feedback_data.empty:
             st.info("現在、保存されているフィードバックはありません。")
         else:
@@ -93,8 +98,11 @@ elif menu == "フィードバック集計と削除":
                 file_name="feedback.csv",
                 mime="text/csv"
             )
-    else:
-        st.error("パスワードが違います。")
+
+        # 🔓 ログアウトボタン
+        if st.button("ログアウト"):
+            st.session_state.logged_in = False
+            st.experimental_rerun()
 
 # 指導データ
 guidance_data = {
