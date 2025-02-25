@@ -83,7 +83,7 @@ elif menu == "フィードバック集計と削除":
             if st.button("選択した行を削除"):
              st.session_state.feedback_data = st.session_state.feedback_data.drop(delete_index).reset_index(drop=True)
              save_feedback(st.session_state.feedback_data)
-             st.experimental_rerun()  # 最新のデータを反映
+             st.rerun()  # 最新の状態に更新 # 最新のデータを反映
 
             # データをCSVとしてダウンロード
             st.subheader("📥 フィードバックのダウンロード")
