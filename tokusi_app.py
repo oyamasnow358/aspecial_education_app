@@ -758,10 +758,9 @@ guidance_data = {
 
 # 衣服の着脱練習
 st.subheader("👕 衣服の着脱練習")
-st.image(img_dressing, caption="衣服の着脱練習の教材", use_column_width=True)
+st.image(img_dressing, caption="衣服の着脱練習の教材", use_container_width=True)
 for step in guidance_data["日常生活における実態"]["身辺自立が未熟な生徒"]["衣服の着脱練習"]:
     st.write(f"- {step}")
-
 
 
 
