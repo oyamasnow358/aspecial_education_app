@@ -7,7 +7,7 @@ import requests
 
 # 画像のURLを貼る（手動でコピーしたもの）
 # 画像のURLを手動で設定（Imgur にアップロードした画像のリンクを使う）
-img_dressing = "https://imgur.com/a/wm7FvMA"  # 着脱練習の画像
+img_dressing = "https://i.imgur.com/t4RLTeG.jpeg"  # 着脱練習の画像
 img_eating = "https://i.imgur.com/xyz123.jpg"  # 食事練習の画像
 img_sensory = "https://i.imgur.com/789lmn.jpg"  # 感覚統合活動の画像
 
@@ -756,11 +756,8 @@ guidance_data = {
         },
     }
 
-# 衣服の着脱練習
-st.subheader("👕 衣服の着脱練習")
-st.image(img_dressing, caption="衣服の着脱練習の教材", use_container_width=True)
-for step in guidance_data["日常生活における実態"]["身辺自立が未熟な生徒"]["衣服の着脱練習"]:
-    st.write(f"- {step}")
+
+
 
 
 
@@ -814,6 +811,10 @@ if menu == "指導支援内容":
                     st.write(f"- {detail}")
             else:
               st.write(f"- {item}")  # 文字列データのリストならそのまま表示
+          
+        if "衣服の着脱練習" in selected_detail:
+              st.image(img_dressing, caption="衣服の着脱練習の教材", use_container_width=True)
+
 
  # **区切り線**
     st.markdown("---")
