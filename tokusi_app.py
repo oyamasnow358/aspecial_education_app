@@ -10,6 +10,9 @@ import requests
 img_dressing = "https://i.imgur.com/t4RLTeG.jpeg"  # 着脱練習の画像
 img_eating = "https://i.imgur.com/xyz123.jpg"  # 食事練習の画像
 img_sensory = "https://i.imgur.com/789lmn.jpg"  # 感覚統合活動の画像
+# 画像データ（指文字）
+img_sign_language = "https://i.imgur.com/gqmXyNT.png"  # 画像のファイル名を指定（事前にアップロード）
+
 
 
 
@@ -814,7 +817,9 @@ if menu == "指導支援内容":
           
         if "衣服の着脱練習" in selected_detail:
               st.image(img_dressing, caption="衣服の着脱練習の教材", use_container_width=True)
-
+        # 「手話の練習: 手話を使って、自己紹介や日常会話を学ぶ。」の場合、画像を表示
+        if item.get('title') == "指文字練習: 手話に加え、指文字を活用する場面を設定。":
+                st.image(img_sign_language, caption="指文字画像", use_container_width=True)
 
  # **区切り線**
     st.markdown("---")
