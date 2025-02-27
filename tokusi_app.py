@@ -2,6 +2,17 @@ import streamlit as st
 import pandas as pd
 import io
 import os  # osをインポート
+import requests
+
+
+# 画像のURLを貼る（手動でコピーしたもの）
+# 画像のURLを手動で設定（Imgur にアップロードした画像のリンクを使う）
+img_dressing = "https://imgur.com/a/wm7FvMA"  # 着脱練習の画像
+img_eating = "https://i.imgur.com/xyz123.jpg"  # 食事練習の画像
+img_sensory = "https://i.imgur.com/789lmn.jpg"  # 感覚統合活動の画像
+
+
+
 
 # CSVのファイル名
 CSV_FILE = "feedback_data.csv"
@@ -744,6 +755,12 @@ guidance_data = {
          },
         },
     }
+
+# 衣服の着脱練習
+st.subheader("👕 衣服の着脱練習")
+st.image(img_dressing, caption="衣服の着脱練習の教材", use_column_width=True)
+for step in guidance_data["日常生活における実態"]["身辺自立が未熟な生徒"]["衣服の着脱練習"]["具体的教材の導入: 実際のボタン付きシャツやファスナーを取り付けたパネル教材を使い、繰り返し練習する。"]:
+    st.write(f"- {step}")
 
 
 
