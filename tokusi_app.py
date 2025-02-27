@@ -818,7 +818,7 @@ if menu == "指導支援内容":
         if "衣服の着脱練習" in selected_detail:
               st.image(img_dressing, caption="衣服の着脱練習の教材", use_container_width=True)
         # 「手話の練習: 手話を使って、自己紹介や日常会話を学ぶ。」の場合、画像を表示
-        if item.get('title') == "指文字練習: 手話に加え、指文字を活用する場面を設定。":
+        if item.get('details') == "指文字を使ったスピードゲーム: 生徒に単語を出題し、指文字で早く表現できるか競争することで楽しみながら習得。":
                 st.image(img_sign_language, caption="指文字画像", use_container_width=True)
 
  # **区切り線**
