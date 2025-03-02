@@ -818,8 +818,10 @@ if menu == "指導支援内容":
         if "衣服の着脱練習" in selected_detail:
               st.image(img_dressing, caption="衣服の着脱練習の教材", use_container_width=True)
         # 「手話の練習: 手話を使って、自己紹介や日常会話を学ぶ。」の場合、画像を表示
-        if item.get('title') == "指文字練習: 手話に加え、指文字を活用する場面を設定。":
-                st.image(img_sign_language, caption="指文字", width=200)
+        # 指文字の画像を表示（辞書かどうかを確認）
+        if isinstance(item, dict) and item.get('title') == "指文字練習: 手話に加え、指文字を活用する場面を設定。":
+         st.image(img_sign_language, caption="指文字", width=200)
+
 
  # **区切り線**
     st.markdown("---")
