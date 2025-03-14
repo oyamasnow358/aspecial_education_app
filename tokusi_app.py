@@ -51,23 +51,26 @@ if menu == "指導支援内容":
 # メニューによって表示を制御
 elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
+    
+    google_form_url = "https://docs.google.com/forms/d/1xXzq0vJ9E5FX16CFNoTzg5VAyX6eWsuN8Xl5qEwJFTc/preview"
 
-    feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
-    feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
-    feedback_content = st.text_area("追加するフィードバックを入力してください:")
+    st.components.v1.iframe(google_form_url, width=700, height=900)
+    #feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
+    #feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
+    #feedback_content = st.text_area("追加するフィードバックを入力してください:")
 
-    if st.button("フィードバックを保存"):
-        if feedback_content:
-            new_feedback = pd.DataFrame([{
-                "カテゴリー": feedback_category,
-                "項目": feedback_subcategory,
-                "追加内容": feedback_content
-            }])
-            st.session_state.feedback_data = pd.concat([st.session_state.feedback_data, new_feedback], ignore_index=True)
-            save_feedback(st.session_state.feedback_data)  # CSVに保存
-            st.success("フィードバックが保存されました！")
-        else:
-            st.warning("フィードバック内容を入力してください。")
+    #if st.button("フィードバックを保存"):
+     #   if feedback_content:
+      #      new_feedback = pd.DataFrame([{
+       #         "カテゴリー": feedback_category,
+        #        "項目": feedback_subcategory,
+         #       "追加内容": feedback_content
+          #  }])
+           # st.session_state.feedback_data = pd.concat([st.session_state.feedback_data, new_feedback], ignore_index=True)
+            #save_feedback(st.session_state.feedback_data)  # CSVに保存
+            #st.success("フィードバックが保存されました！")
+        #else:
+         #   st.warning("フィードバック内容を入力してください。")
 
 elif menu == "フィードバック集計と削除":
     # 🔐 ログイン機能
@@ -133,7 +136,8 @@ guidance_data = {
             "感覚統合活動": [
                 "感覚に配慮した布選び: 初めは柔らかく生徒が触りやすい素材を使い、徐々に異なる感触の素材に慣れさせる。",
                 "遊びを取り入れた活動: 感触遊び（触覚用スライム、ビーズのプール）や、冷たい・温かい感覚を体験するゲームを実施する。",
-                "成功体験を重視: 生徒が触れられる素材や温度に合わせて成功しやすい体験を積ませ、自信を持たせる。 異なる素材の布や玩具を触る活動を取り入れ、感覚過敏を軽減。"
+                "成功体験を重視: 生徒が触れられる素材や温度に合わせて成功しやすい体験を積ませ、自信を持たせる。 異なる素材の布や玩具を触る活動を取り入れ、感覚過敏を軽減。",
+                "トランポリン: トランポリンに立ったり飛んだりすることで、感覚刺激を調整。"
               ],
         },
         
@@ -403,7 +407,7 @@ guidance_data = {
                  {
                     "title": "ゆっくりした発話練習",
                     "details": [
-                        "短いフレーズの反復練習: 「おはようございます」など、3～5文字程度の短いフレーズをカードや音声教材を使って反復。",
+                        "短いフレーズの反復練習: 「おはようございます」など、短いフレーズをカードや音声教材を使って反復。",
                         "リズムを取り入れる: リズムに合わせて言葉を発する練習（例: 音楽に合わせて「いち、に、さん」と声を出す）。",
                         "ビデオ録画での自己確認: 生徒自身が話す様子を録画し、映像を確認しながら改善点を一緒に見つける。",
                     ],
@@ -421,7 +425,7 @@ guidance_data = {
                     "details": [
                         "ジェスチャーゲーム: お題に合わせて表情や動作で意思を伝えるゲームを行い、楽しみながらスキルを習得。",
                         "鏡を使った表情練習: 鏡を見ながら笑顔や怒りなどの表情を練習し、感情表現の幅を広げる。",
-                        "身振りの活用場面を設定: 例：「静かに」を示す指一本のジェスチャー、「こっちに来て」を示す手招きなど。",
+                        "手話やジェスチャーを使用する場面の設定: 例：「静かに」を示す指一本のジェスチャー、「こっちに来て」を示す手招きなど。",
                     ],
                 },
             ],
@@ -543,9 +547,9 @@ guidance_data = {
                  {
                     "title": "感覚統合遊び",
                     "details": [
-                        "マットの活用: マットに立ったり飛んだりすることで、感覚刺激を調整。",
+                        "トランポリン: トランポリンに立ったり飛んだりすることで、感覚刺激を調整。",
                         "触覚: スライムなど様々な物に触れる活動を設定。",
-                        "障害物コース: ブランコやトンネルなど、適度な感覚刺激を取り入れたコースを用意。",
+                        "障害物コース: ミニハードルやトンネルなど、適度な感覚刺激を取り入れたコースを用意。",
                     ],
                 },
              ],
