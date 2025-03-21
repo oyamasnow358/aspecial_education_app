@@ -52,7 +52,7 @@ if menu == "指導支援内容":
 
 # メニューによって表示を制御
 elif menu == "フィードバック追加":
-    st.subheader("📝 フィードバック追加")
+    st.subheader("📝 フィードバック追加(2つの方法から1つを選んで入力)")
       # Microsoft Forms の埋め込み
     st.info("方法１   Microsoft foam")
     form_url = "https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAMAANa6zUxUQjRFQ1NRUFhJODhKVFMzUkdVVzVCR0JEVS4u&embed=true"
