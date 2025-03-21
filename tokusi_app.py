@@ -53,7 +53,11 @@ if menu == "指導支援内容":
 # メニューによって表示を制御
 elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
+      # Microsoft Forms の埋め込み
     
+    form_url = "https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAMAANa6zUxUQjRFQ1NRUFhJODhKVFMzUkdVVzVCR0JEVS4u&embed=true"
+
+    st.components.v1.iframe(form_url, width=700, height=900)
     google_form_url = "https://docs.google.com/forms/d/1xXzq0vJ9E5FX16CFNoTzg5VAyX6eWsuN8Xl5qEwJFTc/preview"
 
     st.components.v1.iframe(google_form_url, width=700, height=900)
@@ -1038,5 +1042,5 @@ if menu == "指導支援内容":
     st.markdown("    ※埼玉県の学校教育関係者のみＳＴアカウントで回答できます。") 
     st.markdown("[アンケート](https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview)")
     st.markdown("---")  # 区切り線
-    st.write("""※ それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部に出す物（研究など）に使用する場合は小山までご相談ください（上記のフォームからでも可）。無断での転記・利用を禁じます。""")
+    st.write("""※ それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部に出す物（研究など）に使用する場合は小山までご相談ください（上記フォームからでも可）。無断での転記・利用を禁じます。""")
    
