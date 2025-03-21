@@ -54,7 +54,7 @@ if menu == "指導支援内容":
 elif menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加")
       # Microsoft Forms の埋め込み
-    st.info("方法１   Microsoft　foam")
+    st.info("方法１   Microsoft foam")
     form_url = "https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAMAANa6zUxUQjRFQ1NRUFhJODhKVFMzUkdVVzVCR0JEVS4u&embed=true"
     st.components.v1.iframe(form_url, width=700, height=900)
     st.info("方法２   Google foam")
