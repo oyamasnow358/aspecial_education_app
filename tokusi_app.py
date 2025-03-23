@@ -1012,237 +1012,218 @@ def show_chart():
     
 
 
-    def main():
-            st.title("📉発達段階能力チャート作成📈")
-            st.info("児童・生徒の発達段階が分からない場合は下の「現在の発達段階を表から確認する」⇒「発達段階表」を順に押して下さい。")
+
+    st.title("📉発達段階能力チャート作成📈")
+    st.info("児童・生徒の発達段階が分からない場合は下の「現在の発達段階を表から確認する」⇒「発達段階表」を順に押して下さい。")
+    if st.button("現在の発達段階を表から確認する"):
+     try:
+        # 指定したシートのID（例: "0" は通常、最初のシート）
+        sheet_gid = "643912489"  # 必要に応じて変更
         
+        # スプレッドシートのURLを生成してブラウザで開けるようにする
+        spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
+        st.markdown(f"[発達段階表]({spreadsheet_url})", unsafe_allow_html=True)
         
+     except Exception as e:
+        st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
+     sheet_name = "シート1"
+     categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
+    options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
+    #変更
+    selected_options = {}
+    for index, category in enumerate(categories, start=1):
+        st.subheader(category)
+        selected_options[category] = st.radio(f"{category}の選択肢を選んでください:", options, key=f"radio_{index}")
+        st.markdown("""1.各項目の選択が終わりましたら、まず「スプレッドシートに書き込む」を押してください。  
+                2.続いて「スプレッドシートを開く」を押して内容を確認してくだい。  
+                3.Excelでデータを保存したい方は「EXCELを保存」を押してくだい。""")
+    if st.button("スプレッドシートに書き込む"):
+     try:
+          # 各カテゴリと選択肢をスプレッドシートに書き込む
+          for index, (category, selected_option) in enumerate(selected_options.items(), start=1):
+              write_to_sheets(sheet_name, f"A{index + 2}", category)
+              write_to_sheets(sheet_name, f"C{index + 2}", selected_option)  # C列に発達年齢を記入
+      
+          # 年齢カテゴリのマッピング
+          age_categories = {
+              "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4,
+              "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8,
+              "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12
+          }
+      
+          # シート1のデータを取得
+          sheet1_data = service.spreadsheets().values().get(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!A3:C14"
+          ).execute().get('values', [])
+      
+          # A列（カテゴリ名）とC列（発達年齢）を取得
+          category_names = [row[0].strip() for row in sheet1_data]
+          age_range = [row[2].strip() for row in sheet1_data]  # C列に発達年齢がある
+      
+          # 年齢を数値化
+          converted_values = [[age_categories.get(age, "")] for age in age_range]
+      
+          # B3:B14に数値（段階）を設定
+          service.spreadsheets().values().update(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!B3:B14",
+              valueInputOption="RAW",
+              body={"values": converted_values}
+          ).execute()
+      
+          # A3:C13をA18:C28にコピー
+          sheet1_copy_data = service.spreadsheets().values().get(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!A3:C14"
+          ).execute().get('values', [])
+          
+          # シートの範囲を一度に更新
+          service.spreadsheets().values().update(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!A19:C30",
+              valueInputOption="RAW",
+              body={"values": sheet1_copy_data}
+          ).execute()
+      
+          # B19:B30の段階を+1（最大値12を超えない）
+          updated_b_values = [[min(12, int(row[1]) + 1) if row[1].isdigit() else ""] for row in sheet1_copy_data]
+          service.spreadsheets().values().update(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!B19:B30",
+              valueInputOption="RAW",
+              body={"values": updated_b_values}
+          ).execute()
+      
+          # **🟢 B19:B30の段階データを取得**
+          b19_b30_values = service.spreadsheets().values().get(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!B19:B30"
+          ).execute().get('values', [])
+      
+          # **🔵 B列の値（段階）を整数に変換**
+          b19_b30_values = [int(row[0]) if row and row[0].isdigit() else None for row in b19_b30_values]
+      
+          # **🔵 段階に対応する発達年齢を取得**
+          b_to_c_mapping = {  # B列の段階をC列の発達年齢に変換
+              1: "0〜3ヶ月", 2: "3〜6ヶ月", 3: "6〜9ヶ月", 4: "9〜12ヶ月",
+              5: "12～18ヶ月", 6: "18～24ヶ月", 7: "2～3歳", 8: "3～4歳",
+              9: "4～5歳", 10: "5～6歳", 11: "6～7歳", 12: "7歳以上"
+          }
+      
+          # **C19:C30に対応する発達年齢をセット**
+          updated_c_values = [[b_to_c_mapping.get(b, "該当なし")] for b in b19_b30_values]
+      
+          # **Google SheetsにC19:C30のデータを更新**
+          service.spreadsheets().values().update(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!C19:C30",
+              valueInputOption="RAW",
+              body={"values": updated_c_values}
+          ).execute()
+      
+          # **🟢 シート2のデータを取得**
+          sheet2_data = service.spreadsheets().values().get(
+              spreadsheetId=spreadsheet_id,
+              range="シート2!A1:V"
+          ).execute().get('values', [])
+      
+          # **データマッピングを作成**
+          headers = [h.strip() for h in sheet2_data[0]]
+          data_map = {}  # 🔵 ここで `data_map` を適切に定義
+          for row in sheet2_data[1:]:
+              age_step = row[21] if len(row) > 21 else ""
+              if not age_step.isdigit():
+                  continue
+              for j, key in enumerate(headers):
+                  if key not in data_map:
+                      data_map[key] = {}
+                  data_map[key][int(age_step)] = row[j]
+      
+          # **D3:D14にシート2の対応データを設定**
+          results = [[data_map.get(category, {}).get(age[0], "該当なし")]
+                     for category, age in zip(category_names, converted_values)]
+          service.spreadsheets().values().update(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!D3:D14",
+              valueInputOption="RAW",
+              body={"values": results}
+          ).execute()
+          
+           # 🟢 **B19:B30の値を取得**
+          b19_b30_values = service.spreadsheets().values().get(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!B19:B30"
+          ).execute().get('values', [])
+          
+          # 🟢 **A19:A30のカテゴリを取得**
+          a19_a30_values = service.spreadsheets().values().get(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!A19:A30"
+          ).execute().get('values', [])
         
+                    # 🔵 **カテゴリと対応する段階（B19:B30）を使ってD19:D30の値を決定**
+          new_results = []
+          for category_row, stage_row in zip(a19_a30_values, b19_b30_values):
+              category = category_row[0] if category_row else ""  # A列のカテゴリ
+              stage = int(stage_row[0]) if stage_row and stage_row[0].isdigit() else None  # B列の段階
+          
+              if stage is not None:
+                  result_value = data_map.get(category, {}).get(stage, "該当なし")  # シート2のデータを参照
+              else:
+                  result_value = "該当なし"
+          
+              new_results.append([result_value])
+          
+          # **D19:D30に対応する値を更新**
+          service.spreadsheets().values().update(
+              spreadsheetId=spreadsheet_id,
+              range="シート1!D19:D30",
+              valueInputOption="RAW",
+              body={"values": new_results}
+          ).execute()
+      
+     except Exception as e:
+          st.error(f"エラーが発生しました: {e}")
+   # ダウンロード機能
+    if st.button("スプレッドシートを開く"):
+     try:
+        # 指定したシートのID（例: "0" は通常、最初のシート）
+        sheet_gid = "0"  # 必要に応じて変更
         
-        
-            if st.button("現在の発達段階を表から確認する"):
-             try:
-                # 指定したシートのID（例: "0" は通常、最初のシート）
-                sheet_gid = "643912489"  # 必要に応じて変更
-                
-                # スプレッドシートのURLを生成してブラウザで開けるようにする
-                spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
-                st.markdown(f"[発達段階表]({spreadsheet_url})", unsafe_allow_html=True)
-                
-             except Exception as e:
-                st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
-        
-        
-            sheet_name = "シート1"
-        
-            categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
-            options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
-            #変更
-            selected_options = {}
-        
-            for index, category in enumerate(categories, start=1):
-                st.subheader(category)
-                selected_options[category] = st.radio(f"{category}の選択肢を選んでください:", options, key=f"radio_{index}")
-        
-            st.markdown("""1.各項目の選択が終わりましたら、まず「スプレッドシートに書き込む」を押してください。  
-                        2.続いて「スプレッドシートを開く」を押して内容を確認してくだい。  
-                        3.Excelでデータを保存したい方は「EXCELを保存」を押してくだい。""")
-        
-            if st.button("スプレッドシートに書き込む"):
-             try:
-                  # 各カテゴリと選択肢をスプレッドシートに書き込む
-                  for index, (category, selected_option) in enumerate(selected_options.items(), start=1):
-                      write_to_sheets(sheet_name, f"A{index + 2}", category)
-                      write_to_sheets(sheet_name, f"C{index + 2}", selected_option)  # C列に発達年齢を記入
-              
-                  # 年齢カテゴリのマッピング
-                  age_categories = {
-                      "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4,
-                      "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8,
-                      "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12
-                  }
-              
-                  # シート1のデータを取得
-                  sheet1_data = service.spreadsheets().values().get(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!A3:C14"
-                  ).execute().get('values', [])
-              
-                  # A列（カテゴリ名）とC列（発達年齢）を取得
-                  category_names = [row[0].strip() for row in sheet1_data]
-                  age_range = [row[2].strip() for row in sheet1_data]  # C列に発達年齢がある
-              
-                  # 年齢を数値化
-                  converted_values = [[age_categories.get(age, "")] for age in age_range]
-              
-                  # B3:B14に数値（段階）を設定
-                  service.spreadsheets().values().update(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!B3:B14",
-                      valueInputOption="RAW",
-                      body={"values": converted_values}
-                  ).execute()
-              
-                  # A3:C13をA18:C28にコピー
-                  sheet1_copy_data = service.spreadsheets().values().get(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!A3:C14"
-                  ).execute().get('values', [])
-                  
-                  # シートの範囲を一度に更新
-                  service.spreadsheets().values().update(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!A19:C30",
-                      valueInputOption="RAW",
-                      body={"values": sheet1_copy_data}
-                  ).execute()
-              
-                  # B19:B30の段階を+1（最大値12を超えない）
-                  updated_b_values = [[min(12, int(row[1]) + 1) if row[1].isdigit() else ""] for row in sheet1_copy_data]
-                  service.spreadsheets().values().update(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!B19:B30",
-                      valueInputOption="RAW",
-                      body={"values": updated_b_values}
-                  ).execute()
-              
-                  # **🟢 B19:B30の段階データを取得**
-                  b19_b30_values = service.spreadsheets().values().get(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!B19:B30"
-                  ).execute().get('values', [])
-              
-                  # **🔵 B列の値（段階）を整数に変換**
-                  b19_b30_values = [int(row[0]) if row and row[0].isdigit() else None for row in b19_b30_values]
-              
-                  # **🔵 段階に対応する発達年齢を取得**
-                  b_to_c_mapping = {  # B列の段階をC列の発達年齢に変換
-                      1: "0〜3ヶ月", 2: "3〜6ヶ月", 3: "6〜9ヶ月", 4: "9〜12ヶ月",
-                      5: "12～18ヶ月", 6: "18～24ヶ月", 7: "2～3歳", 8: "3～4歳",
-                      9: "4～5歳", 10: "5～6歳", 11: "6～7歳", 12: "7歳以上"
-                  }
-              
-                  # **C19:C30に対応する発達年齢をセット**
-                  updated_c_values = [[b_to_c_mapping.get(b, "該当なし")] for b in b19_b30_values]
-              
-                  # **Google SheetsにC19:C30のデータを更新**
-                  service.spreadsheets().values().update(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!C19:C30",
-                      valueInputOption="RAW",
-                      body={"values": updated_c_values}
-                  ).execute()
-              
-                  # **🟢 シート2のデータを取得**
-                  sheet2_data = service.spreadsheets().values().get(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート2!A1:V"
-                  ).execute().get('values', [])
-              
-                  # **データマッピングを作成**
-                  headers = [h.strip() for h in sheet2_data[0]]
-                  data_map = {}  # 🔵 ここで `data_map` を適切に定義
-                  for row in sheet2_data[1:]:
-                      age_step = row[21] if len(row) > 21 else ""
-                      if not age_step.isdigit():
-                          continue
-                      for j, key in enumerate(headers):
-                          if key not in data_map:
-                              data_map[key] = {}
-                          data_map[key][int(age_step)] = row[j]
-              
-                  # **D3:D14にシート2の対応データを設定**
-                  results = [[data_map.get(category, {}).get(age[0], "該当なし")]
-                             for category, age in zip(category_names, converted_values)]
-                  service.spreadsheets().values().update(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!D3:D14",
-                      valueInputOption="RAW",
-                      body={"values": results}
-                  ).execute()
-                  
-        
-                  # 🟢 **B19:B30の値を取得**
-                  b19_b30_values = service.spreadsheets().values().get(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!B19:B30"
-                  ).execute().get('values', [])
-                  
-                  # 🟢 **A19:A30のカテゴリを取得**
-                  a19_a30_values = service.spreadsheets().values().get(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!A19:A30"
-                  ).execute().get('values', [])
-        
-        
-              
-                            # 🔵 **カテゴリと対応する段階（B19:B30）を使ってD19:D30の値を決定**
-                  new_results = []
-                  for category_row, stage_row in zip(a19_a30_values, b19_b30_values):
-                      category = category_row[0] if category_row else ""  # A列のカテゴリ
-                      stage = int(stage_row[0]) if stage_row and stage_row[0].isdigit() else None  # B列の段階
-                  
-                      if stage is not None:
-                          result_value = data_map.get(category, {}).get(stage, "該当なし")  # シート2のデータを参照
-                      else:
-                          result_value = "該当なし"
-                  
-                      new_results.append([result_value])
-                  
-                  # **D19:D30に対応する値を更新**
-                  service.spreadsheets().values().update(
-                      spreadsheetId=spreadsheet_id,
-                      range="シート1!D19:D30",
-                      valueInputOption="RAW",
-                      body={"values": new_results}
-                  ).execute()
-              
-             except Exception as e:
-                  st.error(f"エラーが発生しました: {e}")
-        
-          # ダウンロード機能
-            if st.button("スプレッドシートを開く"):
-             try:
-                # 指定したシートのID（例: "0" は通常、最初のシート）
-                sheet_gid = "0"  # 必要に応じて変更
-                
-                # スプレッドシートのURLを生成してブラウザで開けるようにする
-                spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
-                st.markdown(f"[スプレッドシートを開く]({spreadsheet_url})", unsafe_allow_html=True)
-        
-                st.info("スプレッドシートを開いた後に、Excelとして保存できます。")
-             except Exception as e:
-                st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
-        
-            
-        # Excelダウンロード機能
-            if st.button("EXCELを保存"):
-             try:
-                # Google Drive API を使用してスプレッドシートをエクスポート
-                request = drive_service.files().export_media(
-                    fileId=spreadsheet_id,
-                    mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                file_data = io.BytesIO()
-                downloader = MediaIoBaseDownload(file_data, request)
-                done = False
-                while not done:
-                    status, done = downloader.next_chunk()
-        
-                file_data.seek(0)
-                st.download_button(
-                    label="PCに結果を保存",
-                    data=file_data,
-                    file_name="spreadsheet.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                st.info("保存EXCELのレーダーチャートは仕様が少し異なります。")
-             except Exception as e:
-                st.error(f"Excel保存中にエラーが発生しました: {e}")
-        
-            
-             st.subheader("今までの発達チャートから成長グラフを作成する")
-             st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
+        # スプレッドシートのURLを生成してブラウザで開けるようにする
+        spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
+        st.markdown(f"[スプレッドシートを開く]({spreadsheet_url})", unsafe_allow_html=True)
+        st.info("スプレッドシートを開いた後に、Excelとして保存できます。")
+     except Exception as e:
+        st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
+     
+  #Excelダウンロード機能
+    if st.button("EXCELを保存"):
+     try:
+        # Google Drive API を使用してスプレッドシートをエクスポート
+        request = drive_service.files().export_media(
+            fileId=spreadsheet_id,
+            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        file_data = io.BytesIO()
+        downloader = MediaIoBaseDownload(file_data, request)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+        file_data.seek(0)
+        st.download_button(
+            label="PCに結果を保存",
+            data=file_data,
+            file_name="spreadsheet.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        st.info("保存EXCELのレーダーチャートは仕様が少し異なります。")
+     except Exception as e:
+        st.error(f"Excel保存中にエラーが発生しました: {e}")
+     
+     st.subheader("今までの発達チャートから成長グラフを作成する")
+     st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
     
 def show_analysis():
     st.subheader("📈 特別支援分析法")
