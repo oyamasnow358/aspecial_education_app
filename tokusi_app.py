@@ -71,20 +71,20 @@ st.sidebar.button("📈 特別支援分析法", on_click=lambda: set_page("analy
 # ページ表示
 def show_home():
     st.title("特別支援教育サポートアプリ")
-    st.write("メニューからページを選択してください。")
+    st.write("メニューORサイドバーから、ページを選択してください。")
     # ナビゲーションバー
     # ここでページ切り替えの状態を管理する関数を作成
-def set_page(page):
+    def set_page(page):
     # ページ切り替えに必要な処理を行います
-    if page == "home":
+     if page == "home":
         show_home()
-    elif page == "guidance":
+     elif page == "guidance":
         show_guidance()
-    elif page == "feedback":
+     elif page == "feedback":
         show_feedback()
-    elif page == "chart":
+     elif page == "chart":
         show_chart()
-    elif page == "analysis":
+     elif page == "analysis":
         show_analysis()
 
 
