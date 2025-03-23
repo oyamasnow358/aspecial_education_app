@@ -53,15 +53,16 @@ st.title("🌟 自立活動の参考指導 🌟")
 # メニュー選択
 #menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
 # タブを作成
-tabs = ["指導支援内容", "フィードバック", "発達チャート作成", "特別支援分析法"]
-selected_tab = st.sidebar.radio("メニューを選択", tabs)
+# ドロップダウンメニューの作成
+menu_options = ["指導支援内容", "フィードバック", "発達チャート作成", "特別支援分析法"]
+selected_menu = st.selectbox("メニューを選択", menu_options)
 
-if selected_tab == "指導支援内容":
+if selected_menu == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
     st.text("１から順番に選択して下さい")
 
 # メニューによって表示を制御
-elif selected_tab == "フィードバック追加":
+elif selected_menu == "フィードバック追加":
     st.subheader("📝 フィードバック追加(2つの方法から1つを選んで入力)")
     st.markdown("あなたの自立活動、生活指導を教えてください♪")
       # Microsoft Forms の埋め込み
@@ -73,7 +74,7 @@ elif selected_tab == "フィードバック追加":
 
     st.components.v1.iframe(google_form_url, width=700, height=900)
 
-elif selected_tab == "発達チャート作成":
+elif selected_menu == "発達チャート作成":
     st.subheader("📊 発達チャート作成")
     st.text("ここに発達チャート作成アプリのコードを挿入してください。")
     # 別アプリのコードをここにコピー＆ペースト
@@ -339,7 +340,7 @@ elif selected_tab == "発達チャート作成":
          st.subheader("今までの発達チャートから成長グラフを作成する")
          st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
     
-elif selected_tab == "特別支援分析法":
+elif selected_menu == "特別支援分析法":
     st.subheader("📈 特別支援分析法")
     st.text("ここに特別支援分析法アプリのコードを挿入してください。")
         # 別アプリのコードをここにコピー＆ペースト
@@ -1490,7 +1491,7 @@ guidance_data = {
 
 
 # 指導支援内容表示
-if menu == "指導支援内容":
+if selected_menu == "指導支援内容":
     
     # カテゴリー選択
     selected_category = st.selectbox("１. カテゴリーを選択してください:", list(guidance_data.keys()))
