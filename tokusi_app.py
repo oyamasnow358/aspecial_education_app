@@ -3,7 +3,14 @@ import pandas as pd
 import io
 import os  # osをインポート
 import requests
+from PIL import Image
+import requests
+import json
 
+from googleapiclient.discovery import build
+from google.oauth2.service_account import Credentials
+from google.cloud import storage
+from googleapiclient.http import MediaIoBaseDownload
 
 # 画像のURLを貼る（手動でコピーしたもの）
 # 画像のURLを手動で設定（Imgur にアップロードした画像のリンクを使う）
@@ -44,14 +51,17 @@ if "logged_in" not in st.session_state:
 st.title("🌟 自立活動の参考指導 🌟")
 
 # メニュー選択
-menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
+#menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
+# タブを作成
+tabs = ["指導支援内容", "フィードバック", "発達チャート作成", "特別支援分析法"]
+selected_tab = st.sidebar.radio("メニューを選択", tabs)
 
-if menu == "指導支援内容":
+if selected_tab == "指導支援内容":
     st.subheader("📚 指導支援内容の参照")
     st.text("１から順番に選択して下さい")
 
 # メニューによって表示を制御
-elif menu == "フィードバック追加":
+elif selected_tab == "フィードバック追加":
     st.subheader("📝 フィードバック追加(2つの方法から1つを選んで入力)")
     st.markdown("あなたの自立活動、生活指導を教えてください♪")
       # Microsoft Forms の埋め込み
@@ -62,6 +72,529 @@ elif menu == "フィードバック追加":
     google_form_url = "https://docs.google.com/forms/d/1xXzq0vJ9E5FX16CFNoTzg5VAyX6eWsuN8Xl5qEwJFTc/preview"
 
     st.components.v1.iframe(google_form_url, width=700, height=900)
+
+elif selected_tab == "発達チャート作成":
+    st.subheader("📊 発達チャート作成")
+    st.text("ここに発達チャート作成アプリのコードを挿入してください。")
+    # 別アプリのコードをここにコピー＆ペースト
+    # Secrets から認証情報を取得
+    credentials = Credentials.from_service_account_info(
+        st.secrets["google_credentials"],
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+    ]
+    )
+    
+    
+    # Google Sheets API クライアントを作成
+    service = build('sheets', 'v4', credentials=credentials)
+    
+    # Google Drive API クライアントを作成（ダウンロード時に使用）
+    drive_service = build('drive', 'v3', credentials=credentials)
+    
+    # Google Cloud Storage クライアントを作成（必要なら使用）
+    client = storage.Client(credentials=credentials)
+    
+    # **スプレッドシートのIDをグローバル変数として定義**
+    spreadsheet_id = "1yXSXSjYBaV2jt2BNO638Y2YZ6U7rdOCv5ScozlFq_EE"
+    
+    def write_to_sheets(sheet_name, cell, value):
+        service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id,
+            range=f"{sheet_name}!{cell}",
+            valueInputOption="RAW",
+            body={"values": [[value]]}
+        ).execute()
+    
+    def main():
+        st.title("📉発達段階能力チャート作成📈")
+        st.info("児童・生徒の発達段階が分からない場合は下の「現在の発達段階を表から確認する」⇒「発達段階表」を順に押して下さい。")
+    
+    
+    
+    
+    
+        if st.button("現在の発達段階を表から確認する"):
+         try:
+            # 指定したシートのID（例: "0" は通常、最初のシート）
+            sheet_gid = "643912489"  # 必要に応じて変更
+            
+            # スプレッドシートのURLを生成してブラウザで開けるようにする
+            spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
+            st.markdown(f"[発達段階表]({spreadsheet_url})", unsafe_allow_html=True)
+            
+         except Exception as e:
+            st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
+    
+    
+        sheet_name = "シート1"
+    
+        categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
+        options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
+        #変更
+        selected_options = {}
+    
+        for index, category in enumerate(categories, start=1):
+            st.subheader(category)
+            selected_options[category] = st.radio(f"{category}の選択肢を選んでください:", options, key=f"radio_{index}")
+    
+        st.markdown("""1.各項目の選択が終わりましたら、まず「スプレッドシートに書き込む」を押してください。  
+                    2.続いて「スプレッドシートを開く」を押して内容を確認してくだい。  
+                    3.Excelでデータを保存したい方は「EXCELを保存」を押してくだい。""")
+    
+        if st.button("スプレッドシートに書き込む"):
+         try:
+              # 各カテゴリと選択肢をスプレッドシートに書き込む
+              for index, (category, selected_option) in enumerate(selected_options.items(), start=1):
+                  write_to_sheets(sheet_name, f"A{index + 2}", category)
+                  write_to_sheets(sheet_name, f"C{index + 2}", selected_option)  # C列に発達年齢を記入
+          
+              # 年齢カテゴリのマッピング
+              age_categories = {
+                  "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4,
+                  "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8,
+                  "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12
+              }
+          
+              # シート1のデータを取得
+              sheet1_data = service.spreadsheets().values().get(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!A3:C14"
+              ).execute().get('values', [])
+          
+              # A列（カテゴリ名）とC列（発達年齢）を取得
+              category_names = [row[0].strip() for row in sheet1_data]
+              age_range = [row[2].strip() for row in sheet1_data]  # C列に発達年齢がある
+          
+              # 年齢を数値化
+              converted_values = [[age_categories.get(age, "")] for age in age_range]
+          
+              # B3:B14に数値（段階）を設定
+              service.spreadsheets().values().update(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!B3:B14",
+                  valueInputOption="RAW",
+                  body={"values": converted_values}
+              ).execute()
+          
+              # A3:C13をA18:C28にコピー
+              sheet1_copy_data = service.spreadsheets().values().get(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!A3:C14"
+              ).execute().get('values', [])
+              
+              # シートの範囲を一度に更新
+              service.spreadsheets().values().update(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!A19:C30",
+                  valueInputOption="RAW",
+                  body={"values": sheet1_copy_data}
+              ).execute()
+          
+              # B19:B30の段階を+1（最大値12を超えない）
+              updated_b_values = [[min(12, int(row[1]) + 1) if row[1].isdigit() else ""] for row in sheet1_copy_data]
+              service.spreadsheets().values().update(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!B19:B30",
+                  valueInputOption="RAW",
+                  body={"values": updated_b_values}
+              ).execute()
+          
+              # **🟢 B19:B30の段階データを取得**
+              b19_b30_values = service.spreadsheets().values().get(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!B19:B30"
+              ).execute().get('values', [])
+          
+              # **🔵 B列の値（段階）を整数に変換**
+              b19_b30_values = [int(row[0]) if row and row[0].isdigit() else None for row in b19_b30_values]
+          
+              # **🔵 段階に対応する発達年齢を取得**
+              b_to_c_mapping = {  # B列の段階をC列の発達年齢に変換
+                  1: "0〜3ヶ月", 2: "3〜6ヶ月", 3: "6〜9ヶ月", 4: "9〜12ヶ月",
+                  5: "12～18ヶ月", 6: "18～24ヶ月", 7: "2～3歳", 8: "3～4歳",
+                  9: "4～5歳", 10: "5～6歳", 11: "6～7歳", 12: "7歳以上"
+              }
+          
+              # **C19:C30に対応する発達年齢をセット**
+              updated_c_values = [[b_to_c_mapping.get(b, "該当なし")] for b in b19_b30_values]
+          
+              # **Google SheetsにC19:C30のデータを更新**
+              service.spreadsheets().values().update(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!C19:C30",
+                  valueInputOption="RAW",
+                  body={"values": updated_c_values}
+              ).execute()
+          
+              # **🟢 シート2のデータを取得**
+              sheet2_data = service.spreadsheets().values().get(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート2!A1:V"
+              ).execute().get('values', [])
+          
+              # **データマッピングを作成**
+              headers = [h.strip() for h in sheet2_data[0]]
+              data_map = {}  # 🔵 ここで `data_map` を適切に定義
+              for row in sheet2_data[1:]:
+                  age_step = row[21] if len(row) > 21 else ""
+                  if not age_step.isdigit():
+                      continue
+                  for j, key in enumerate(headers):
+                      if key not in data_map:
+                          data_map[key] = {}
+                      data_map[key][int(age_step)] = row[j]
+          
+              # **D3:D14にシート2の対応データを設定**
+              results = [[data_map.get(category, {}).get(age[0], "該当なし")]
+                         for category, age in zip(category_names, converted_values)]
+              service.spreadsheets().values().update(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!D3:D14",
+                  valueInputOption="RAW",
+                  body={"values": results}
+              ).execute()
+              
+    
+              # 🟢 **B19:B30の値を取得**
+              b19_b30_values = service.spreadsheets().values().get(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!B19:B30"
+              ).execute().get('values', [])
+              
+              # 🟢 **A19:A30のカテゴリを取得**
+              a19_a30_values = service.spreadsheets().values().get(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!A19:A30"
+              ).execute().get('values', [])
+    
+    
+          
+                        # 🔵 **カテゴリと対応する段階（B19:B30）を使ってD19:D30の値を決定**
+              new_results = []
+              for category_row, stage_row in zip(a19_a30_values, b19_b30_values):
+                  category = category_row[0] if category_row else ""  # A列のカテゴリ
+                  stage = int(stage_row[0]) if stage_row and stage_row[0].isdigit() else None  # B列の段階
+              
+                  if stage is not None:
+                      result_value = data_map.get(category, {}).get(stage, "該当なし")  # シート2のデータを参照
+                  else:
+                      result_value = "該当なし"
+              
+                  new_results.append([result_value])
+              
+              # **D19:D30に対応する値を更新**
+              service.spreadsheets().values().update(
+                  spreadsheetId=spreadsheet_id,
+                  range="シート1!D19:D30",
+                  valueInputOption="RAW",
+                  body={"values": new_results}
+              ).execute()
+          
+         except Exception as e:
+              st.error(f"エラーが発生しました: {e}")
+    
+      # ダウンロード機能
+        if st.button("スプレッドシートを開く"):
+         try:
+            # 指定したシートのID（例: "0" は通常、最初のシート）
+            sheet_gid = "0"  # 必要に応じて変更
+            
+            # スプレッドシートのURLを生成してブラウザで開けるようにする
+            spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
+            st.markdown(f"[スプレッドシートを開く]({spreadsheet_url})", unsafe_allow_html=True)
+    
+            st.info("スプレッドシートを開いた後に、Excelとして保存できます。")
+         except Exception as e:
+            st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
+    
+        
+    # Excelダウンロード機能
+        if st.button("EXCELを保存"):
+         try:
+            # Google Drive API を使用してスプレッドシートをエクスポート
+            request = drive_service.files().export_media(
+                fileId=spreadsheet_id,
+                mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            file_data = io.BytesIO()
+            downloader = MediaIoBaseDownload(file_data, request)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+    
+            file_data.seek(0)
+            st.download_button(
+                label="PCに結果を保存",
+                data=file_data,
+                file_name="spreadsheet.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            st.info("保存EXCELのレーダーチャートは仕様が少し異なります。")
+         except Exception as e:
+            st.error(f"Excel保存中にエラーが発生しました: {e}")
+    
+        
+         st.subheader("今までの発達チャートから成長グラフを作成する")
+         st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
+    
+elif selected_tab == "特別支援分析法":
+    st.subheader("📈 特別支援分析法")
+    st.text("ここに特別支援分析法アプリのコードを挿入してください。")
+        # 別アプリのコードをここにコピー＆ペースト
+    # 画像のURLを貼る（手動でコピーしたもの）
+# 画像のURLを手動で設定（Imgur にアップロードした画像のリンクを使う）
+img1 = "https://i.imgur.com/SwjfDft.png"  # 動作法１画像
+img2 = "https://i.imgur.com/LqbE9Nf.png"  # 動作法２画像
+img3 = "https://i.imgur.com/XLwjXFE.png"  # 動作法３の画像
+img4 = "https://i.imgur.com/2MfaBxc.png"  # 動作法４
+img5 = "https://i.imgur.com/zheqhdv.png"  #
+img6 = "https://i.imgur.com/Hw4PIKo.jpeg"#
+img7 = "https://i.imgur.com/vnMHFNE.png"#
+
+# 画像を読み込む（PIL を使用）
+#image1 = Image.open("images/生徒1.png")
+#image2 = Image.open("images/生徒2.png")
+#image3 = Image.open("images/生徒3.png")
+#image4 = Image.open("images/生徒4.png")
+
+# タイトル
+st.title("特別支援教育サポートアプリ")
+
+# 療法・分析法の一覧
+methods = {
+    "ABA（応用行動分析）": "pages/aba.md",
+    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）": "pages/fba_pbs.md",
+    "CBT（認知行動療法）": "pages/cbt.md",
+    "ソーシャルスキルトレーニング": "pages/sst.md",
+    "感覚統合療法": "pages/sensory_integration.md",
+    "PECS（絵カード交換式コミュニケーション）": "pages/pecs.md",
+    "動作法": "pages/dousahou.md",
+    "TEACCH": "pages/teacch.md",
+    "SEL（社会情動的学習）": "pages/sel.md",
+    "マインドフルネス": "pages/mindfulness.md",
+    "プレイセラピー": "pages/play_therapy.md",
+    "アートセラピー": "pages/art_therapy.md",
+    "ミュージックセラピー": "pages/music_therapy.md",
+    "セルフモニタリング":"pages/self_monitar.md",
+    "統計学的分析方法":"pages/toukei.md",
+}
+
+# セッションステートを使用して、選択された療法を記憶
+if "selected_method" not in st.session_state:
+    st.session_state.selected_method = None  # 初期状態はNone
+
+# サイドバーに療法・分析法の一覧
+st.sidebar.title("療法・分析法一覧")
+selected_method = st.sidebar.radio("選択してください", list(methods.keys()), index=None)
+
+# サイドバーで選択があれば、セッションステートを更新
+if selected_method:
+    st.session_state.selected_method = selected_method
+
+# メイン画面に実態選択フォーム
+st.subheader("児童・生徒の実態を選択してください")
+
+# 実態リスト
+student_conditions = {
+    "言葉で気持ちを伝えるのが難しい": ["プレイセラピー", "アートセラピー", "PECS（絵カード交換式コミュニケーション）"],
+    "感情のコントロールが苦手": ["CBT（認知行動療法）", "SEL（社会情動的学習）", "マインドフルネス"],
+    "対人関係が苦手": ["ソーシャルスキルトレーニング", "TEACCH"],
+    "学習の集中が続かない": ["ABA（応用行動分析）", "感覚統合療法", "セルフモニタリング"],
+    "行動の問題がある": ["FBA/PBS（機能的アセスメント/ポジティブ行動支援）", "ABA（応用行動分析）"],
+    "身体に課題がある": ["動作法"],
+}
+
+# 実態を選択
+condition = st.selectbox("実態を選んでください", list(student_conditions.keys()))
+
+# 適した療法を表示
+st.write("この実態に適した療法・分析法:")
+
+# 選択肢ごとにボタンを作成
+for method in student_conditions[condition]:
+    if method in methods:  # methods に存在するかチェック
+        if st.button(method):  # ボタンを押したらサイドバーで選択したのと同じ状態にする
+            st.session_state.selected_method = method
+            st.rerun()  # ✅ 最新のStreamlitではこちらを使う
+    else:
+        st.error(f"{method} のページが見つかりません")
+
+# 説明ページの表示
+if st.session_state.selected_method:
+    st.markdown(f"### {st.session_state.selected_method}")
+    file_path = methods.get(st.session_state.selected_method)
+
+    if file_path:
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                st.markdown(file.read(), unsafe_allow_html=True)
+        except FileNotFoundError:
+            st.error(f"{st.session_state.selected_method} の説明ページが見つかりません（ファイルが存在しません）")
+    else:
+        st.error(f"{st.session_state.selected_method} の説明ページが見つかりません（辞書に登録されていません）")
+
+    # **CBT（認知行動療法）なら画像を表示**
+    if st.session_state.selected_method == "CBT（認知行動療法）":
+        #st.image("images/cbt_diagram.png", caption="認知行動療法", use_container_width=True)
+        st.image(img7, caption="認知行動療法", use_container_width=True) 
+
+    elif st.session_state.selected_method == "PECS（絵カード交換式コミュニケーション）":
+          st.image(img6, caption="PECS（絵カード交換式コミュニケーション）", use_container_width=True) 
+
+    elif st.session_state.selected_method == "動作法":
+          # 📌 画像1と画像2を横並び
+     col1, col2 = st.columns(2)
+     with col1:
+       #st.image(image1, caption="生徒1", use_container_width=True)
+       st.image(img1, caption="生徒1", use_container_width=True)
+     with col2:
+       #st.image(image2, caption="生徒2", use_container_width=True)
+       st.image(img2, caption="生徒2", use_container_width=True)
+
+          # 📌 画像3と画像4を横並び（下段）
+     col3, col4 = st.columns(2)
+     with col3:
+        #st.image(image3, caption="生徒3", use_container_width=True)
+        st.image(img3, caption="生徒3", use_container_width=True)
+     with col4:
+        #st.image(image4, caption="生徒4", use_container_width=True)
+        st.image(img4, caption="生徒4", use_container_width=True)
+    
+    elif st.session_state.selected_method == "マインドフルネス":
+          #st.image("images/マインドフルネス1.png", caption="マインドフルネス", use_container_width=True)
+          st.image(img5, caption="マインドフルネス", use_container_width=True)
+          
+
+     # **FBA/PBS（機能的行動評価/ポジティブ行動支援）の場合、Word・Excelダウンロードを追加**
+    elif st.session_state.selected_method == "FBA/PBS（機能的アセスメント/ポジティブ行動支援）":
+        st.markdown("---")  # 区切り線
+        st.subheader("📂 参考データのダウンロード")
+
+        # Wordファイルのダウンロード
+        word_file_path = "data/機能的アセスメントについて.docx"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ①機能的アセスメントについてをダウンロード",
+                data=f,
+                file_name="機能的アセスメントについて.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート１　基礎情報.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ②ワークシート１　基礎情報をダウンロード",
+                data=f,
+                file_name="ワークシート１　基礎情報.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        # Excelファイルのダウンロード
+        excel_file_path = "data/ワークシート２　MAS機能分析.xls"
+        with open(excel_file_path, "rb") as f:
+            st.download_button(
+                label="📊 ③ワークシート２　MAS機能分析.xlsをダウンロード",
+                data=f,
+                file_name="ワークシート２　MAS機能分析.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート３　行動問題の特徴.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ④ワークシート３　行動問題の特徴をダウンロード",
+                data=f,
+                file_name="ワークシート３　行動問題の特徴.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ) 
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート４　ライフスタイルの特徴.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ⑤ワークシート４　ライフスタイルの特徴をダウンロード",
+                data=f,
+                file_name="ワークシート４　ライフスタイルの特徴.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート５　行動の記録スキャッターブロット.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ⑥ワークシート５　行動の記録スキャッターブロットをダウンロード",
+                data=f,
+                file_name="ワークシート５　行動の記録スキャッターブロット.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート６　１日の記録.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ⑦ワークシート６　１日の記録をダウンロード",
+                data=f,
+                file_name="ワークシート６　１日の記録.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート７　頭の中のアセスメント.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ⑧ワークシート７　頭の中のアセスメント.docをダウンロード",
+                data=f,
+                file_name="ワークシート７　頭の中のアセスメント.doc.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+        # Wordファイルのダウンロード
+        word_file_path = "data/ワークシート８　ＡＢＣ分析.doc"
+        with open(word_file_path, "rb") as f:
+            st.download_button(
+                label="📄 ⑨ワークシート８　ＡＢＣ分析をダウンロード",
+                data=f,
+                file_name="ワークシート８　ＡＢＣ分析.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+
+        # **出典情報を追加**
+        st.subheader("📖 出典情報")
+        st.markdown("""
+        - **参考文献:** Durand, V. M. (1990). Severe behavior problems: A functional communication training approach. Guilford Press..
+        - **Webサイト:** [機能的アセスメント](http://www.kei-ogasawara.com/support/assessment/)
+        """)
+
+        st.markdown("---")  # 区切り線
+        st.subheader("📂 機能的アセスメント分析")
+        st.markdown("""
+        [機能的行動評価分析ツール](https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/)
+        """)
+
+         # **応用行動分析ツール**
+    elif st.session_state.selected_method == "ABA（応用行動分析）":
+        st.markdown("---")  # 区切り線
+        st.subheader("📂 簡単分析ツール")
+        st.markdown("""
+        [応用行動分析ツール](https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/)
+        """)
+         # **統計学的分析方法ツール**
+    elif st.session_state.selected_method == "統計学的分析方法":
+        st.write("""※以下の分析ツールを気軽に試してみて下さい。初心者でも簡単に使えるようにはしましたが、説明が難しい箇所はあると思います。フォームで意見を入力して頂くか、直接小山にお声かけ下さい。""")
+        st.markdown("---")  # 区切り線
+        st.subheader("📂 統計学 分析ツール一覧")
+        st.markdown("""
+        [相関分析](https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/)
+        """)
+        st.markdown("""
+        [多変量回帰分析](https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/)
+        """)
+        st.markdown("""
+        [t検定](https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/)""")
+        st.markdown("""
+        [ロジスティック回帰分析](https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/)
+        """)
+        st.markdown("""
+        [ノンパラメトリック統計分析](https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/)
+        """)
+
+
     #feedback_category = st.selectbox("カテゴリーを選択:", ["日常生活における実態", "障害の種類"])
     #feedback_subcategory = st.selectbox("項目を選択:", ["身辺自立が未熟な生徒","コミュニケーションが苦手な生徒","社会生活スキルが不足している生徒","時間や順序の理解が苦手な生徒","運動能力や感覚に偏りがある生徒","情緒が不安定な生徒","集団活動への参加が難しい生徒", "聴覚障害","視覚障害","ダウン症","自閉スペクトラム症（ASD）","注意・欠如・多動性障害（ADHD）","自閉スペクトラム症（ASD）","学習障害（LD）","発達性協調運動障害（DCD）","四肢・体幹機能障害"])
     #feedback_content = st.text_area("追加するフィードバックを入力してください:")
@@ -79,50 +612,50 @@ elif menu == "フィードバック追加":
         #else:
          #   st.warning("フィードバック内容を入力してください。")
 
-elif menu == "フィードバック集計と削除":
+#elif menu == "フィードバック集計と削除":
     # 🔐 ログイン機能
-    if not st.session_state.logged_in:
-        st.subheader("🔑 パスワード認証（管理者専用）")
-        password_input = st.text_input("パスワードを入力してください", type="password")
-        correct_password = st.secrets.get("admin_password", "default_password")
-
-        if st.button("ログイン"):
-            if password_input == correct_password:
-                st.session_state.logged_in = True  # ログイン成功！
-                st.success("認証成功！")
-                st.experimental_rerun()  # 画面を更新
-            else:
-                st.error("パスワードが違います。")
-    else:
-        st.subheader("📊 フィードバック集計と削除")
+ #   if not st.session_state.logged_in:
+  #      st.subheader("🔑 パスワード認証（管理者専用）")
+   #     password_input = st.text_input("パスワードを入力してください", type="password")
+    #    correct_password = st.secrets.get("admin_password", "default_password")
+#
+ #       if st.button("ログイン"):
+  #          if password_input == correct_password:
+   #             st.session_state.logged_in = True  # ログイン成功！
+    #            st.success("認証成功！")
+     #           st.experimental_rerun()  # 画面を更新
+      #      else:
+       #         st.error("パスワードが違います。")
+    #else:
+     #   st.subheader("📊 フィードバック集計と削除")
         
-        if st.session_state.feedback_data.empty:
-            st.info("現在、保存されているフィードバックはありません。")
-        else:
-            st.dataframe(st.session_state.feedback_data)
+      #  if st.session_state.feedback_data.empty:
+           # st.info("現在、保存されているフィードバックはありません。")
+       # else:
+        #    st.dataframe(st.session_state.feedback_data)
 
              # **削除機能**
-            delete_index = st.number_input("削除する行の番号を入力（1から）", min_value=1, max_value=len(st.session_state.feedback_data), step=1) - 1
+         #   delete_index = st.number_input("削除する行の番号を入力（1から）", min_value=1, max_value=len(st.session_state.feedback_data), step=1) - 1
 
-            if st.button("選択した行を削除"):
-             st.session_state.feedback_data = st.session_state.feedback_data.drop(delete_index).reset_index(drop=True)
-             save_feedback(st.session_state.feedback_data)
-             st.rerun()  # 最新の状態に更新 # 最新のデータを反映
+          #  if st.button("選択した行を削除"):
+           #  st.session_state.feedback_data = st.session_state.feedback_data.drop(delete_index).reset_index(drop=True)
+            # save_feedback(st.session_state.feedback_data)
+             #st.rerun()  # 最新の状態に更新 # 最新のデータを反映
 
             # データをCSVとしてダウンロード
-            st.subheader("📥 フィードバックのダウンロード")
-            csv = st.session_state.feedback_data.to_csv(index=False, encoding="utf-8-sig") 
-            st.download_button(
-                label="CSVファイルをダウンロード",
-                data=csv.encode("utf-8-sig"),
-                file_name="feedback.csv",
-                mime="text/csv"
-            )
+        #    st.subheader("📥 フィードバックのダウンロード")
+         #   csv = st.session_state.feedback_data.to_csv(index=False, encoding="utf-8-sig") 
+          #  st.download_button(
+            #    label="CSVファイルをダウンロード",
+             #   data=csv.encode("utf-8-sig"),
+              #  file_name="feedback.csv",
+               # mime="text/csv"
+            #)
 
         # 🔓 ログアウトボタン
-        if st.button("ログアウト"):
-            st.session_state.logged_in = False
-            st.experimental_rerun()
+      #  if st.button("ログアウト"):
+       #     st.session_state.logged_in = False
+        #    st.experimental_rerun()
 
 # 指導データ
 guidance_data = {
@@ -540,7 +1073,7 @@ guidance_data = {
                     "details": [
                         "写真や動画を使った分析: 生徒の普段の行動を撮影し、何が良かったか一緒に振り返る。",
                         "グループでの練習: 少人数で「順番待ち」や「頼む・断る」の練習をし、実際の場面に応用する。",
-                        "「ちくちく言葉」と「あったか言葉」:  \n  〇ちくちく言葉とあったか言葉を分類するクイズ形式  \n   〇日常の場面をイラストや動画で見せて、どちらの言葉か選ばせる  \n  〇あったか言葉を増やす目標を設定し、カウントできる機能。",
+                        "「ちくちく言葉」と「あったか言葉」:  \n  〇ちくちく言葉とあったか言葉を分類するクイズ形式  \n   〇日常の場面をイラストや動画で見せて、どちらの言葉か選ばせる  \n  〇あったか言葉を増やす目標を設定し、カウントする。",
                     ],
                 },
                  {
