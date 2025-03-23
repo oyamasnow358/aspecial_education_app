@@ -1030,34 +1030,6 @@ def show_chart():
 
     def main(): 
       
-      if st.button("発達段階のチャートを作成する"):
-         st.info("児童・生徒の発達段階が分からない場合は下の「発達段階表」を押して下さい。")
-        try:
-           # 指定したシートのID（例: "0" は通常、最初のシート）
-           sheet_gid = "643912489"  # 必要に応じて変更
-           
-           # スプレッドシートのURLを生成してブラウザで開けるようにする
-           spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
-           st.markdown(f"[発達段階表]({spreadsheet_url})", unsafe_allow_html=True)
-           
-        except Exception as e:
-           st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
-   
-   
-       sheet_name = "シート1"
-   
-       categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
-       options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
-       #変更
-       selected_options = {}
-   
-       for index, category in enumerate(categories, start=1):
-           st.subheader(category)
-           selected_options[category] = st.radio(f"{category}の選択肢を選んでください:", options, key=f"radio_{index}")
-   
-       st.markdown("""1.各項目の選択が終わりましたら、まず「スプレッドシートに書き込む」を押してください。  
-                   2.続いて「スプレッドシートを開く」を押して内容を確認してくだい。  
-                   3.Excelでデータを保存したい方は「EXCELを保存」を押してくだい。""")
       if st.button("スプレッドシートに書き込む"):
        try:
             # 各カテゴリと選択肢をスプレッドシートに書き込む
@@ -1171,7 +1143,8 @@ def show_chart():
                 body={"values": results}
             ).execute()
             
-             # 🟢 **B19:B30の値を取得**
+  
+            # 🟢 **B19:B30の値を取得**
             b19_b30_values = service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
                 range="シート1!B19:B30"
@@ -1182,7 +1155,9 @@ def show_chart():
                 spreadsheetId=spreadsheet_id,
                 range="シート1!A19:A30"
             ).execute().get('values', [])
-          
+  
+  
+        
                       # 🔵 **カテゴリと対応する段階（B19:B30）を使ってD19:D30の値を決定**
             new_results = []
             for category_row, stage_row in zip(a19_a30_values, b19_b30_values):
@@ -1206,7 +1181,8 @@ def show_chart():
         
        except Exception as e:
             st.error(f"エラーが発生しました: {e}")
-   #   ダウンロード機能
+  
+  #   ダウンロード機能
       if st.button("スプレッドシートを開く"):
        try:
           # 指定したシートのID（例: "0" は通常、最初のシート）
@@ -1215,11 +1191,13 @@ def show_chart():
           # スプレッドシートのURLを生成してブラウザで開けるようにする
           spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
           st.markdown(f"[スプレッドシートを開く]({spreadsheet_url})", unsafe_allow_html=True)
+  
           st.info("スプレッドシートを開いた後に、Excelとして保存できます。")
        except Exception as e:
           st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
-       
-  #E  xcelダウンロード機能
+  
+      
+# Ex  celダウンロード機能
       if st.button("EXCELを保存"):
        try:
           # Google Drive API を使用してスプレッドシートをエクスポート
@@ -1232,6 +1210,7 @@ def show_chart():
           done = False
           while not done:
               status, done = downloader.next_chunk()
+  
           file_data.seek(0)
           st.download_button(
               label="PCに結果を保存",
@@ -1242,9 +1221,10 @@ def show_chart():
           st.info("保存EXCELのレーダーチャートは仕様が少し異なります。")
        except Exception as e:
           st.error(f"Excel保存中にエラーが発生しました: {e}")
-       
-       st.subheader("今までの発達チャートから成長グラフを作成する")
-       st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
+  
+      
+      st.subheader("今までの発達チャートから成長グラフを作成する")
+      st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
     if __name__ == "__main__":
      main()
  
