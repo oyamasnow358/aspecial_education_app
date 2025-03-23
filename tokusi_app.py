@@ -1029,23 +1029,28 @@ def show_chart():
 
 
     def main(): 
-      st.info("児童・生徒の発達段階が分からない場合は下の「現在の発達段階を表から確認する」⇒「発達段階表」を順に押して下さい。")
-      # 発達段階表を最初から表示
-      sheet_gid = "643912489"  # 必要に応じて変更
-      spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
-      st.markdown(f"[発達段階表]({spreadsheet_url})", unsafe_allow_html=True)
-        
-      sheet_name = "シート1"
-      categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動", "数の概念"]
-      options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
-
-      selected_options = {}
-      for index, category in enumerate(categories, start=1):
-            st.subheader(category)
-            selected_options[category] = st.radio(f"{category}の選択肢を選んでください:", options, key=f"radio_{index}")
+      
+      if st.button("発達段階のチャートを作成する"):
+        st.info("児童・生徒の発達段階が分からない場合は下の「発達段階表」を押して下さい。")
+        try:
+          # 指定したシートのID（例: "0" は通常、最初のシート）
+          sheet_gid = "643912489"  # 必要に応じて変更
+          
+          # スプレッドシートのURLを生成してブラウザで開けるようにする
+          spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit#gid={sheet_gid}"
+          st.markdown(f"[発達段階表]({spreadsheet_url})", unsafe_allow_html=True)
+          
+        except Exception as e:
+          st.error(f"スプレッドシートのリンク生成中にエラーが発生しました: {e}")
+        sheet_name = "シート1"
+        categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
+        options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
       #変更
-        
-            st.markdown("""1.各項目の選択が終わりましたら、まず「スプレッドシートに書き込む」を押してください。  
+        selected_options = {}
+      for index, category in enumerate(categories, start=1):
+          st.subheader(category)
+          selected_options[category] = st.radio(f"{category}の選択肢を選んでください:", options, key=f"radio_{index}")
+          st.markdown("""1.各項目の選択が終わりましたら、まず「スプレッドシートに書き込む」を押してください。  
                   2.続いて「スプレッドシートを開く」を押して内容を確認してくだい。  
                   3.Excelでデータを保存したい方は「EXCELを保存」を押してくだい。""")
       if st.button("スプレッドシートに書き込む"):
