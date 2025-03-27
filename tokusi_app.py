@@ -1263,16 +1263,14 @@ def show_chart():
     
     # **区切り線**
         st.markdown("---")    
-        st.subheader("今までの発達チャートから成長グラフを作成する")
+        st.subheader("今までの発達チャートから成長グラフを作成したい場合")
         st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
     if __name__ == "__main__":
      main()
     col1, col2, col3 = st.columns([6, 3, 1])  # 右側の `col3` を小さくする
     with col3:
         st.button("🏠 戻る", on_click=lambda: set_page("home"), key="home_home")
-    st.markdown("""
-    <hr style="border: none; height: 4px; background: linear-gradient(to right, #ff0000, #0000ff);">
-""", unsafe_allow_html=True)
+    
     
 def show_analysis():
     st.subheader("📈 特別支援分析法")
@@ -1606,7 +1604,9 @@ elif st.session_state.page == "analysis":
     show_analysis()
 
  # **区切り線**
-st.markdown("---")
+st.markdown("""
+    <hr style="border: none; height: 4px; background: linear-gradient(to right, #ff0000, #0000ff);">
+""", unsafe_allow_html=True)
 st.markdown("📁教育・心理分析ツール") 
 st.markdown("[応用行動分析](https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/)")
 st.markdown("[機能的行動評価分析](https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/)") 
