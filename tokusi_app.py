@@ -53,6 +53,7 @@ if "logged_in" not in st.session_state:
 # メニュー選択
 #menu = st.sidebar.selectbox("メニューを選択してください", ["指導支援内容", "フィードバック追加", "フィードバック集計と削除"])
 # ページ遷移用の状態管理
+# セッションステートでページ管理
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
@@ -60,33 +61,33 @@ def set_page(page):
     st.session_state.page = page
     st.rerun()
 
-# ナビゲーションバー
+# ナビゲーションバー（サイドバー）
 st.sidebar.title("メニュー")
-st.sidebar.button("🏠 ホーム", on_click=lambda: set_page("home"))
-st.sidebar.button("📚 指導支援内容", on_click=lambda: set_page("guidance"))
-st.sidebar.button("📝 フィードバック", on_click=lambda: set_page("feedback"))
-st.sidebar.button("📊 発達チャート作成", on_click=lambda: set_page("chart"))
-st.sidebar.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"))
+st.sidebar.button("🏠 ホーム", on_click=lambda: set_page("home"), key="sidebar_home")
+st.sidebar.button("📚 指導支援内容", on_click=lambda: set_page("guidance"), key="sidebar_guidance")
+st.sidebar.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="sidebar_feedback")
+st.sidebar.button("📊 発達チャート作成", on_click=lambda: set_page("chart"), key="sidebar_chart")
+st.sidebar.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="sidebar_analysis")
+
 
 # ホーム画面
 def show_home():
     st.title("特別支援教育サポートアプリ")
     st.write("メニューまたはサイドバーからページを選択してください。")
 
-    # ホーム画面にもナビゲーションボタンを追加
+    # ホーム画面にもナビゲーションボタンを追加（key を指定）
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.button("🏠 ホーム", on_click=lambda: set_page("home"))
-        st.button("📚 指導支援内容", on_click=lambda: set_page("guidance"))
+        st.button("🏠 ホーム", on_click=lambda: set_page("home"), key="home_home")
+        st.button("📚 指導支援内容", on_click=lambda: set_page("guidance"), key="home_guidance")
 
     with col2:
-        st.button("📝 フィードバック", on_click=lambda: set_page("feedback"))
-        st.button("📊 発達チャート作成", on_click=lambda: set_page("chart"))
+        st.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="home_feedback")
+        st.button("📊 発達チャート作成", on_click=lambda: set_page("chart"), key="home_chart")
 
     with col3:
-        st.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"))
-
+        st.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="home_analysis")
 
 
 def show_guidance():
