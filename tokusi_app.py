@@ -1270,7 +1270,7 @@ def show_chart():
     col1, col2, col3 = st.columns([6, 3, 1])  # 右側の `col3` を小さくする
     with col3:
         st.button("🏠 戻る", on_click=lambda: set_page("home"), key="home_home")
-        st.markdown("""
+    st.markdown("""
     <hr style="border: none; height: 4px; background: linear-gradient(to right, #ff0000, #0000ff);">
 """, unsafe_allow_html=True)
     
