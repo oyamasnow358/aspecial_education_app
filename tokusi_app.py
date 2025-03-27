@@ -68,24 +68,25 @@ st.sidebar.button("📝 フィードバック", on_click=lambda: set_page("feedb
 st.sidebar.button("📊 発達チャート作成", on_click=lambda: set_page("chart"))
 st.sidebar.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"))
 
-# ページ表示
+# ホーム画面
 def show_home():
     st.title("特別支援教育サポートアプリ")
-    st.write("メニューORサイドバーから、ページを選択してください。")
-    # ナビゲーションバー
-    # ここでページ切り替えの状態を管理する関数を作成
-    def set_page(page):
-    # ページ切り替えに必要な処理を行います
-     if page == "home":
-        show_home()
-     elif page == "guidance":
-        show_guidance()
-     elif page == "feedback":
-        show_feedback()
-     elif page == "chart":
-        show_chart()
-     elif page == "analysis":
-        show_analysis()
+    st.write("メニューまたはサイドバーからページを選択してください。")
+
+    # ホーム画面にもナビゲーションボタンを追加
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.button("🏠 ホーム", on_click=lambda: set_page("home"))
+        st.button("📚 指導支援内容", on_click=lambda: set_page("guidance"))
+
+    with col2:
+        st.button("📝 フィードバック", on_click=lambda: set_page("feedback"))
+        st.button("📊 発達チャート作成", on_click=lambda: set_page("chart"))
+
+    with col3:
+        st.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"))
+
 
 
 def show_guidance():
@@ -1029,7 +1030,7 @@ def show_chart():
 
 
     def main():
-        st.title("📉発達段階能力チャート作成📈")
+        st.title("")
         st.info("児童・生徒の発達段階が分からない場合は下の「現在の発達段階を表から確認する」⇒「発達段階表」を順に押して下さい。")
     
     
@@ -1283,8 +1284,8 @@ def show_analysis():
             #image3 = Image.open("images/生徒3.png")
             #image4 = Image.open("images/生徒4.png")
             
-            # タイトル
-    st.title("特別支援教育サポートアプリ")
+           
+    
             
             # 療法・分析法の一覧
     methods = {
