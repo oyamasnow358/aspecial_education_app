@@ -59,7 +59,7 @@ if "page" not in st.session_state:
 
 def set_page(page):
     st.session_state.page = page
-    st.rerun()
+    #st.rerun()
 
 # ナビゲーションバー（サイドバー）
 st.sidebar.title("メニュー")
