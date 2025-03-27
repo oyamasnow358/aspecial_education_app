@@ -980,9 +980,9 @@ def show_guidance():
         if "食事の練習" in selected_detail:
               st.image(img_hasizo, caption="箸ゾーくん（箸の練習に最適）", use_container_width=True)
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.button("🏠 ホーム", on_click=lambda: set_page("home"), key="home_home")
+    col1, col2, col3 = st.columns([6, 3, 1])  # 右側の `col3` を小さくする
+    with col3:
+        st.button("🏠 戻る", on_click=lambda: set_page("home"), key="home_home")
 # メニューによって表示を制御
 def show_feedback():
     st.subheader("📝 フィードバック追加(2つの方法から1つを選んで入力)")
