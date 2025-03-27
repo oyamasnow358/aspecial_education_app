@@ -1261,7 +1261,8 @@ def show_chart():
          except Exception as e:
             st.error(f"Excel保存中にエラーが発生しました: {e}")
     
-        
+    # **区切り線**
+        st.markdown("---")    
         st.subheader("今までの発達チャートから成長グラフを作成する")
         st.markdown("[発達段階の成長傾向分析](https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/)")
     if __name__ == "__main__":
@@ -1269,6 +1270,9 @@ def show_chart():
     col1, col2, col3 = st.columns([6, 3, 1])  # 右側の `col3` を小さくする
     with col3:
         st.button("🏠 戻る", on_click=lambda: set_page("home"), key="home_home")
+        st.markdown("""
+    <hr style="border: none; height: 4px; background: linear-gradient(to right, #ff0000, #0000ff);">
+""", unsafe_allow_html=True)
     
 def show_analysis():
     st.subheader("📈 特別支援分析法")
