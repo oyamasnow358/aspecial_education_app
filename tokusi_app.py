@@ -65,10 +65,9 @@ def set_page(page):
 st.sidebar.title("メニュー")
 st.sidebar.button("🏠 ホーム", on_click=lambda: set_page("home"), key="sidebar_home")
 st.sidebar.button("📚 指導支援内容", on_click=lambda: set_page("guidance"), key="sidebar_guidance")
-st.sidebar.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="sidebar_feedback")
 st.sidebar.button("📊 発達チャート作成", on_click=lambda: set_page("chart"), key="sidebar_chart")
 st.sidebar.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="sidebar_analysis")
-
+st.sidebar.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="sidebar_feedback")
 
 # ホーム画面
 def show_home():
@@ -83,12 +82,11 @@ def show_home():
         st.button("📚 指導支援内容", on_click=lambda: set_page("guidance"), key="home_guidance")
 
     with col2:
-        st.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="home_feedback")
+        st.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="home_analysis")
         st.button("📊 発達チャート作成", on_click=lambda: set_page("chart"), key="home_chart")
 
     with col3:
-        st.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="home_analysis")
-
+        st.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="home_feedback")
 
 def show_guidance():
     st.title("📚 指導支援内容の参照")
@@ -995,10 +993,12 @@ def show_feedback():
     google_form_url = "https://docs.google.com/forms/d/1xXzq0vJ9E5FX16CFNoTzg5VAyX6eWsuN8Xl5qEwJFTc/preview"
 
     st.components.v1.iframe(google_form_url, width=700, height=900)
-
+    col1, col2, col3 = st.columns([6, 3, 1])  # 右側の `col3` を小さくする
+    with col3:
+        st.button("🏠 戻る", on_click=lambda: set_page("home"), key="home_home")
+        
 def show_chart():
     st.subheader("📊 発達チャート作成")
-    st.text("ここに発達チャート作成アプリのコードを挿入してください。")
     # 別アプリのコードをここにコピー＆ペースト
     # Secrets から認証情報を取得
     credentials = Credentials.from_service_account_info(
