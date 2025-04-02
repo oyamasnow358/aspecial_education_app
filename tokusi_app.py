@@ -66,7 +66,7 @@ st.sidebar.title("メニュー")
 st.sidebar.button("🏠 ホーム", on_click=lambda: set_page("home"), key="sidebar_home")
 st.sidebar.button("📚 指導支援内容", on_click=lambda: set_page("guidance"), key="sidebar_guidance")
 st.sidebar.button("📊 発達チャート作成", on_click=lambda: set_page("chart"), key="sidebar_chart")
-st.sidebar.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="sidebar_analysis")
+st.sidebar.button("📈 分析方法", on_click=lambda: set_page("analysis"), key="sidebar_analysis")
 st.sidebar.button("📝 フィードバック", on_click=lambda: set_page("feedback"), key="sidebar_feedback")
 
 # ホーム画面
@@ -82,7 +82,7 @@ def show_home():
         st.button("📚 指導支援内容", on_click=lambda: set_page("guidance"), key="home_guidance")
 
     with col2:
-        st.button("📈 特別支援分析法", on_click=lambda: set_page("analysis"), key="home_analysis")
+        st.button("📈 分析方法", on_click=lambda: set_page("analysis"), key="home_analysis")
         st.button("📊 発達チャート作成", on_click=lambda: set_page("chart"), key="home_chart")
 
     with col3:
@@ -1274,7 +1274,7 @@ def show_chart():
     
     
 def show_analysis():
-    st.title("📈 特別支援分析法")
+    st.title("📈 分析方法")
     st.text("ここでは、特別支援教育で使える教育学的、心理学的、統計学的分析方法を知り、分からない人でもツールで簡単に分析ができます。")
                 # 別アプリのコードをここにコピー＆ペースト
             # 画像のURLを貼る（手動でコピーしたもの）
