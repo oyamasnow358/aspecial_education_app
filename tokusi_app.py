@@ -1613,6 +1613,7 @@ st.markdown("[応用行動分析](https://abaapppy-k7um2qki5kggexf8qkfxjc.stream
 st.markdown("[機能的行動評価分析](https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/)") 
 st.markdown("---")  # 区切り線
 st.markdown("📁統計学分析ツール") 
+st.markdown("[アンケートデータ、総合統計分析ツール](https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/)")
 st.markdown("[相関分析ツール](https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/)")
 st.markdown("[多変量回帰分析](https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/)")
 st.markdown("[t検定](https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/)")
