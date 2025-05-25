@@ -1514,6 +1514,9 @@ def show_analysis():
             st.markdown("---")  # 区切り線
             st.subheader("📂 統計学 分析ツール一覧")
             st.markdown("""
+            [アンケートデータ、総合統計分析ツール](https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/)
+                        """)
+            st.markdown("""
             [相関分析](https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/)
             """)
             st.markdown("""
