@@ -23,7 +23,7 @@ if "page_to_visit" in st.session_state:
 st.title("🌟 特別支援教育サポートアプリ")
 
 # メインイメージ
-st.image("https://i.imgur.com/t4RLTeG.jpeg", caption="子どもたちの「できた！」を支援する", use_container_width=True)
+st.image("https://i.imgur.com/CTSCBYi.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
 
 st.header("ようこそ！")
 st.write("""
@@ -58,7 +58,7 @@ with col2:
         st.markdown("#### 📊 発達チャート作成")
         st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
         # --- ▼ここを修正▼ ---
-        st.button("この機能を使う", on_click=set_page, args=("pages/2_発達チャート作成.py",), key="btn_chart")
+        st.button("この機能を使う", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
         # --- ▲ここまで修正▲ ---
 
     with st.container(border=True):
