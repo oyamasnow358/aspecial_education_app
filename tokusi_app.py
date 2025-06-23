@@ -30,14 +30,14 @@ with col1:
         st.markdown("#### 📚 指導支援内容")
         st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
         # --- ▼ここを修正▼ ---
-        st.page_link("pages/1_📚_指導支援内容.py", label="この機能を使う", icon="➡️")
+        st.page_link("1_📚_指導支援内容.py", label="この機能を使う", icon="➡️")
         # --- ▲ここまで修正▲ ---
 
     with st.container(border=True):
         st.markdown("#### 📈 分析方法")
         st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
         # --- ▼ここを修正▼ ---
-        st.page_link("pages/3_📈_分析方法.py", label="この機能を使う", icon="➡️")
+        st.page_link("3_📈_分析方法.py", label="この機能を使う", icon="➡️")
         # --- ▲ここまで修正▲ ---
 
 with col2:
@@ -45,14 +45,14 @@ with col2:
         st.markdown("#### 📊 発達チャート作成")
         st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
         # --- ▼ここを修正▼ ---
-        st.page_link("pages/2_📊_発達チャート作成.py", label="この機能を使う", icon="➡️")
+        st.page_link("2_📊_発達チャート作成.py", label="この機能を使う", icon="➡️")
         # --- ▲ここまで修正▲ ---
 
     with st.container(border=True):
         st.markdown("#### 📝 フィードバック")
         st.write("アプリの改善や、新しい指導実践の共有など、皆様からのご意見をお待ちしています。")
         # --- ▼ここを修正▼ ---
-        st.page_link("pages/4_📝_フィードバック.py", label="この機能を使う", icon="➡️")
+        st.page_link("4_📝_フィードバック.py", label="この機能を使う", icon="➡️")
         # --- ▲ここまで修正▲ ---
 
 
