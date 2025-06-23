@@ -20,21 +20,21 @@ img_cbt = "https://i.imgur.com/vnMHFNE.png"
 
 # 療法・分析法とマークダウンファイルの対応
 methods = {
-    "ABA（応用行動分析）": "pages/aba.md",
-    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）": "pages/fba_pbs.md",
-    "CBT（認知行動療法）": "pages/cbt.md",
-    "ソーシャルスキルトレーニング": "pages/sst.md",
-    "感覚統合療法": "pages/sensory_integration.md",
-    "PECS（絵カード交換式コミュニケーション）": "pages/pecs.md",
-    "動作法": "pages/dousahou.md",
-    "TEACCH": "pages/teacch.md",
-    "SEL（社会情動的学習）": "pages/sel.md",
-    "マインドフルネス": "pages/mindfulness.md",
-    "プレイセラピー": "pages/play_therapy.md",
-    "アートセラピー": "pages/art_therapy.md",
-    "ミュージックセラピー": "pages/music_therapy.md",
-    "セルフモニタリング":"pages/self_monitar.md",
-    "統計学的分析方法":"pages/toukei.md",
+    "ABA（応用行動分析）": "pages2/aba.md",
+    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）": "pages2/fba_pbs.md",
+    "CBT（認知行動療法）": "pages2/cbt.md",
+    "ソーシャルスキルトレーニング": "pages2/sst.md",
+    "感覚統合療法": "pages2/sensory_integration.md",
+    "PECS（絵カード交換式コミュニケーション）": "pages2/pecs.md",
+    "動作法": "pages2/dousahou.md",
+    "TEACCH": "pages2/teacch.md",
+    "SEL（社会情動的学習）": "pages2/sel.md",
+    "マインドフルネス": "pages2/mindfulness.md",
+    "プレイセラピー": "pages2/play_therapy.md",
+    "アートセラピー": "pages2/art_therapy.md",
+    "ミュージックセラピー": "pages2/music_therapy.md",
+    "セルフモニタリング":"pages2/self_monitar.md",
+    "統計学的分析方法":"pages2/toukei.md",
 }
 
 # 実態と適した療法の対応
@@ -130,3 +130,7 @@ if st.session_state.selected_method:
             st.info("##### 🛠️ 統計学 分析ツール一覧")
             st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
             st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+            st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+            st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
+            st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
+            st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
