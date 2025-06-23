@@ -3,6 +3,8 @@ pandas
 numpy
 matplotlib
 openpyxl
+requests
+Pillow
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
