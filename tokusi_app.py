@@ -19,35 +19,42 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-        /* ボタンのコンテナを取得 */
+        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
-            position: relative; /* 疑似要素を配置する基準 */
+            position: relative !important;
+            width: 2rem !important;
+            height: 2rem !important;
         }
 
-        /* 内部にある元のアイコン（SVGやテキスト）を完全に非表示にする */
-        [data-testid="stSidebarNavCollapseButton"] > span,
-        [data-testid="stSidebarNavCollapseButton"] svg {
+        /* 元のアイコンとそのコンテナを、子要素含めすべて完全に消す */
+        [data-testid="stSidebarNavCollapseButton"] * {
             display: none !important;
+            visibility: hidden !important;
         }
 
-        /* ::before疑似要素を使って、新しいアイコン『«』を描画する */
+        /* 新しいアイコン『«』を描画 */
         [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«';           /* 表示する文字アイコン */
-            position: absolute;     /* 絶対位置で配置 */
-            top: 50%;               /* 上から中央に */
-            left: 50%;              /* 左から中央に */
-            transform: translate(-50%, -50%); /* 中央揃えの最終調整 */
-            font-size: 22px;        /* アイコンのサイズ */
-            font-weight: bold;      /* 太字にして見やすく */
-            color: #4a4a4a;         /* アイコンの色 */
-            transition: color 0.2s; /* ホバー時の色の変化を滑らかに */
+            content: '«' !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            color: #31333F !important;
+            transition: background-color 0.2s, color 0.2s !important;
+            border-radius: 0.5rem;
         }
 
-        /* ボタンにマウスが乗った時にアイコンの色を変える */
+        /* ホバー時のスタイル */
         [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            color: #8A2BE2; /* アプリのテーマカラー（紫）に */
+            background-color: #F0F2F6 !important;
+            color: #8A2BE2 !important;
         }
-
         /* --- 全体のフォント --- */
         html, body, [class*="st-"] {
             font-family: 'Helvetica Neue', 'Arial', sans-serif;
