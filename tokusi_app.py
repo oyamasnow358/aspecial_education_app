@@ -139,7 +139,7 @@ if "page_to_visit" in st.session_state:
 st.title("🌟 特別支援教育サポートアプリ")
 
 # メインイメージ
-st.image("https://i.imgur.com/AbUxfx.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
+st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
 
 st.header("ようこそ！")
 st.write("""
