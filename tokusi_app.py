@@ -119,6 +119,22 @@ st.set_page_config(
 # CSSを適用
 load_css()
 
+# --- サイドバーに操作案内を追加 ---
+with st.sidebar:
+    st.info(
+        """
+        **サイドバーの操作方法**
+
+        左上の **<** アイコン、または画面のメインエリアをクリックすると、サイドバーを閉じることができます。
+        """
+    )
+    st.markdown("---") # 区切り線
+# --- ▲ここまで追加▲ ---
+
+# ページ遷移を管理するための関数
+def set_page(page):
+    st.session_state.page_to_visit = page
+
 # ページ遷移を管理するための関数
 def set_page(page):
     st.session_state.page_to_visit = page
