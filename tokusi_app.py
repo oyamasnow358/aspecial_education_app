@@ -8,7 +8,7 @@ def load_css():
         /* ご用意された画像のURLを下の 'url(...)' 内に貼り付けてください */
         /* 例: url("https://i.imgur.com/your_image.jpg"); */
         [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/CTSCBYi.png");
+            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -19,42 +19,8 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
-        [data-testid="stSidebarNavCollapseButton"] {
-            position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
-        }
-
-        /* 元のアイコンとそのコンテナを、子要素含めすべて完全に消す */
-        [data-testid="stSidebarNavCollapseButton"] * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-
-        /* 新しいアイコン『«』を描画 */
-        [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«' !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
-        }
-
-        /* ホバー時のスタイル */
-        [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
-        }
+        /* サイドバーの閉じるボタンのアイコンを強制的に変更 */
+        [data-testid="stSidebarNavCollapseButton"]::after { content: '«' !important; }
         /* --- 全体のフォント --- */
         html, body, [class*="st-"] {
             font-family: 'Helvetica Neue', 'Arial', sans-serif;
