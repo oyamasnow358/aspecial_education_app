@@ -19,9 +19,35 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-        /* サイドバーの閉じるボタンのアイコンを強制的に変更 */
-        [data-testid="stSidebarNavCollapseButton"]::after { content: '«' !important; }
-        
+        /* ボタンのコンテナを取得 */
+        [data-testid="stSidebarNavCollapseButton"] {
+            position: relative; /* 疑似要素を配置する基準 */
+        }
+
+        /* 内部にある元のアイコン（SVGやテキスト）を完全に非表示にする */
+        [data-testid="stSidebarNavCollapseButton"] > span,
+        [data-testid="stSidebarNavCollapseButton"] svg {
+            display: none !important;
+        }
+
+        /* ::before疑似要素を使って、新しいアイコン『«』を描画する */
+        [data-testid="stSidebarNavCollapseButton"]::before {
+            content: '«';           /* 表示する文字アイコン */
+            position: absolute;     /* 絶対位置で配置 */
+            top: 50%;               /* 上から中央に */
+            left: 50%;              /* 左から中央に */
+            transform: translate(-50%, -50%); /* 中央揃えの最終調整 */
+            font-size: 22px;        /* アイコンのサイズ */
+            font-weight: bold;      /* 太字にして見やすく */
+            color: #4a4a4a;         /* アイコンの色 */
+            transition: color 0.2s; /* ホバー時の色の変化を滑らかに */
+        }
+
+        /* ボタンにマウスが乗った時にアイコンの色を変える */
+        [data-testid="stSidebarNavCollapseButton"]:hover::before {
+            color: #8A2BE2; /* アプリのテーマカラー（紫）に */
+        }
+
         /* --- 全体のフォント --- */
         html, body, [class*="st-"] {
             font-family: 'Helvetica Neue', 'Arial', sans-serif;
