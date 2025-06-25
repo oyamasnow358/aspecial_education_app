@@ -19,7 +19,9 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-
+        /* サイドバーの閉じるボタンのアイコンを強制的に変更 */
+        [data-testid="stSidebarNavCollapseButton"]::after { content: '«' !important; }
+        
         /* --- 全体のフォント --- */
         html, body, [class*="st-"] {
             font-family: 'Helvetica Neue', 'Arial', sans-serif;
@@ -119,17 +121,7 @@ st.set_page_config(
 # CSSを適用
 load_css()
 
-# --- サイドバーに操作案内を追加 ---
-with st.sidebar:
-    st.info(
-        """
-        **サイドバーの操作方法**
 
-        左上の **<** アイコン、または画面のメインエリアをクリックすると、サイドバーを閉じることができます。
-        """
-    )
-    st.markdown("---") # 区切り線
-# --- ▲ここまで追加▲ ---
 
 # ページ遷移を管理するための関数
 def set_page(page):
