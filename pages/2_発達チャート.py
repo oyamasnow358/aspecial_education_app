@@ -4,14 +4,13 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
+
 # --- ▼ 共通CSSの読み込み ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
     <style>
         /* --- 背景画像の設定 --- */
-        /* ご用意された画像のURLを下の 'url(...)' 内に貼り付けてください */
-        /* 例: url("https://i.imgur.com/your_image.jpg"); */
         [data-testid="stAppViewContainer"] > .main {
             background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/CTSCBYi.png");
             background-size: cover;
@@ -24,6 +23,38 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
+        
+        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+        [data-testid="stSidebarNavCollapseButton"] {
+            position: relative !important;
+            width: 2rem !important;
+            height: 2rem !important;
+        }
+        [data-testid="stSidebarNavCollapseButton"] * {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        [data-testid="stSidebarNavCollapseButton"]::before {
+            content: '«' !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            color: #31333F !important;
+            transition: background-color 0.2s, color 0.2s !important;
+            border-radius: 0.5rem;
+        }
+        [data-testid="stSidebarNavCollapseButton"]:hover::before {
+            background-color: #F0F2F6 !important;
+            color: #8A2BE2 !important;
+        }
+        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
 
         /* --- 全体のフォント --- */
         html, body, [class*="st-"] {
@@ -32,35 +63,35 @@ def load_css():
 
         /* --- 見出しのスタイル --- */
         h1 {
-            color: #2c3e50; /* ダークブルー */
+            color: #2c3e50;
             text-align: center;
             padding-bottom: 20px;
             font-weight: bold;
         }
         h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
+            color: #34495e;
+            border-left: 6px solid #8A2BE2;
             padding-left: 12px;
             margin-top: 40px;
         }
         h3 {
             color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
+            border-bottom: 2px solid #4a90e2;
             padding-bottom: 8px;
             margin-top: 30px;
         }
 
         /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
+        div[data-testid="stVerticalBlock"] div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
             background-color: rgba(255, 255, 255, 0.95);
             border: 1px solid #e0e0e0;
             border-radius: 15px;
             padding: 1.5em 1.5em;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
             transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
+            margin-bottom: 20px;
         }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
+        div[data-testid="stVerticalBlock"] div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
             box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
             transform: translateY(-5px);
         }
@@ -81,7 +112,6 @@ def load_css():
             background-color: #8A2BE2;
             transform: scale(1.05);
         }
-        /* Primaryボタン */
         .stButton>button[kind="primary"] {
             background-color: #4a90e2;
             color: white;
@@ -94,8 +124,8 @@ def load_css():
         }
 
         /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 { /* st.infoのコンテナ */
-             background-color: rgba(232, 245, 253, 0.7); /* 淡い青 */
+        .st-emotion-cache-1wivap1 {
+             background-color: rgba(232, 245, 253, 0.7);
              border-left: 5px solid #4a90e2;
              border-radius: 8px;
         }
@@ -112,7 +142,16 @@ def load_css():
     """
     st.markdown(css, unsafe_allow_html=True)
 # --- ▲ 共通CSSの読み込み ▲ ---
-st.set_page_config(page_title="発達チャート作成", page_icon="📊", layout="wide")
+
+st.set_page_config(
+    page_title="発達チャート作成", 
+    page_icon="📊", 
+    layout="wide",
+    initial_sidebar_state="expanded" # ← サイドバーを開いた状態に戻しました
+)
+
+# CSSを適用
+load_css()
 
 st.title("📊 発達チャート作成")
 st.write("お子さんの発達段階を選択し、現在の状態と次のステップをまとめたチャートを作成・保存します。")
@@ -136,8 +175,20 @@ except Exception as e:
     st.error(f"Google APIの認証中に予期せぬエラーが発生しました: {e}")
     st.stop()
 
-# --- ここからUIの定義 ---
-st.info("まず、各項目の現在の発達段階を下の選択肢から選んでください。")
+# --- ★★★ここからUIの定義★★★ ---
+
+# STEP 1: 基準の確認
+with st.container(border=True):
+    st.header("STEP 1: 基準の確認")
+    st.write("まず、下のボタンから「発達段階表」を開き、各項目の基準を確認してください。")
+    # 発達段階表のスプレッドシートへのリンク
+    spreadsheet_url_gantt = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid=643912489"
+    st.link_button("📑 発達段階表を開く", spreadsheet_url_gantt, use_container_width=True, type="primary")
+
+st.markdown("---")
+
+# STEP 2: 発達段階の入力
+st.header("STEP 2: 発達段階の入力")
 
 # カテゴリと選択肢
 categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
@@ -145,25 +196,33 @@ options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18
 
 # フォームを使って入力をグループ化
 with st.form("chart_form"):
-    selected_options = {}
-    # 3列に分けてラジオボタンを配置
-    cols = st.columns(3)
-    for i, category in enumerate(categories):
-        with cols[i % 3]:
-            st.subheader(category)
-            selected_options[category] = st.radio(
-                f"{category}の選択肢:", options, key=f"radio_{category}", label_visibility="collapsed"
-            )
+    with st.container(border=True):
+        st.info("発達段階表を確認後、各項目の現在の発達段階を下の選択肢から選んでください。")
+        selected_options = {}
+        # 3列に分けてラジオボタンを配置
+        cols = st.columns(3)
+        for i, category in enumerate(categories):
+            with cols[i % 3]:
+                st.markdown(f"**{category}**")
+                selected_options[category] = st.radio(
+                    f"{category}の選択肢:", options, key=f"radio_{category}", label_visibility="collapsed"
+                )
 
     submitted = st.form_submit_button("📊 チャートを作成して書き込む", use_container_width=True, type="primary")
+
+# --- ★★★処理と結果表示★★★ ---
 
 if submitted:
     with st.spinner('スプレッドシートにデータを書き込み、チャートを更新しています... しばらくお待ちください。'):
         try:
-            # --- 元のコードの書き込みロジックをここに移植 ---
-            # (長いですが、元のコードのロジックをそのまま関数化せずに持ってきています)
+            # (元の書き込みロジックは変更なし)
             sheet_name = "シート1"
-            
+            age_categories = {
+                "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4,
+                "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8,
+                "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12
+            }
+            # ... (元の長い書き込みロジックをここにペースト) ...
             # 1. 各カテゴリと選択肢をスプレッドシートに書き込む
             values_to_write = []
             for cat, opt in selected_options.items():
@@ -177,11 +236,6 @@ if submitted:
             ).execute()
 
             # 2. 年齢カテゴリを数値にマッピングし、B列を更新
-            age_categories = {
-                "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4,
-                "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8,
-                "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12
-            }
             converted_values = [[age_categories.get(opt, "")] for opt in selected_options.values()]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!B3:B14",
@@ -244,61 +298,64 @@ if submitted:
             ).execute()
 
             st.success("✅ スプレッドシートへの書き込みとチャートの更新が完了しました！")
-            st.info("下のボタンから結果の確認とダウンロードができます。")
+            st.session_state.chart_created = True # 結果表示用のフラグ
 
         except HttpError as e:
             st.error(f"スプレッドシートへのアクセス中にエラーが発生しました: {e.content.decode()}")
+            st.session_state.chart_created = False
         except Exception as e:
             st.error(f"書き込み中に予期せぬエラーが発生しました: {e}")
+            st.session_state.chart_created = False
 
-st.markdown("---")
-st.subheader("作成したチャートの確認と保存")
+# チャート作成が成功した場合のみ結果表示エリアを表示
+if st.session_state.get('chart_created', False):
+    st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
+    st.header("作成したチャートの確認と保存")
 
-col1, col2, col3 = st.columns([1,1,2])
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
 
-with col1:
-    # スプレッドシートへのリンク
-    sheet_gid = "0"
-    spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid={sheet_gid}"
-    st.link_button("🌐 スプレッドシートで確認", spreadsheet_url, use_container_width=True)
+        with col1:
+            # スプレッドシートへのリンク
+            sheet_gid = "0"
+            spreadsheet_url_chart = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid={sheet_gid}"
+            st.link_button("🌐 スプレッドシートでチャートを確認", spreadsheet_url_chart, use_container_width=True)
 
-with col2:
-    # Excelダウンロード機能
-    if st.button("💾 Excel形式でダウンロード", use_container_width=True):
-        try:
-            with st.spinner("Excelファイルを生成しています..."):
-                request = drive_service.files().export_media(
-                    fileId=SPREADSHEET_ID,
-                    mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
-                file_data = io.BytesIO()
-                downloader = MediaIoBaseDownload(file_data, request)
-                done = False
-                while not done:
-                    status, done = downloader.next_chunk()
-                file_data.seek(0)
-                st.session_state.excel_data = file_data.getvalue()
+        with col2:
+            # Excelダウンロード機能
+            if st.button("💾 Excel形式でダウンロード", use_container_width=True):
+                try:
+                    with st.spinner("Excelファイルを生成しています..."):
+                        request = drive_service.files().export_media(
+                            fileId=SPREADSHEET_ID,
+                            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                        file_data = io.BytesIO()
+                        downloader = MediaIoBaseDownload(file_data, request)
+                        done = False
+                        while not done:
+                            status, done = downloader.next_chunk()
+                        file_data.seek(0)
+                        st.session_state.excel_data = file_data.getvalue()
 
-        except HttpError as e:
-            st.error(f"Excelのエクスポート中にエラーが発生しました: {e.content.decode()}")
-        except Exception as e:
-            st.error(f"Excelダウンロード準備中に予期せぬエラーが発生しました: {e}")
+                except HttpError as e:
+                    st.error(f"Excelのエクスポート中にエラーが発生しました: {e.content.decode()}")
+                except Exception as e:
+                    st.error(f"Excelダウンロード準備中に予期せぬエラーが発生しました: {e}")
 
-if 'excel_data' in st.session_state and st.session_state.excel_data:
-    st.download_button(
-        label="🔽 ダウンロード準備完了",
-        data=st.session_state.excel_data,
-        file_name="hattatsu_chart.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-        key="download_excel_final"
-    )
+        if 'excel_data' in st.session_state and st.session_state.excel_data:
+            st.download_button(
+                label="🔽 ダウンロード準備完了 (クリックして保存)",
+                data=st.session_state.excel_data,
+                file_name="hattatsu_chart.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                type="primary",
+                key="download_excel_final"
+            )
 
-with col3:
-    st.markdown("[発達段階表](https://docs.google.com/spreadsheets/d/1yXSXSjYBaV2jt2BNO638Y2YZ6U7rdOCv5ScozlFq_EE/edit#gid=643912489)で基準を確認できます。")
-
-
-st.markdown("---")
-st.subheader("📈 成長傾向の分析")
-st.markdown("これまでの発達チャートデータから成長グラフを作成したい場合は、以下のツールをご利用ください。")
-st.page_link("https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/", label="発達段階の成長傾向分析ツール", icon="🔗")
+st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
+st.header("📈 成長傾向の分析")
+with st.container(border=True):
+    st.markdown("これまでの発達チャートデータから成長グラフを作成したい場合は、以下のツールをご利用ください。")
+    st.page_link("https://bunnsekiexcel-edeeuzkkntxmhdptk54v2t.streamlit.app/", label="発達段階の成長傾向分析ツールへ", icon="🔗")
