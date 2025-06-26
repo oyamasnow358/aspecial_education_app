@@ -6,6 +6,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 
 # --- ▼ 共通CSSの読み込み ▼ ---
+# (変更ないため、コードは前のものをそのままお使いください)
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
@@ -147,95 +148,101 @@ st.set_page_config(
     page_title="発達チャート作成", 
     page_icon="📊", 
     layout="wide",
-    initial_sidebar_state="expanded" # ← サイドバーを開いた状態に戻しました
+    initial_sidebar_state="expanded"
 )
 
 # CSSを適用
 load_css()
 
-st.title("📊 発達チャート作成")
-st.write("お子さんの発達段階を選択し、現在の状態と次のステップをまとめたチャートを作成・保存します。")
+# --- ★★★ここからが大きな変更点★★★ ---
+
+# データをキャッシュする関数
+@st.cache_data(ttl=600) # 10分間データをキャッシュしてAPIの負荷を減らす
+def load_guidance_data(_sheets_service, spreadsheet_id):
+    try:
+        sheet_data = _sheets_service.spreadsheets().values().get(
+            spreadsheetId=spreadsheet_id, range="シート2!A1:V"
+        ).execute().get('values', [])
+        
+        headers = [h.strip() for h in sheet_data[0]]
+        data_map = {key: {} for key in headers}
+        for row in sheet_data[1:]:
+            if len(row) > 21 and row[21].isdigit():
+                age_step = int(row[21])
+                for j, key in enumerate(headers):
+                    if j < len(row):
+                        data_map[key][age_step] = row[j]
+        return data_map
+    except Exception as e:
+        st.error(f"発達段階表データの読み込み中にエラーが発生しました: {e}")
+        return None
 
 # --- Google API関連のセットアップ ---
 try:
     credentials = Credentials.from_service_account_info(
         st.secrets["google_credentials"],
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
+        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     )
     sheets_service = build('sheets', 'v4', credentials=credentials)
     drive_service = build('drive', 'v3', credentials=credentials)
     SPREADSHEET_ID = "1yXSXSjYBaV2jt2BNO638Y2YZ6U7rdOCv5ScozlFq_EE"
-except (KeyError, FileNotFoundError):
-    st.error("GCPの認証情報が設定されていません。`st.secrets`に`google_credentials`を設定してください。")
-    st.stop()
+    
+    # 発達段階の目安データを読み込む
+    guidance_map = load_guidance_data(sheets_service, SPREADSHEET_ID)
+
 except Exception as e:
-    st.error(f"Google APIの認証中に予期せぬエラーが発生しました: {e}")
+    st.error(f"Google APIの認証またはデータ読み込みでエラーが発生しました: {e}")
     st.stop()
 
-# --- ★★★ここからUIの定義★★★ ---
 
-# STEP 1: 基準の確認
-with st.container(border=True):
-    st.header("STEP 1: 基準の確認")
-    st.write("まず、下のボタンから「発達段階表」を開き、各項目の基準を確認してください。")
-    # 発達段階表のスプレッドシートへのリンク
-    spreadsheet_url_gantt = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid=643912489"
-    st.link_button("📑 発達段階表を開く", spreadsheet_url_gantt, use_container_width=True, type="primary")
+st.title("📊 発達チャート作成")
+st.write("お子さんの発達段階を選択し、現在の状態と次のステップをまとめたチャートを作成・保存します。")
 
-st.markdown("---")
+# --- UIの定義 ---
+st.header("発達段階の入力")
+st.info("各項目の**「▼ 目安を見る」**を開いて内容を確認しながら、現在の発達段階を選択してください。")
 
-# STEP 2: 発達段階の入力
-st.header("STEP 2: 発達段階の入力")
-
-# カテゴリと選択肢
 categories = ["認知力・操作", "認知力・注意力", "集団参加", "生活動作", "言語理解", "表出言語", "記憶", "読字", "書字", "粗大運動", "微細運動","数の概念"]
 options = ["0〜3ヶ月", "3〜6ヶ月", "6〜9ヶ月", "9〜12ヶ月", "12～18ヶ月", "18～24ヶ月", "2～3歳", "3～4歳", "4～5歳", "5～6歳", "6～7歳", "7歳以上"]
+age_categories_map = {text: i + 1 for i, text in enumerate(options)}
 
-# フォームを使って入力をグループ化
 with st.form("chart_form"):
-    with st.container(border=True):
-        st.info("発達段階表を確認後、各項目の現在の発達段階を下の選択肢から選んでください。")
-        selected_options = {}
-        # 3列に分けてラジオボタンを配置
-        cols = st.columns(3)
-        for i, category in enumerate(categories):
-            with cols[i % 3]:
+    selected_options = {}
+    cols = st.columns(3)
+    for i, category in enumerate(categories):
+        with cols[i % 3]:
+            with st.container(border=True):
                 st.markdown(f"**{category}**")
                 selected_options[category] = st.radio(
                     f"{category}の選択肢:", options, key=f"radio_{category}", label_visibility="collapsed"
                 )
 
+                # ★★★ここが新しい機能！★★★
+                with st.expander("▼ 目安を見る"):
+                    if guidance_map and category in guidance_map:
+                        for age_text, age_step in age_categories_map.items():
+                            description = guidance_map[category].get(age_step, "（記載なし）")
+                            st.markdown(f"**{age_text}:** {description}")
+                    else:
+                        st.write("このカテゴリの目安データはありません。")
+    
     submitted = st.form_submit_button("📊 チャートを作成して書き込む", use_container_width=True, type="primary")
 
-# --- ★★★処理と結果表示★★★ ---
-
+# --- 処理と結果表示 ---
 if submitted:
     with st.spinner('スプレッドシートにデータを書き込み、チャートを更新しています... しばらくお待ちください。'):
         try:
-            # (元の書き込みロジックは変更なし)
+            # (書き込みロジックは元のコードと同じでOK)
             sheet_name = "シート1"
-            age_categories = {
-                "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4,
-                "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8,
-                "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12
-            }
-            # ... (元の長い書き込みロジックをここにペースト) ...
             # 1. 各カテゴリと選択肢をスプレッドシートに書き込む
-            values_to_write = []
-            for cat, opt in selected_options.items():
-                values_to_write.append([cat, '', opt]) # B列は後で更新
-
+            values_to_write = [[cat, '', opt] for cat, opt in selected_options.items()]
             sheets_service.spreadsheets().values().update(
-                spreadsheetId=SPREADSHEET_ID,
-                range=f"{sheet_name}!A3:C14",
-                valueInputOption="RAW",
-                body={"values": values_to_write}
+                spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!A3:C14",
+                valueInputOption="RAW", body={"values": values_to_write}
             ).execute()
 
             # 2. 年齢カテゴリを数値にマッピングし、B列を更新
+            age_categories = { "0〜3ヶ月": 1, "3〜6ヶ月": 2, "6〜9ヶ月": 3, "9〜12ヶ月": 4, "12～18ヶ月": 5, "18～24ヶ月": 6, "2～3歳": 7, "3～4歳": 8, "4～5歳": 9, "5～6歳": 10, "6～7歳": 11, "7歳以上": 12 }
             converted_values = [[age_categories.get(opt, "")] for opt in selected_options.values()]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!B3:B14",
@@ -246,7 +253,6 @@ if submitted:
             sheet1_data = sheets_service.spreadsheets().values().get(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!A3:C14"
             ).execute().get('values', [])
-            
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!A19:C30",
                 valueInputOption="RAW", body={"values": sheet1_data}
@@ -267,35 +273,20 @@ if submitted:
                 valueInputOption="RAW", body={"values": updated_c_values}
             ).execute()
 
-            # 6. シート2のデータを取得してマッピングを作成
-            sheet2_data = sheets_service.spreadsheets().values().get(
-                spreadsheetId=SPREADSHEET_ID, range="シート2!A1:V"
-            ).execute().get('values', [])
-            headers = [h.strip() for h in sheet2_data[0]]
-            data_map = {key: {} for key in headers}
-            for row in sheet2_data[1:]:
-                if len(row) > 21 and row[21].isdigit():
-                    age_step = int(row[21])
-                    for j, key in enumerate(headers):
-                        if j < len(row):
-                            data_map[key][age_step] = row[j]
-            
-            # 7. D3:D14とD19:D30を更新
+            # 7. D3:D14とD19:D30を更新 (guidance_mapを再利用)
             category_names = [row[0].strip() for row in sheet1_data]
-            
-            # D3:D14
-            results_d3 = [[data_map.get(cat, {}).get(int(age[0]), "該当なし")] for cat, age in zip(category_names, converted_values) if age and age[0]]
+            results_d3 = [[guidance_map.get(cat, {}).get(int(age[0]), "該当なし")] for cat, age in zip(category_names, converted_values) if age and age[0]]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!D3:D14",
                 valueInputOption="RAW", body={"values": results_d3}
             ).execute()
 
-            # D19:D30
-            results_d19 = [[data_map.get(cat, {}).get(b[0], "該当なし")] for cat, b in zip(category_names, updated_b_values) if b and b[0]]
+            results_d19 = [[guidance_map.get(cat, {}).get(b[0], "該当なし")] for cat, b in zip(category_names, updated_b_values) if b and b[0]]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!D19:D30",
                 valueInputOption="RAW", body={"values": results_d19}
             ).execute()
+            # ...元のロジックここまで...
 
             st.success("✅ スプレッドシートへの書き込みとチャートの更新が完了しました！")
             st.session_state.chart_created = True # 結果表示用のフラグ
@@ -314,34 +305,23 @@ if st.session_state.get('chart_created', False):
 
     with st.container(border=True):
         col1, col2 = st.columns(2)
-
         with col1:
-            # スプレッドシートへのリンク
             sheet_gid = "0"
             spreadsheet_url_chart = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid={sheet_gid}"
             st.link_button("🌐 スプレッドシートでチャートを確認", spreadsheet_url_chart, use_container_width=True)
-
         with col2:
-            # Excelダウンロード機能
             if st.button("💾 Excel形式でダウンロード", use_container_width=True):
                 try:
                     with st.spinner("Excelファイルを生成しています..."):
-                        request = drive_service.files().export_media(
-                            fileId=SPREADSHEET_ID,
-                            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
+                        request = drive_service.files().export_media(fileId=SPREADSHEET_ID, mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                         file_data = io.BytesIO()
                         downloader = MediaIoBaseDownload(file_data, request)
                         done = False
-                        while not done:
-                            status, done = downloader.next_chunk()
+                        while not done: status, done = downloader.next_chunk()
                         file_data.seek(0)
                         st.session_state.excel_data = file_data.getvalue()
-
-                except HttpError as e:
-                    st.error(f"Excelのエクスポート中にエラーが発生しました: {e.content.decode()}")
                 except Exception as e:
-                    st.error(f"Excelダウンロード準備中に予期せぬエラーが発生しました: {e}")
+                    st.error(f"Excelエクスポート中にエラーが発生しました: {e}")
 
         if 'excel_data' in st.session_state and st.session_state.excel_data:
             st.download_button(
@@ -350,8 +330,7 @@ if st.session_state.get('chart_created', False):
                 file_name="hattatsu_chart.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
-                type="primary",
-                key="download_excel_final"
+                type="primary"
             )
 
 st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
