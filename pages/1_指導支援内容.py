@@ -1,7 +1,63 @@
       
 import streamlit as st
 import json
+from pathlib import Path # ★★★ 新しく追加 ★★★
 
+# (load_css 関数はそのまま)
+
+# --- ▼ 外部JSONデータを読み込む関数 (この部分を丸ごと置き換える) ▼ ---
+@st.cache_data
+def load_guidance_data():
+    """指導データをJSONファイルから読み込む（パス自動解決つき）"""
+    try:
+        # このスクリプトファイル自身の絶対パスを取得
+        script_path = Path(__file__)
+        # アプリのルートディレクトリのパスを構築 (pagesフォルダの親)
+        app_root = script_path.parent.parent
+        # 読み込むべきJSONファイルの絶対パスを決定
+        json_path = app_root / "guidance_data.json"
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    except FileNotFoundError:
+        # もしファイルが見つからなかった場合に、アプリ画面に親切なエラーを表示
+        st.error(
+            f"""
+            **【エラー】 `guidance_data.json` が見つかりません！**
+
+            プログラムは以下の場所からファイルを探そうとしました：
+            `{json_path}`
+
+            **▼ 確認してください ▼**
+            1.  `guidance_data.json` という名前のファイルが存在しますか？ (スペルは正しいですか？)
+            2.  そのファイルは **`pages` フォルダの外（同じ階層）** に置いてありますか？
+
+            **正しいフォルダ構成（例）：**
+            ```
+            - あなたのアプリのフォルダ/
+              ├─ guidance_data.json  <-- ★ここに配置
+              ├─ Home.py (メインのpyファイル)
+              └─ pages/
+                 └─ 1_指導支援内容.py
+            ```
+            """
+        )
+        st.stop() # エラーがあったら、ここで処理を停止する
+    except json.JSONDecodeError:
+        # もしJSONファイルの中身が壊れていた場合に、アプリ画面に親切なエラーを表示
+        st.error(
+            """
+            **【エラー】 `guidance_data.json` ファイルの中身が正しくありません！**
+
+            ファイルを開いて、以下の点を確認してください。
+
+            - 全体が `{` で始まり、`}` で終わっていますか？
+            - 項目の間のカンマ `,` が抜けていたり、最後の項目に余分なカンマが付いていませんか？
+            - 文字列はすべてダブルクォーテーション `"` で囲まれていますか？
+            """
+        )
+        st.stop()
 # --- ▼ 共通CSSの読み込み (変更なし) ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
