@@ -13,3 +13,4 @@ google-api-python-client
 google-cloud-storage
 oauth2client
 google-api-python-client
+openai==1.23.6

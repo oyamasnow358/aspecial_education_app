@@ -6,5 +6,6 @@ propane-atrium-449411-e6-e1bccb92a993.json
 config/
 venv/
 c o n f i g / * . j s o n 
+.streamlit/secrets.toml
  
 config/secrets.toml

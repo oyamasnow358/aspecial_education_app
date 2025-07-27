@@ -176,8 +176,16 @@ with col2:
         st.write("アプリの改善や、新しい指導実践の共有など、皆様からのご意見をお待ちしています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
 
-# --- フッター（外部リンクや注意書き） ---
-st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
+# --- ▼ 機能紹介を均等にするため、列の外に新しい機能を追加 ▼ ---
+st.markdown("---")
+with st.container(border=True):
+    st.markdown("### 🤖 AIによる対話 <span style='color: #8A2BE2; font-size: 0.8em; font-weight: bold;'>NEW!</span>", unsafe_allow_html=True)
+    st.write("入力フォームや対話を通じて、AIが個別の指導計画作成や指導のヒントを提案します。")
+    # ボタンを中央に配置するための列
+    b_col1, b_col2, b_col3 = st.columns([1,2,1])
+    with b_col2:
+        st.button("この機能を使ってみる ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", type="primary", use_container_width=True)
+st.markdown("---")
 
 with st.container(border=True):
     st.header("関連ツール＆リンク")
