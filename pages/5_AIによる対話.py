@@ -2,15 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import time
 
-# --- Google AIのAPIキーを設定 ---
-try:
-    # st.secretsからAPIキーを読み込む
-    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    API_KEY_CONFIGURED = True
-except (KeyError, FileNotFoundError):
-    API_KEY_CONFIGURED = False
-
-# --- プロンプトを生成する関数（内容は同じでOK） ---
+# --- プロンプトを生成する関数（変更なし） ---
 def create_prompt(child_name, long_term_goal, short_term_goal, consideration, support_idea):
     """AIへの指示（プロンプト）を作成する関数"""
     prompt = f"""
@@ -59,11 +51,6 @@ def main():
     **生成された内容はあくまで草案です。必ず専門的な知見に基づき、内容を検討・修正してご活用ください。**
     """)
 
-    if not API_KEY_CONFIGURED:
-        st.error("エラー: Google AIのAPIキーが設定されていません。管理者にお問い合わせください。")
-        st.warning("（管理者向け）`.streamlit/secrets.toml` ファイルに `GOOGLE_API_KEY = 'あなたのキー'` を設定してください。")
-        return # APIキーがない場合はここで処理を中断
-
     # --- 入力フォーム（変更なし） ---
     with st.form("plan_form"):
         st.subheader("お子さんの情報を入力してください")
@@ -94,11 +81,18 @@ def main():
         else:
             with st.spinner("GoogleのAIが個別指導計画を考えています..."):
                 try:
+                    # --- ▼▼▼ ここでAPIキーを設定します ▼▼▼ ---
+                    try:
+                        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+                    except (KeyError, FileNotFoundError):
+                        st.error("エラー: Google AIのAPIキーが設定されていません。Streamlit CloudのSecretsを確認してください。")
+                        st.stop() # エラーがあれば処理を中断
+                    
                     # AIへのプロンプトを生成
                     prompt = create_prompt(child_name, long_term_goal, short_term_goal, consideration, support_idea)
                     
                     # Google Gemini APIを呼び出し
-                    model = genai.GenerativeModel('gemini-1.5-flash-latest') # 無料で高速なモデル
+                    model = genai.GenerativeModel('gemini-1.5-flash-latest')
                     response = model.generate_content(prompt)
                     
                     ai_response = response.text
@@ -119,10 +113,8 @@ def main():
     """)
 
 
+# --- ページの実行部分 ---
+# st.set_page_configはメインのアプリファイルで一度だけ呼び出すのがベストプラクティス
+# このファイル単体でテストしたい時以外は、以下のifブロックは不要になることが多いです
 if __name__ == "__main__":
-    st.set_page_config(
-        page_title="AIによる対話",
-        page_icon="🤖",
-        layout="wide"
-    )
     main()
