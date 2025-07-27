@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 def create_prompt(child_name, long_term_goal, short_term_goal, consideration, support_idea):
-    """AIへの指示（プロンプト）を作成する関数"""
+    """※未完成です　いじらないで　AIへの指示（プロンプト）を作成する関数"""
     # (この関数の中身は変更ありません)
     prompt = f"""
 あなたは、特別支援教育の経験豊富な専門家です。
