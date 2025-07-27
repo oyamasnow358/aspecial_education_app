@@ -172,6 +172,11 @@ with col2:
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
 
     with st.container(border=True):
+        st.markdown("### 📊 AIによる対話")
+        st.write("支援方法やと個別の支援計画の作成など")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_chart")
+
+    with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善や、新しい指導実践の共有など、皆様からのご意見をお待ちしています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
