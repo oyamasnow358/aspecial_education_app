@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 def create_prompt(child_name, long_term_goal, short_term_goal, consideration, support_idea):
-    """※未完成です　いじらないで　AIへの指示（プロンプト）を作成する関数"""
+    """AIへの指示（プロンプト）を作成する関数"""
     # (この関数の中身は変更ありません)
     prompt = f"""
 あなたは、特別支援教育の経験豊富な専門家です。
@@ -43,7 +43,7 @@ def create_prompt(child_name, long_term_goal, short_term_goal, consideration, su
     return prompt
 
 def main():
-    st.title("🤖 AIによる個別指導計画サポート (Google Gemini版)")
+    st.title("🤖※未完成です　いじらないで　 AIによる個別指導計画サポート (Google Gemini版)")
     st.info("""
     ここでは、お子さんの情報や目標を入力することで、**GoogleのAI「Gemini」**が個別指導計画の草案や具体的な支援のヒントを提案します。\n
     **生成された内容はあくまで草案です。必ず専門的な知見に基づき、内容を検討・修正してご活用ください。**
