@@ -80,18 +80,30 @@ st.title("🤖 個別の支援計画・指導計画作成サポート")
 st.info(
     """
     ここでは、個別の支援計画・指導計画に関する文章を作成するためのプロンプト（AIへの命令文）を簡単に作成できます。
-    必要な項目を入力し、プロンプトを生成してください。
+    下の各セクションで必要な項目を入力し、プロンプトを生成してください。
     """
 )
 
-# ChatGPTへのリンク
-st.markdown("---")
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.write("#### プロンプトをコピーしたら、下のボタンからChatGPTを開いて貼り付け！")
-with col2:
-    st.link_button("ChatGPT を開く ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
-st.markdown("---")
+# --- ▼▼▼【修正箇所】ChatGPTへのリンクを目立つように変更 ▼▼▼ ---
+with st.container(border=True):
+    st.markdown("""
+    <div style="background-color: #e9f5ff; padding: 15px 20px; border: 2px solid #4a90e2; border-radius: 10px;">
+        <h2 style="margin-top: 0; color: #2c3e50; border-left: none; text-align: center;">
+            🚀 プロンプトをコピーしたら、ChatGPTへ！
+        </h2>
+        <p style="text-align: center; font-size: 1.1em; margin-bottom: 15px;">
+            下のボタンを押すとChatGPTが開きます。コピーしたプロンプトを貼り付けて、文章作成を始めましょう。
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ボタンを中央に配置するための列
+    b_col1, b_col2, b_col3 = st.columns([1,1.5,1])
+    with b_col2:
+        st.link_button("ChatGPT を開いて文章作成を始める ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
+# --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
 
 
 # --- プロンプト①〜③（変更なし） ---
@@ -145,7 +157,7 @@ with st.container(border=True):
 - 指導方針は全体的な視点で、各実態は200〜300文字で丁寧に描写してください。""", language="text")
 
 
-# --- ▼▼▼【修正箇所】ここからプロンプト④です ▼▼▼ ---
+# --- プロンプト④ ---
 with st.container(border=True):
     st.header("プロンプト④【個別の指導計画：評価】")
     st.write("指導計画を基に、活動の様子を評価する文章を作成します。")
@@ -205,7 +217,7 @@ with st.container(border=True):
         st.code(prompt_full_4, language="text")
 
 
-# --- ▼▼▼【修正箇所】ここからプロンプト⑤です ▼▼▼ ---
+# --- プロンプト⑤ ---
 with st.container(border=True):
     st.header("プロンプト⑤【前期・後期の所見】")
     st.write("評価文や計画書を基に、総合的な所見を作成します。")

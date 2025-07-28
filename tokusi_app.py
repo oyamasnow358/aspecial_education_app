@@ -154,9 +154,9 @@ with col1:
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance")
 
     with st.container(border=True):
-        st.markdown("### 📝 フィードバック")
-        st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
+        st.markdown("### 📈 分析方法")
+        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
 
 with col2:
     with st.container(border=True):
@@ -165,21 +165,22 @@ with col2:
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
 
     with st.container(border=True):
+        st.markdown("### 💬 AIによる対話")
+        st.write("支援方法について、AIとチャット形式で自由に相談できます。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_AIによる対話.py",), key="btn_ai_chat")
+
+with col3:
+    with st.container(border=True):
         st.markdown("### 🤖 **計画作成サポート** <span style='color: #8A2BE2;'>NEW!</span>", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation")
 
-
-with col3:
+    # --- ▼▼▼【修正箇所】フィードバックを一番最後に移動 ▼▼▼ ---
     with st.container(border=True):
-        st.markdown("### 📈 分析方法")
-        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
-
-    with st.container(border=True):
-        st.markdown("### 💬 **AIによる対話**")
-        st.write("支援方法について、AIとチャット形式で自由に相談できます。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_AIによる対話.py",), key="btn_ai_chat")
+        st.markdown("### 📝 フィードバック")
+        st.write("アプリの改善やご意見をお待ちしています。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
+    # --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
 
 
 # --- ▼ 関連ツール＆リンク ▼ ---
