@@ -1,12 +1,11 @@
 import streamlit as st
+
 # --- ▼ 共通CSSの読み込み ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
     <style>
         /* --- 背景画像の設定 --- */
-        /* ご用意された画像のURLを下の 'url(...)' 内に貼り付けてください */
-        /* 例: url("https://i.imgur.com/your_image.jpg"); */
         [data-testid="stAppViewContainer"] > .main {
             background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
@@ -120,12 +119,6 @@ st.set_page_config(
 # CSSを適用
 load_css()
 
-
-
-# ページ遷移を管理するための関数
-def set_page(page):
-    st.session_state.page_to_visit = page
-
 # ページ遷移を管理するための関数
 def set_page(page):
     st.session_state.page_to_visit = page
@@ -145,14 +138,14 @@ st.header("ようこそ！")
 st.write("""
 このアプリは、特別支援教育に関わる先生方をサポートするためのツールです。
 子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
-発達段階を記録・分析したりすることができます。
+発達段階を記録・分析したり、AIによる計画作成の補助を受けたりすることができます。
 
 **サイドバーのメニューから、利用したい機能を選択してください。**
 """)
 
 st.header("各機能の紹介")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     with st.container(border=True):
@@ -161,9 +154,9 @@ with col1:
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance")
 
     with st.container(border=True):
-        st.markdown("### 📈 分析方法")
-        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
+        st.markdown("### 📝 フィードバック")
+        st.write("アプリの改善やご意見をお待ちしています。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
 
 with col2:
     with st.container(border=True):
@@ -172,26 +165,25 @@ with col2:
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
 
     with st.container(border=True):
-        st.markdown("### 📊 AIによる対話")
-        st.write("支援方法やと個別の支援計画の作成など")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_chart")
+        st.markdown("### 🤖 **計画作成サポート** <span style='color: #8A2BE2;'>NEW!</span>", unsafe_allow_html=True)
+        st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation")
+
+
+with col3:
+    with st.container(border=True):
+        st.markdown("### 📈 分析方法")
+        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
 
     with st.container(border=True):
-        st.markdown("### 📝 フィードバック")
-        st.write("アプリの改善や、新しい指導実践の共有など、皆様からのご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
+        st.markdown("### 💬 **AIによる対話**")
+        st.write("支援方法について、AIとチャット形式で自由に相談できます。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_AIによる対話.py",), key="btn_ai_chat")
 
-# --- ▼ 機能紹介を均等にするため、列の外に新しい機能を追加 ▼ ---
-st.markdown("---")
-with st.container(border=True):
-    st.markdown("### 🤖 AIによる対話 <span style='color: #8A2BE2; font-size: 0.8em; font-weight: bold;'>NEW!</span>", unsafe_allow_html=True)
-    st.write("入力フォームや対話を通じて、AIが個別の指導計画作成や指導のヒントを提案します。")
-    # ボタンを中央に配置するための列
-    b_col1, b_col2, b_col3 = st.columns([1,2,1])
-    with b_col2:
-        st.button("この機能を使ってみる ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", type="primary", use_container_width=True)
-st.markdown("---")
 
+# --- ▼ 関連ツール＆リンク ▼ ---
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 with st.container(border=True):
     st.header("関連ツール＆リンク")
     c1, c2 = st.columns(2)
@@ -214,7 +206,7 @@ with st.container(border=True):
     st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
     st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
 
-st.markdown("---")
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 st.warning("""
 **【利用上の注意】**
 それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
