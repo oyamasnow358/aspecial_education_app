@@ -147,6 +147,7 @@ st.header("各機能の紹介")
 
 col1, col2, col3 = st.columns(3)
 
+# --- ▼▼▼【修正箇所】ボタンのリンク先を新しいファイル名に変更 ▼▼▼ ---
 with col1:
     with st.container(border=True):
         st.markdown("### 📚 指導支援内容")
@@ -163,24 +164,23 @@ with col2:
         st.markdown("### 📊 発達チャート作成")
         st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
-
-    with st.container(border=True):
-        st.markdown("### 💬 AIによる対話")
-        st.write("支援方法について、AIとチャット形式で自由に相談できます。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_AIによる対話.py",), key="btn_ai_chat")
-
-with col3:
+    
     with st.container(border=True):
         st.markdown("### 🤖 **計画作成サポート** <span style='color: #8A2BE2;'>NEW!</span>", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation")
 
-    # --- ▼▼▼【修正箇所】フィードバックを一番最後に移動 ▼▼▼ ---
+with col3:
+    with st.container(border=True):
+        st.markdown("### 💬 AIによる対話")
+        st.write("支援方法について、AIとチャット形式で自由に相談できます。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat")
+
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_フィードバック.py",), key="btn_feedback")
-    # --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_フィードバック.py",), key="btn_feedback")
+# --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
 
 
 # --- ▼ 関連ツール＆リンク ▼ ---
