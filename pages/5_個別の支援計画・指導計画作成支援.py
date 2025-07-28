@@ -1,6 +1,6 @@
 import streamlit as st
 
-# --- ▼ 共通CSSの読み込み（メインページからコピー） ▼ ---
+# --- ▼ 共通CSSの読み込み ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
@@ -25,51 +25,40 @@ def load_css():
         }
 
         /* --- 見出しのスタイル --- */
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
         h1 {
-            color: #2c3e50; /* ダークブルー */
             text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
         }
         h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
+            border-left: 6px solid #8A2BE2;
             padding-left: 12px;
             margin-top: 40px;
         }
         h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
+            border-bottom: 2px solid #4a90e2;
             padding-bottom: 8px;
             margin-top: 30px;
         }
 
-        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
+        /* --- カードデザイン --- */
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
             background-color: rgba(255, 255, 255, 0.95);
             border: 1px solid #e0e0e0;
             border-radius: 15px;
             padding: 1.5em 1.5em;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px; /* カード間の余白 */
+            margin-bottom: 20px;
         }
         
         /* --- ボタンのスタイル --- */
         .stButton>button {
-            border: 2px solid #4a90e2;
             border-radius: 25px;
-            color: #4a90e2;
-            background-color: #ffffff;
             padding: 10px 24px;
             font-weight: bold;
             transition: all 0.3s ease;
         }
-        .stButton>button:hover {
-            border-color: #8A2BE2;
-            color: white;
-            background-color: #8A2BE2;
-        }
-        /* Primaryボタン */
         .stButton>button[kind="primary"] {
             background-color: #4a90e2;
             color: white;
@@ -77,14 +66,6 @@ def load_css():
         }
         .stButton>button[kind="primary"]:hover {
             background-color: #357ABD;
-            border-color: #357ABD;
-        }
-
-        /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 { /* st.infoのコンテナ */
-             background-color: rgba(232, 245, 253, 0.7); /* 淡い青 */
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
         }
     </style>
     """
@@ -99,8 +80,7 @@ st.title("🤖 個別の支援計画・指導計画作成サポート")
 st.info(
     """
     ここでは、個別の支援計画・指導計画に関する文章を作成するためのプロンプト（AIへの命令文）を簡単に作成できます。
-    必要な項目を入力し、「プロンプトを生成」ボタンを押してください。
-    生成されたプロンプトをコピーし、ChatGPTなどのAIチャットに貼り付けて使用します。
+    必要な項目を入力し、プロンプトを生成してください。
     """
 )
 
@@ -114,18 +94,14 @@ with col2:
 st.markdown("---")
 
 
-# --- プロンプト① ---
+# --- プロンプト①〜③（変更なし） ---
 with st.container(border=True):
     st.header("プロンプト①【プランA：特別な教育的ニーズ／合理的配慮】")
-    jittai_1 = st.text_area(
-        "✅ お子さんの実態や課題を入力してください",
-        value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す",
-        height=100, key="jittai_1"
-    )
+    jittai_1 = st.text_area("✅ お子さんの実態や課題を入力", value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す", height=100, key="jittai_1")
     if st.button("プロンプト① を生成", key="btn_1", use_container_width=True):
-        prompt_text_1 = f"""以下の実態や課題をもとに、特別支援教育に関する「プランA」の以下の項目を作成してください。
+        st.code(f"""以下の実態や課題をもとに、特別支援教育に関する「プランA」の以下の項目を作成してください。
 
-【入力】実態や課題（単語や短文、複数）：
+【入力】実態や課題：
 {jittai_1}
 
 【出力項目】：
@@ -133,145 +109,146 @@ with st.container(border=True):
 ② 上記ニーズ①～③と連動した、合理的配慮の実施内容（3つ）
 
 【条件】：
-- 「特別な教育的ニーズ」は、入力された情報を3つの観点から分類し、①〜③として明確に提示してください。
-- 「合理的配慮の実施内容」は、上記①〜③のニーズそれぞれに対応した具体的な支援内容を記述してください。
-- 各項目の文量は200〜300文字程度。
-- 添付資料の文体（柔らかく、教育的な表現）を参考にし、読んで納得しやすい表現で整えてください。"""
-        st.subheader("📄 生成されたプロンプト①（コピーして使ってください）")
-        st.code(prompt_text_1, language="text")
+- 各項目の文量は200〜300文字程度で、柔らかく教育的な表現で整えてください。""", language="text")
 
-# --- プロンプト② ---
 with st.container(border=True):
     st.header("プロンプト②【プランA：所属校の支援】")
-    needs_2 = st.text_area(
-        "✅ プロンプト①でAIが生成した「特別な教育的ニーズ①〜③」をここに貼り付けてください",
-        value="① 感覚過敏があり、環境刺激に影響を受けやすい\n② 注意の持続が難しく、集中が途切れやすい\n③ コミュニケーションに混乱が見られ、一斉指示に反応しづらい",
-        height=150, key="needs_2"
-    )
+    needs_2 = st.text_area("✅ プロンプト①でAIが生成した「特別な教育的ニーズ」を貼り付け", value="① 感覚過敏があり、環境刺激に影響を受けやすい\n② 注意の持続が難しく、集中が途切れやすい\n③ コミュニケーションに混乱が見られ、一斉指示に反応しづらい", height=150, key="needs_2")
     if st.button("プロンプト② を生成", key="btn_2", use_container_width=True):
-        prompt_text_2 = f"""以下の「特別な教育的ニーズ①〜③」に基づいて、「所属校による支援計画（プランA）」の以下項目を作成してください。
+        st.code(f"""以下の「特別な教育的ニーズ」に基づいて、「所属校による支援計画（プランA）」の項目を作成してください。
 
 【参考】特別な教育的ニーズ：
 {needs_2}
 
 【出力項目】：
 ① 所属校の支援目標（3つ）
-② 必要に応じた支援機関名（例：特別支援教育コーディネーター、巡回相談員など）
+② 必要に応じた支援機関名
 ③ 各目標に連動した支援内容（3つ）
 
 【条件】：
-- 各支援目標は「特別な教育的ニーズ①～③」に対応する形で記述してください。
-- 支援内容には、どのような工夫・体制・周囲の支援が必要かを具体的に示してください。
-- 文章量は1項目あたり200文字前後。過剰に専門的すぎず、実践的な記述を心がけてください。
-- 添付資料の文体と構成を意識し、教育現場向けの整った記述としてください。"""
-        st.subheader("📄 生成されたプロンプト②（コピーして使ってください）")
-        st.code(prompt_text_2, language="text")
+- 各項目は、ニーズに対応した実践的な内容を200文字前後で記述してください。""", language="text")
 
-# --- プロンプト③ ---
 with st.container(border=True):
     st.header("プロンプト③【プランB：指導方針・7項目の実態】")
-    jittai_3 = st.text_area(
-        "✅ お子さんの実態や課題を入力してください（プロンプト①と同じ内容で構いません）",
-        value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す",
-        height=100, key="jittai_3"
-    )
+    jittai_3 = st.text_area("✅ お子さんの実態や課題を入力（プロンプト①と同じでOK）", value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す", height=100, key="jittai_3")
     if st.button("プロンプト③ を生成", key="btn_3", use_container_width=True):
-        prompt_text_3 = f"""以下の実態・課題をもとに、特別支援計画「プランB」における以下項目を作成してください。
+        st.code(f"""以下の実態・課題をもとに、特別支援計画「プランB」の項目を作成してください。
 
-【入力】実態・課題（単語や短文、複数）：
+【入力】実態・課題：
 {jittai_3}
 
 【出力項目】：
-① 指導方針（全体の方針や教育的視点）
-② 実態（以下の7つの観点から、それぞれ200〜300文字で記述）：
-　- 健康・生活
-　- 心理
-　- 行動
-　- 人間関係・集団参加
-　- 学習
-　- 身体・感覚
-　- 家庭・地域との連携
+① 指導方針
+② 実態（健康・生活／心理／行動／人間関係・集団参加／学習／身体・感覚／家庭・地域との連携）
 
 【条件】：
-- 指導方針は上記の実態や課題に応じた全体的な教育的視点で記述。
-- 各7項目は、児童生徒の様子・特性・課題を丁寧に描写してください。
-- プランAで設定した「特別な教育的ニーズ①～③」と内容的な整合性が取れるようにしてください。
-- 添付資料の文体を踏襲し、専門性と実用性のバランスを意識してください。"""
-        st.subheader("📄 生成されたプロンプト③（コピーして使ってください）")
-        st.code(prompt_text_3, language="text")
+- 指導方針は全体的な視点で、各実態は200〜300文字で丁寧に描写してください。""", language="text")
 
-# --- ▼▼▼【修正箇所】ここからプロンプト④の機能です ▼▼▼ ---
+
+# --- ▼▼▼【修正箇所】ここからプロンプト④です ▼▼▼ ---
 with st.container(border=True):
     st.header("プロンプト④【個別の指導計画：評価】")
-    st.write("各教科の「目標」と「できたこと」から、指導計画の評価（振り返り文）を作成します。")
+    st.write("指導計画を基に、活動の様子を評価する文章を作成します。")
 
-    evaluation_goals = st.text_area(
-        "✅ 教科ごとの「目標」を入力してください（例のように【教科名】：内容 の形式で入力）",
-        value="""【自立活動】：・安定した姿勢を保ち、基本的な身体の動きを高める。・身近な人とのコミュニケーションの基礎的な能力を育てる。
-【国語】：・身近な単語や自分の名前に関心を持ち、読み書きしようとする。
-【算数】：・具体物を使って、数の概念の基礎を理解する。""",
+    use_file_4 = st.checkbox(
+        "ChatGPTにWord/Excel等のファイルを添付して、主たる情報源として利用する", 
+        key="use_file_4"
+    )
+    st.caption("💡 ファイルを添付する場合、下のテキストエリアは補足として利用できます。")
+
+    reference_text_4 = st.text_area(
+        "✅ 参考にする指導計画のテキスト（補足など）",
+        value="（例：個別の指導計画の「指導の目標および内容」の全文や、特に見てほしい部分など）",
         height=150,
-        key="evaluation_goals"
+        key="reference_4"
     )
     
-    evaluation_activities = st.text_area(
-        "✅ 教科ごとの「できたこと・活動の様子」を入力してください",
-        value="""【自立活動】：・教員の誘導で肩や首の力を抜き、胸を張った姿勢で活動できた。・片手で支えながら片足立ちができた。・「ご馳走様」のハンドサインを教員の合図でできた。
-【国語】：自分の名前を丁寧になぞり書きできた。絵本の音読を楽しんでいた。
-【算数】：ブロックを操作して「10」のまとまりを作ることができた。""",
-        height=200,
-        key="evaluation_activities"
+    evaluation_activities_4 = st.text_area(
+        "✅ 教科ごとの「できたこと・活動の様子」を具体的に入力",
+        value="【自立活動】：・教員の誘導で肩や首の力を抜き、胸を張った姿勢で活動できた。・片手で支えながら片足立ちができた。\n【国語】：自分の名前を丁寧になぞり書きできた。",
+        height=150,
+        key="evaluation_activities_4"
     )
 
     if st.button("プロンプト④ を生成", key="btn_4", use_container_width=True):
-        prompt_text_4 = f"""以下の【教科ごとの目標】と【できたこと・活動の様子】をもとに、教科ごとの「個別の指導の評価」（振り返り文）を作成してください。
+        prompt_intro_4 = ""
+        prompt_main_source_4 = ""
 
-【教科ごとの目標】：
-{evaluation_goals}
+        if use_file_4:
+            prompt_intro_4 = "添付した指導計画のファイルを主たる情報源とし、"
+            if reference_text_4.strip() and reference_text_4 != "（例：個別の指導計画の「指導の目標および内容」の全文や、特に見てほしい部分など）":
+                prompt_main_source_4 = f"以下の【参考テキスト】も補足情報として考慮した上で、"
+            else:
+                 prompt_main_source_4 = "以下の"
 
+        else:
+            prompt_intro_4 = "以下の【指導計画のテキスト】を主たる情報源として、"
+        
+        prompt_text_part_4 = f"""【指導計画のテキスト】：
+{reference_text_4}
+""" if not use_file_4 or (use_file_4 and reference_text_4.strip() and reference_text_4 != "（例：個別の指導計画の「指導の目標および内容」の全文や、特に見てほしい部分など）") else ""
+
+
+        prompt_full_4 = f"""{prompt_intro_4}{prompt_main_source_4}【できたこと・活動の様子】とを関連付けながら、教科ごとの「個別の指導の評価」（振り返り文）を作成してください。
+{prompt_text_part_4}
 【できたこと・活動の様子】：
-{evaluation_activities}
+{evaluation_activities_4}
 
 【出力ルール】：
-- 入力された【目標】と【できたこと・活動の様子】を関連付け、目標がどの程度達成できたかを具体的に記述してください。
-- 入力されたすべての教科について、評価文を個別に出力してください。
+- まず、主たる情報源（添付ファイルまたは上記テキスト）を読み込み、そこに書かれている目標や内容を完全に理解してください。
+- その上で、【できたこと・活動の様子】が、計画のどの目標・内容に対応するのかを分析し、目標の達成度合いが分かるように評価文を作成してください。
+- 計画で言及されているすべての教科・領域について、評価文を個別に出力してください。
 - 各教科について、【教科名の見出し】と200～300文字程度の評価文を作成してください。
-- 文体は、実務で使用されるような柔らかく教育的な表現にしてください。
-- 同じ教科に複数の目標（・）がある場合は、それらすべてに触れるように評価文を作成してください。"""
+- 文体は、実務で使用されるような柔らかく教育的な表現にしてください。"""
 
         st.subheader("📄 生成されたプロンプト④（コピーして使ってください）")
-        st.code(prompt_text_4, language="text")
-# --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
+        st.code(prompt_full_4, language="text")
 
 
-# --- プロンプト⑤ ---
+# --- ▼▼▼【修正箇所】ここからプロンプト⑤です ▼▼▼ ---
 with st.container(border=True):
     st.header("プロンプト⑤【前期・後期の所見】")
-    st.markdown("#### 通知表などの総合的な所見作成に", unsafe_allow_html=False)
-    st.write("学期・学年末の総合的な所見を作成します。下の選択肢に応じて、AIへの指示が自動で変わります。")
+    st.write("評価文や計画書を基に、総合的な所見を作成します。")
 
-    term_choice = st.radio(
-        "どちらの所見を作成しますか？",
-        ("前期", "後期／学年末"),
-        key="term_choice",
-        horizontal=True
+    term_choice = st.radio("どちらの所見を作成しますか？", ("前期", "後期／学年末"), key="term_choice", horizontal=True)
+
+    use_file_5 = st.checkbox(
+        "ChatGPTに評価文等のファイルを添付して、主たる情報源として利用する",
+        key="use_file_5"
     )
+    st.caption("💡 ファイルを添付する場合、下のテキストエリアは補足として利用できます。")
 
+    reference_text_5 = st.text_area(
+        "✅ 参考にする評価文や計画のテキスト（補足など）",
+        value="（例：プロンプト④で作成した評価文の全体、または特に見てほしい部分など）",
+        height=200,
+        key="reference_5"
+    )
+    
     shoken_input = st.text_area(
-        "✅ 所見の材料となる情報を入力してください（箇条書きで構いません）",
-        value="""- 大きなけがもなく元気に登校していた。
-- 友人との関わりにおいて少しずつ改善が見られた。
-- 【国語】音読や名前を書く練習に意欲的だった。
-- 【生活】自分で身の回りを整える力が育ってきた。
-- 宿泊学習や校外学習にも落ち着いて対応できた。
-- ご家庭とも連携しながら指導を行っている。""",
-        height=250,
+        "✅ 所見で特に強調したいポイントを入力（箇条書きでOK）",
+        value="- 大きなけがもなく元気に登校できたことの喜び。\n- 友人との関わりが前向きになった点。\n- 宿泊学習などの大きな行事を乗り越えた自信。\n- 家庭との連携への感謝。",
+        height=150,
         key="shoken_input"
     )
 
     if st.button("プロンプト⑤ を生成", key="btn_5", use_container_width=True):
-        
-        # 時期によって条件を切り替える
+        prompt_intro_5 = ""
+        prompt_main_source_5 = ""
+
+        if use_file_5:
+            prompt_intro_5 = "添付したファイル（評価文や計画書など）を主たる情報源とし、"
+            if reference_text_5.strip() and reference_text_5 != "（例：プロンプト④で作成した評価文の全体、または特に見てほしい部分など）":
+                prompt_main_source_5 = "以下の【参考テキスト】も補足情報として考慮し、"
+            else:
+                prompt_main_source_5 = ""
+        else:
+            prompt_intro_5 = "以下の【参考テキスト】を主たる情報源として、"
+
+        prompt_text_part_5 = f"""【参考テキスト】：
+{reference_text_5}
+""" if not use_file_5 or (use_file_5 and reference_text_5.strip() and reference_text_5 != "（例：プロンプト④で作成した評価文の全体、または特に見てほしい部分など）") else ""
+
         if term_choice == "前期":
             specific_conditions = """- 「前期は、〜」といった書き出しで始めてください。
 - 200～400文字程度の文章量で作成してください。
@@ -279,27 +256,23 @@ with st.container(border=True):
         else: # 後期／学年末
             specific_conditions = """- 「この1年間で〜」や「いよいよ来年度は〜」など、年度の区切りを感じさせる書き出しにしてください。
 - 200〜450文字程度の文章量で作成してください。
-- 文末には、保護者への感謝（例：「1年間、本校の教育活動にご理解とご協力をいただき、誠にありがとうございました。」）と、次年度に向けた応援の言葉（例：「これからも応援しています」「新しい学年でも、○○さんらしさを大切に頑張ってくれることを楽しみにしています」）を必ず含めてください。"""
+- 文末には、保護者への感謝と、次年度に向けた応援の言葉を必ず含めてください。"""
 
-        prompt_text_5 = f"""以下の情報と条件をもとに、保護者向けの「{term_choice}の所見（総合的な所見）」を作成してください。
-
-【参考情報】：
+        prompt_full_5 = f"""{prompt_intro_5}{prompt_main_source_5}さらに【強調したいポイント】を盛り込みながら、保護者向けの「{term_choice}の所見」を作成してください。
+{prompt_text_part_5}
+【強調したいポイント】：
 {shoken_input}
 
 【全体の共通条件】：
+- 主たる情報源（添付ファイルまたは上記テキスト）から全体的な成長の様子を読み取り、【強調したいポイント】を特に意識して、自然な文章を作成してください。
 - 丁寧な語り口で、前向きな表現を心がけてください。
-- 情報が足りない場合、これまでの教科ごとの評価（特に自立活動や日常生活の指導）を参考にし、内容を補って構いません。
-- 学校生活全体の様子、各教科や生活面での成長をバランスよく含めてください。
-- 保護者の方が読んで、お子さんの成長が具体的に伝わるような文章にしてください。
+- 保護者の方が読んで、お子さんの具体的な成長が伝わるような文章にしてください。
 
 【{term_choice}用の個別条件】：
-{specific_conditions}
-
-【出力形式（参考例）】：
-前期は、大きなけがもなく毎日、元気に楽しく学校生活を送ることができました。授業や活動にも積極的に取り組む姿が見られ、特に国語では音読や名前を書く練習に意欲的でした。生活面でも、自分で身の回りを整える力が育ってきており、日常の切り替えにも落ち着きが感じられるようになっています。宿泊学習などの行事にも前向きに参加し、集団での役割を意識しながら行動することができました。これらの経験が自信となり、学校生活全体に良い影響を与えているように感じます。後期も引き続き、ご家庭と連携を取りながら、成長を見守っていきたいと思います。よろしくお願いいたします。"""
+{specific_conditions}"""
 
         st.subheader(f"📄 生成されたプロンプト⑤（{term_choice}の所見用）")
-        st.code(prompt_text_5, language="text")
+        st.code(prompt_full_5, language="text")
 
 st.markdown("---")
 st.warning("""
