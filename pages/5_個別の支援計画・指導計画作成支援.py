@@ -84,7 +84,7 @@ st.info(
     """
 )
 
-# --- ▼▼▼【修正箇所】ChatGPTへのリンクを目立つように変更 ▼▼▼ ---
+# --- ▼▼▼ ChatGPTへのリンク ▼▼▼ ---
 with st.container(border=True):
     st.markdown("""
     <div style="background-color: #e9f5ff; padding: 15px 20px; border: 2px solid #4a90e2; border-radius: 10px;">
@@ -103,10 +103,8 @@ with st.container(border=True):
         st.link_button("ChatGPT を開いて文章作成を始める ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
-# --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
 
-
-# --- プロンプト①〜③（変更なし） ---
+# --- プロンプト① ---
 with st.container(border=True):
     st.header("プロンプト①【プランA：特別な教育的ニーズ／合理的配慮】")
     jittai_1 = st.text_area("✅ お子さんの実態や課題を入力", value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す", height=100, key="jittai_1")
@@ -124,6 +122,7 @@ with st.container(border=True):
 - 添付資料があれば参考にしてください。
 - 各項目の文量は200〜300文字程度で、柔らかく教育的な表現で整えてください。""", language="text")
 
+# --- プロンプト② ---
 with st.container(border=True):
     st.header("プロンプト②【プランA：所属校の支援】")
     needs_2 = st.text_area("✅ プロンプト①でAIが生成した「特別な教育的ニーズ」を貼り付け", value="① 感覚過敏があり、環境刺激に影響を受けやすい\n② 注意の持続が難しく、集中が途切れやすい\n③ コミュニケーションに混乱が見られ、一斉指示に反応しづらい", height=150, key="needs_2")
@@ -142,6 +141,7 @@ with st.container(border=True):
 - 添付資料があれば参考にしてください。
 - 各項目は、ニーズに対応した実践的な内容を200文字前後で記述してください。""", language="text")
 
+# --- プロンプト③ ---
 with st.container(border=True):
     st.header("プロンプト③【プランB：指導方針・7項目の実態】")
     jittai_3 = st.text_area("✅ お子さんの実態や課題を入力（プロンプト①と同じでOK）", value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す", height=100, key="jittai_3")
@@ -166,9 +166,6 @@ with st.container(border=True):
 　③絵カードや手話による要求を増やす。
 これらの指導を元に本生徒の生活面での自立、行動面・コミュニケーション面での成長につなげていく。」
 - 指導方針は全体的な視点で、各実態は200〜300文字で丁寧に描写してください。""", language="text")
-
-
-
 
 # --- プロンプト④ ---
 with st.container(border=True):
