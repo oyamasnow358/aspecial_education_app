@@ -89,11 +89,18 @@ def load_css():
         }
 
         /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 { /* st.infoのコンテナ */
-             background-color: rgba(232, 245, 253, 0.7); /* 淡い青 */
+        .st-emotion-cache-1wivap1 {
+             background-color: rgba(232, 245, 253, 0.7);
              border-left: 5px solid #4a90e2;
              border-radius: 8px;
         }
+        
+        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
+        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
+        [data-testid="stExpanderToggleIcon"] {
+            display: none;
+        }
+        /* --- ▲▲▲ ここまで ▲▲▲ --- */
 
         /* --- フッターの区切り線 --- */
         .footer-hr {
