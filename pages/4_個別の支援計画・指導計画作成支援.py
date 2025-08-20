@@ -18,8 +18,7 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-            
-        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
             position: relative !important;
             width: 2rem !important;
@@ -53,47 +52,59 @@ def load_css():
         }
         /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
 
-  
-        /* --- 全体のフォント --- */
-        html, body, [class*="st-"] {
-            font-family: 'Helvetica Neue', 'Arial', sans-serif;
-        }
 
         /* --- 見出しのスタイル --- */
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
         h1 {
+            color: #2c3e50; /* ダークブルー */
             text-align: center;
+            padding-bottom: 20px;
+            font-weight: bold;
         }
         h2 {
-            border-left: 6px solid #8A2BE2;
+            color: #34495e; /* 少し明るいダークブルー */
+            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
             padding-left: 12px;
             margin-top: 40px;
         }
         h3 {
-            border-bottom: 2px solid #4a90e2;
+            color: #34495e;
+            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
             padding-bottom: 8px;
             margin-top: 30px;
         }
 
-        /* --- カードデザイン --- */
+        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
             background-color: rgba(255, 255, 255, 0.95);
             border: 1px solid #e0e0e0;
             border-radius: 15px;
             padding: 1.5em 1.5em;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+            margin-bottom: 20px; /* カード間の余白 */
+        }
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
+            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
+            transform: translateY(-5px);
         }
         
         /* --- ボタンのスタイル --- */
         .stButton>button {
+            border: 2px solid #4a90e2;
             border-radius: 25px;
+            color: #4a90e2;
+            background-color: #ffffff;
             padding: 10px 24px;
             font-weight: bold;
             transition: all 0.3s ease;
         }
+        .stButton>button:hover {
+            border-color: #8A2BE2;
+            color: white;
+            background-color: #8A2BE2;
+            transform: scale(1.05);
+        }
+        /* Primaryボタン */
         .stButton>button[kind="primary"] {
             background-color: #4a90e2;
             color: white;
@@ -101,6 +112,31 @@ def load_css():
         }
         .stButton>button[kind="primary"]:hover {
             background-color: #357ABD;
+            border-color: #357ABD;
+            transform: scale(1.05);
+        }
+
+        /* --- st.infoのカスタムスタイル --- */
+        .st-emotion-cache-1wivap1 {
+             background-color: rgba(232, 245, 253, 0.7);
+             border-left: 5px solid #4a90e2;
+             border-radius: 8px;
+        }
+        
+        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
+        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
+        [data-testid="stExpanderToggleIcon"] {
+            display: none;
+        }
+        /* --- ▲▲▲ ここまで ▲▲▲ --- */
+
+        /* --- フッターの区切り線 --- */
+        .footer-hr {
+            border: none;
+            height: 3px;
+            background: linear-gradient(to right, #4a90e2, #8A2BE2);
+            margin-top: 40px;
+            margin-bottom: 20px;
         }
     </style>
     """

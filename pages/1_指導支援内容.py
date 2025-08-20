@@ -65,13 +65,130 @@ def load_css():
     <style>
         /* --- 背景画像の設定 --- */
         [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/CTSCBYi.png");
+            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
-        /* (以下、元のCSSと同じなので省略) */
+
+        /* サイドバーの背景を少し透過 */
+        [data-testid="stSidebar"] {
+            background-color: rgba(240, 242, 246, 0.9);
+        }
+                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+        [data-testid="stSidebarNavCollapseButton"] {
+            position: relative !important;
+            width: 2rem !important;
+            height: 2rem !important;
+        }
+        /* 元のアイコンを完全に非表示にする */
+        [data-testid="stSidebarNavCollapseButton"] * {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        /* カスタムアイコン「«」を疑似要素として追加 */
+        [data-testid="stSidebarNavCollapseButton"]::before {
+            content: '«' !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            color: #31333F !important;
+            transition: background-color 0.2s, color 0.2s !important;
+            border-radius: 0.5rem;
+        }
+        [data-testid="stSidebarNavCollapseButton"]:hover::before {
+            background-color: #F0F2F6 !important;
+            color: #8A2BE2 !important;
+        }
+        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
+
+
+        /* --- 見出しのスタイル --- */
+        h1 {
+            color: #2c3e50; /* ダークブルー */
+            text-align: center;
+            padding-bottom: 20px;
+            font-weight: bold;
+        }
+        h2 {
+            color: #34495e; /* 少し明るいダークブルー */
+            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
+            padding-left: 12px;
+            margin-top: 40px;
+        }
+        h3 {
+            color: #34495e;
+            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }
+
+        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 1.5em 1.5em;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+            margin-bottom: 20px; /* カード間の余白 */
+        }
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
+            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        /* --- ボタンのスタイル --- */
+        .stButton>button {
+            border: 2px solid #4a90e2;
+            border-radius: 25px;
+            color: #4a90e2;
+            background-color: #ffffff;
+            padding: 10px 24px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .stButton>button:hover {
+            border-color: #8A2BE2;
+            color: white;
+            background-color: #8A2BE2;
+            transform: scale(1.05);
+        }
+        /* Primaryボタン */
+        .stButton>button[kind="primary"] {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+        }
+        .stButton>button[kind="primary"]:hover {
+            background-color: #357ABD;
+            border-color: #357ABD;
+            transform: scale(1.05);
+        }
+
+        /* --- st.infoのカスタムスタイル --- */
+        .st-emotion-cache-1wivap1 {
+             background-color: rgba(232, 245, 253, 0.7);
+             border-left: 5px solid #4a90e2;
+             border-radius: 8px;
+        }
+        
+        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
+        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
+        [data-testid="stExpanderToggleIcon"] {
+            display: none;
+        }
+        /* --- ▲▲▲ ここまで ▲▲▲ --- */
+
+        /* --- フッターの区切り線 --- */
         .footer-hr {
             border: none;
             height: 3px;
