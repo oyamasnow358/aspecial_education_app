@@ -124,19 +124,19 @@ def load_css():
             transform: scale(1.05);
         }
 
-               /* --- st.infoのカスタムスタイル --- */
+                /* --- st.infoのカスタムスタイル --- */
         .st-emotion-cache-1wivap1 {
              background-color: rgba(232, 245, 253, 0.7);
              border-left: 5px solid #4a90e2;
              border-radius: 8px;
         }
         
-        /* --- ▼▼▼ この部分を追加 ▼▼▼ --- */
-        /* st.expanderの重複アイコンを非表示にする */
-        [data-testid="stExpander"] summary svg {
+        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
+        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
+        [data-testid="stExpanderToggleIcon"] {
             display: none;
         }
-        /* --- ▲▲▲ 追加部分はここまで ▲▲▲ --- */
+        /* --- ▲▲▲ ここまで ▲▲▲ --- */
 
         /* --- フッターの区切り線 --- */
         .footer-hr {
