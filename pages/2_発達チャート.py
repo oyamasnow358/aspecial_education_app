@@ -25,16 +25,19 @@ def load_css():
             background-color: rgba(240, 242, 246, 0.9);
         }
         
+            
         /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
             position: relative !important;
             width: 2rem !important;
             height: 2rem !important;
         }
+        /* 元のアイコンを完全に非表示にする */
         [data-testid="stSidebarNavCollapseButton"] * {
             display: none !important;
             visibility: hidden !important;
         }
+        /* カスタムアイコン「«」を疑似要素として追加 */
         [data-testid="stSidebarNavCollapseButton"]::before {
             content: '«' !important;
             display: flex !important;
@@ -57,8 +60,11 @@ def load_css():
         }
         /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
 
-        /* --- 全体のフォント --- */
-        html, body, [class*="st-"] {
+  
+
+        /* --- 全体のフォント (修正版) --- */
+        /* アプリのコンテナに基本フォントを適用し、アイコンフォントの上書きを防ぐ */
+        [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
             font-family: 'Helvetica Neue', 'Arial', sans-serif;
         }
 
