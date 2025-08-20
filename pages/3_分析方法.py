@@ -6,10 +6,8 @@ def load_css():
     css = """
     <style>
         /* --- 背景画像の設定 --- */
-        /* ご用意された画像のURLを下の 'url(...)' 内に貼り付けてください */
-        /* 例: url("https://i.imgur.com/your_image.jpg"); */
         [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/CTSCBYi.png");
+            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -20,8 +18,7 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-            
-        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
             position: relative !important;
             width: 2rem !important;
@@ -55,12 +52,6 @@ def load_css():
         }
         /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
 
-          
-
-        /* --- 全体のフォント --- */
-        html, body, [class*="st-"] {
-            font-family: 'Helvetica Neue', 'Arial', sans-serif;
-        }
 
         /* --- 見出しのスタイル --- */
         h1 {
@@ -126,11 +117,18 @@ def load_css():
         }
 
         /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 { /* st.infoのコンテナ */
-             background-color: rgba(232, 245, 253, 0.7); /* 淡い青 */
+        .st-emotion-cache-1wivap1 {
+             background-color: rgba(232, 245, 253, 0.7);
              border-left: 5px solid #4a90e2;
              border-radius: 8px;
         }
+        
+        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
+        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
+        [data-testid="stExpanderToggleIcon"] {
+            display: none;
+        }
+        /* --- ▲▲▲ ここまで ▲▲▲ --- */
 
         /* --- フッターの区切り線 --- */
         .footer-hr {
