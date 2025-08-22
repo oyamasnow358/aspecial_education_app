@@ -211,10 +211,18 @@ with col3:
         st.write("支援方法について、AIとチャット形式で自由に相談できます。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat")
 
+        # ▼▼▼ ここから追加 ▼▼▼
+    with st.container(border=True):
+        st.markdown("### 📜 **知的段階（学習指導要領）** <span style='color: #8A2BE2;'>NEW!</span>", unsafe_allow_html=True)
+        st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline")
+    # ▲▲▲ ここまで追加 ▲▲▲
+
+with col3:
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_フィードバック.py",), key="btn_feedback")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_フィードバック.py",), key="btn_feedback")
 # --- ▲▲▲ 修正箇所はここまで ▲▲▲ ---
 
 
