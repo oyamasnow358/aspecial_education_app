@@ -311,7 +311,7 @@ with col3:
             st.markdown(manuals["guideline_page"])
 
     with st.container(border=True):
-        st.markdown("### 💬 AIによる対話")
+        st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
         st.write("支援方法について、AIとチャット形式で自由に相談できます。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
 
