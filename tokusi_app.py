@@ -201,7 +201,7 @@ with col2:
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
     
     with st.container(border=True):
-        st.markdown("### 🤖 **計画作成サポート** <span style='color: #8A2BE2;'>NEW!</span>", unsafe_allow_html=True)
+        st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation")
 
@@ -213,7 +213,7 @@ with col3:
 
         # ▼▼▼ ここから追加 ▼▼▼
     with st.container(border=True):
-        st.markdown("### 📜 **知的段階（学習指導要領）** <span style='color: #8A2BE2;'>NEW!</span>", unsafe_allow_html=True)
+        st.markdown("### 📜 知的段階（学習指導要領）", unsafe_allow_html=True)
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline")
     # ▲▲▲ ここまで追加 ▲▲▲
