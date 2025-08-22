@@ -1,9 +1,9 @@
-# pages/7_知的段階_学習指導要領.py
+# pages/6_知的段階_学習指導要領.py
 import streamlit as st
 # ステップ1で作成したデータファイルをインポート
 from guideline_data import data
 
-# --- ▼ 共通CSSの読み込み（メインページからコピー） ▼ ---
+# --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
@@ -107,6 +107,26 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 # --- ▲ 共通CSSの読み込み ▲ ---
 
+# ▼▼▼【ここから修正・追加】▼▼▼
+def format_guideline_text(text):
+    """
+    学習指導要領のテキストの改行とインデントを維持して表示するためのフォーマット関数
+    - 全角スペースをHTMLのエンティティに変換してインデントを表現
+    - 改行コードをMarkdownの強制改行に変換
+    """
+    if not isinstance(text, str):
+        return ""
+    
+    # 全角スペースをインデントとして保持するために変換します。
+    # 全角1文字を半角スペース2つ分の幅として `&nbsp;&nbsp;` に置き換えます。
+    processed_text = text.replace("　", "&nbsp;&nbsp;")
+    
+    # 改行をMarkdownの強制改行（半角スペース2つ + 改行）に変換します。
+    processed_text = processed_text.replace("\n", "  \n")
+    
+    return processed_text
+# ▲▲▲【ここまで修正・追加】▲▲▲
+
 st.set_page_config(
     page_title="知的段階（学習指導要領）",
     page_icon="📜",
@@ -119,7 +139,7 @@ st.title("📜 知的段階（学習指導要領）")
 
 st.info("学部、段階（障害種別）、教科を選択すると、関連する学習指導要領の内容が表示されます。")
 
-# --- 選択肢 ---
+# --- 選択肢（変更なし） ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -158,18 +178,21 @@ if st.button("表示する", type="primary", use_container_width=True):
     st.header(f"表示結果：{selected_gakubu} - {selected_shubetsu}" + (f" - {selected_kyoka}" if is_chiteki else ""))
     
     with st.container(border=True):
+        # ▼▼▼【ここから修正】▼▼▼
         # 知的障害者以外の場合の表示
         if not is_chiteki:
             shubetsu_data = data[selected_gakubu][selected_shubetsu]
             st.subheader("全体")
-            st.markdown(shubetsu_data.get("全体", "データがありません。"))
+            # format_guideline_text関数を適用
+            st.markdown(format_guideline_text(shubetsu_data.get("全体", "データがありません。")), unsafe_allow_html=True)
 
             if "全体" in shubetsu_data:
                 # 各障害種別の詳細を表示
                 for key, value in shubetsu_data.items():
                     if key != "全体":
                         with st.expander(f"**{key}**"):
-                            st.markdown(value)
+                            # format_guideline_text関数を適用
+                            st.markdown(format_guideline_text(value), unsafe_allow_html=True)
 
         # 知的障害者の場合の表示
         else:
@@ -179,7 +202,8 @@ if st.button("表示する", type="primary", use_container_width=True):
                 # 目標
                 if "目標" in kyoka_data:
                     st.subheader("🎯 目標")
-                    st.markdown(kyoka_data["目標"])
+                    # format_guideline_text関数を適用
+                    st.markdown(format_guideline_text(kyoka_data["目標"]), unsafe_allow_html=True)
 
                 # 各段階をタブで表示
                 段階keys = [key for key in kyoka_data.keys() if "段階" in key]
@@ -190,15 +214,26 @@ if st.button("表示する", type="primary", use_container_width=True):
                             dankai_data = kyoka_data[dankai_key]
                             if "目標" in dankai_data:
                                 st.markdown("#### **目標**")
-                                st.markdown(dankai_data["目標"])
+                                # format_guideline_text関数を適用
+                                st.markdown(format_guideline_text(dankai_data["目標"]), unsafe_allow_html=True)
                             if "内容" in dankai_data:
                                 st.markdown("#### **内容**")
-                                st.markdown(dankai_data["内容"])
+                                # format_guideline_text関数を適用
+                                st.markdown(format_guideline_text(dankai_data["内容"]), unsafe_allow_html=True)
 
                 # 指導計画の作成と内容の取扱い
                 if "指導計画の作成と内容の取扱い" in kyoka_data:
                     with st.expander("**指導計画の作成と内容の取扱い**"):
-                        st.markdown(kyoka_data["指導計画の作成と内容の取扱い"])
+                        # format_guideline_text関数を適用
+                        st.markdown(format_guideline_text(kyoka_data["指導計画の作成と内容の取扱い"]), unsafe_allow_html=True)
+                
+                # 全体指導計画 (小学部、中学部でキーが異なる場合も考慮)
+                overall_plan_key = next((key for key in kyoka_data if "全体指導計画" in key), None)
+                if overall_plan_key:
+                     with st.expander(f"**{overall_plan_key}**"):
+                        # format_guideline_text関数を適用
+                        st.markdown(format_guideline_text(kyoka_data[overall_plan_key]), unsafe_allow_html=True)
 
             else:
                 st.warning("教科を選択してください。")
+        # ▲▲▲【ここまで修正】▲▲▲
