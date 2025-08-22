@@ -141,7 +141,7 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 # --- ▲ 共通CSSの読み込み ▲ ---
 
-# --- ▼▼▼【新規追加】マニュアルのテキストデータ ▼▼▼ ---
+# --- マニュアルのテキストデータ（変更なし） ---
 manuals = {
     "guidance": """
     ### 📚 指導支援内容 マニュアル
@@ -227,7 +227,6 @@ manuals = {
         -   「各段階」の内容はタブ形式で切り替えて閲覧できます。
     """
 }
-# --- ▲▲▲ マニュアルデータここまで ▲▲▲ ---
 
 st.set_page_config(
     page_title="特別支援教育サポートアプリ",
@@ -274,18 +273,16 @@ with col1:
         st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
         b_col1, b_col2 = st.columns(2)
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
-        if b_col2.button("📖 マニュアル", key="manual_guidance", use_container_width=True):
-            with st.dialog("指導支援内容 マニュアル"):
-                st.markdown(manuals["guidance"])
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["guidance"])
 
     with st.container(border=True):
         st.markdown("### 📈 分析方法")
         st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
         b_col1, b_col2 = st.columns(2)
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
-        if b_col2.button("📖 マニュアル", key="manual_analysis", use_container_width=True):
-            with st.dialog("分析方法 マニュアル"):
-                st.markdown(manuals["analysis"])
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["analysis"])
 
 with col2:
     with st.container(border=True):
@@ -293,18 +290,16 @@ with col2:
         st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
         b_col1, b_col2 = st.columns(2)
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
-        if b_col2.button("📖 マニュアル", key="manual_chart", use_container_width=True):
-            with st.dialog("発達チャート作成 マニュアル"):
-                st.markdown(manuals["chart"])
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["chart"])
     
     with st.container(border=True):
         st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
         b_col1, b_col2 = st.columns(2)
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation", use_container_width=True)
-        if b_col2.button("📖 マニュアル", key="manual_plan_creation", use_container_width=True):
-            with st.dialog("計画作成サポート マニュアル"):
-                st.markdown(manuals["plan_creation"])
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["plan_creation"])
 
 with col3:
     with st.container(border=True):
@@ -312,9 +307,8 @@ with col3:
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
         b_col1, b_col2 = st.columns(2)
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
-        if b_col2.button("📖 マニュアル", key="manual_guideline_page", use_container_width=True):
-            with st.dialog("知的段階（学習指導要領） マニュアル"):
-                st.markdown(manuals["guideline_page"])
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["guideline_page"])
 
     with st.container(border=True):
         st.markdown("### 💬 AIによる対話")
@@ -326,7 +320,6 @@ with col3:
         st.write("アプリの改善やご意見をお待ちしています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_フィードバック.py",), key="btn_feedback", use_container_width=True)
 # --- ▲▲▲ 修正はここまで ▲▲▲ ---
-
 
 # --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
