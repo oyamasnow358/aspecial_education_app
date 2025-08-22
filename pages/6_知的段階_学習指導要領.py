@@ -3,7 +3,7 @@ import streamlit as st
 # guideline_data.pyをインポート
 from guideline_data import data
 
-# --- ▼ 共通CSSの読み込み ▼ ---
+# --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
@@ -103,7 +103,7 @@ def load_css():
             display: none;
         }
         
-        /* --- ▼▼▼【新規追加】ラジオボタンをタブ風にスタイリング ▼▼▼ --- */
+        /* --- ラジオボタンをタブ風にスタイリング --- */
         div[role="radiogroup"] {
             display: flex;
             justify-content: center; /* 中央揃え */
@@ -140,115 +140,113 @@ def load_css():
         div[role="radiogroup"] input[type="radio"] {
             display: none;
         }
-        /* --- ▲▲▲ スタイリングここまで ▲▲▲ --- */
 
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-# --- ▲ 共通CSSの読み込み ▲ ---
 
 def format_guideline_text(text):
-    """
-    学習指導要領のテキストの改行とインデントを維持して表示するためのフォーマット関数
-    """
-    if not isinstance(text, str):
-        return ""
+    if not isinstance(text, str): return ""
     processed_text = text.replace("　", "&nbsp;&nbsp;")
     processed_text = processed_text.replace("\n", "  \n")
     return processed_text
 
-st.set_page_config(
-    page_title="知的段階（学習指導要領）",
-    page_icon="📜",
-    layout="wide",
-)
+# --- ▼▼▼【新規追加】表示状態をリセットする関数 ▼▼▼ ---
+def reset_display_state():
+    """選択肢が変更されたときに、表示状態をリセットする"""
+    if 'show_results' in st.session_state:
+        st.session_state.show_results = False
+# --- ▲▲▲【ここまで】▲▲▲ ---
 
+st.set_page_config(page_title="知的段階（学習指導要領）", page_icon="📜", layout="wide")
 load_css()
-
 st.title("📜 知的段階（学習指導要領）")
 st.info("学部、段階（障害種別）、教科を選択すると、関連する学習指導要領の内容が表示されます。")
 
-# --- 選択肢（変更なし） ---
+# --- 選択肢 ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    selected_gakubu = st.selectbox("**1. 学部を選択**", options=list(data.keys()))
+    selected_gakubu = st.selectbox("**1. 学部を選択**", options=list(data.keys()), on_change=reset_display_state)
 
 with col2:
     shubetsu_options = list(data[selected_gakubu].keys())
-    selected_shubetsu = st.selectbox("**2. 段階（障害種別）を選択**", options=shubetsu_options)
+    selected_shubetsu = st.selectbox("**2. 段階（障害種別）を選択**", options=shubetsu_options, on_change=reset_display_state)
 
 is_chiteki = "知的障害者" in selected_shubetsu
 if is_chiteki:
     with col3:
         kyoka_options = ["選択してください"] + list(data[selected_gakubu][selected_shubetsu].keys())
-        selected_kyoka = st.selectbox("**3. 教科を選択**", options=kyoka_options)
+        selected_kyoka = st.selectbox("**3. 教科を選択**", options=kyoka_options, on_change=reset_display_state)
 else:
     selected_kyoka = None
 
 st.markdown("---")
 
-# --- 内容表示 ---
-# 「表示する」ボタンは知的障害者以外の場合のみ、または知的障害者で教科が選択された場合に表示
-if (not is_chiteki) or (is_chiteki and selected_kyoka != "選択してください"):
+# --- ▼▼▼【ここからロジックを修正】▼▼▼ ---
+# 表示ボタンの制御
+show_button_enabled = (not is_chiteki) or (is_chiteki and selected_kyoka != "選択してください")
+
+if show_button_enabled:
     if st.button("表示する", type="primary", use_container_width=True):
-        st.header(f"表示結果：{selected_gakubu} - {selected_shubetsu}" + (f" - {selected_kyoka}" if is_chiteki else ""))
-        
-        with st.container(border=True):
-            # 知的障害者以外の場合の表示
-            if not is_chiteki:
-                shubetsu_data = data[selected_gakubu][selected_shubetsu]
-                st.subheader("全体")
-                st.markdown(format_guideline_text(shubetsu_data.get("全体", "データがありません。")), unsafe_allow_html=True)
-
-                if "全体" in shubetsu_data:
-                    for key, value in shubetsu_data.items():
-                        if key != "全体":
-                            with st.expander(f"**{key}**"):
-                                st.markdown(format_guideline_text(value), unsafe_allow_html=True)
-
-            # 知的障害者の場合の表示
-            else:
-                kyoka_data = data[selected_gakubu][selected_shubetsu][selected_kyoka]
-                
-                if "目標" in kyoka_data:
-                    st.subheader("🎯 目標")
-                    st.markdown(format_guideline_text(kyoka_data["目標"]), unsafe_allow_html=True)
-
-                # --- ▼▼▼【ここからUI修正箇所】▼▼▼ ---
-                段階keys = sorted([key for key in kyoka_data.keys() if "段階" in key])
-                
-                if 段階keys:
-                    st.subheader("📖 段階を選択してください")
-
-                    selected_dankai = st.radio(
-                        "表示する段階を選択:",
-                        options=段階keys,
-                        horizontal=True,
-                        label_visibility="collapsed"
-                    )
-
-                    if selected_dankai:
-                        dankai_data = kyoka_data[selected_dankai]
-                        
-                        with st.container(border=True):
-                            if "目標" in dankai_data:
-                                st.markdown("#### **目標**")
-                                st.markdown(format_guideline_text(dankai_data["目標"]), unsafe_allow_html=True)
-                            if "内容" in dankai_data:
-                                st.markdown("#### **内容**")
-                                st.markdown(format_guideline_text(dankai_data["内容"]), unsafe_allow_html=True)
-                # --- ▲▲▲【UI修正ここまで】▲▲▲ ---
-
-                if "指導計画の作成と内容の取扱い" in kyoka_data:
-                    with st.expander("**指導計画の作成と内容の取扱い**"):
-                        st.markdown(format_guideline_text(kyoka_data["指導計画の作成と内容の取扱い"]), unsafe_allow_html=True)
-                
-                overall_plan_key = next((key for key in kyoka_data if "全体指導計画" in key), None)
-                if overall_plan_key:
-                     with st.expander(f"**{overall_plan_key}**"):
-                        st.markdown(format_guideline_text(kyoka_data[overall_plan_key]), unsafe_allow_html=True)
-
+        st.session_state.show_results = True
 else:
-    if is_chiteki and selected_kyoka == "選択してください":
-        st.warning("ステップ3で教科を選択してください。")
+    st.warning("ステップ3で教科を選択してください。")
+
+# --- 内容表示 ---
+if st.session_state.get('show_results', False):
+    st.header(f"表示結果：{selected_gakubu} - {selected_shubetsu}" + (f" - {selected_kyoka}" if is_chiteki and selected_kyoka else ""))
+    
+    with st.container(border=True):
+        # 知的障害者以外の場合の表示
+        if not is_chiteki:
+            shubetsu_data = data[selected_gakubu][selected_shubetsu]
+            st.subheader("全体")
+            st.markdown(format_guideline_text(shubetsu_data.get("全体", "データがありません。")), unsafe_allow_html=True)
+
+            if "全体" in shubetsu_data:
+                for key, value in shubetsu_data.items():
+                    if key != "全体":
+                        with st.expander(f"**{key}**"):
+                            st.markdown(format_guideline_text(value), unsafe_allow_html=True)
+        
+        # 知的障害者の場合の表示
+        elif is_chiteki and selected_kyoka and selected_kyoka != "選択してください":
+            kyoka_data = data[selected_gakubu][selected_shubetsu][selected_kyoka]
+            
+            if "目標" in kyoka_data:
+                st.subheader("🎯 目標")
+                st.markdown(format_guideline_text(kyoka_data["目標"]), unsafe_allow_html=True)
+
+            段階keys = sorted([key for key in kyoka_data.keys() if "段階" in key])
+            
+            if 段階keys:
+                st.subheader("📖 段階を選択してください")
+                
+                selected_dankai = st.radio(
+                    "表示する段階を選択:",
+                    options=段階keys,
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key=f"radio_{selected_gakubu}_{selected_kyoka}" # 選択肢が変わったらキーも変えてリセット
+                )
+
+                if selected_dankai:
+                    dankai_data = kyoka_data[selected_dankai]
+                    with st.container(border=True, key=f"container_{selected_dankai}"):
+                        if "目標" in dankai_data:
+                            st.markdown("#### **目標**")
+                            st.markdown(format_guideline_text(dankai_data["目標"]), unsafe_allow_html=True)
+                        if "内容" in dankai_data:
+                            st.markdown("#### **内容**")
+                            st.markdown(format_guideline_text(dankai_data["内容"]), unsafe_allow_html=True)
+
+            if "指導計画の作成と内容の取扱い" in kyoka_data:
+                with st.expander("**指導計画の作成と内容の取扱い**"):
+                    st.markdown(format_guideline_text(kyoka_data["指導計画の作成と内容の取扱い"]), unsafe_allow_html=True)
+            
+            overall_plan_key = next((key for key in kyoka_data if "全体指導計画" in key), None)
+            if overall_plan_key:
+                 with st.expander(f"**{overall_plan_key}**"):
+                    st.markdown(format_guideline_text(kyoka_data[overall_plan_key]), unsafe_allow_html=True)
+# --- ▲▲▲【ロジック修正ここまで】▲▲▲ ---
