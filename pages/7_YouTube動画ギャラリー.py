@@ -137,20 +137,51 @@ def load_css():
             margin-bottom: 20px;
         }
 
-        /* サイドバーのラジオボタンのスタイルを調整 */
-        .stRadio > label {
-            font-size: 1.1em;
-            padding: 8px 0;
-            margin-bottom: 5px;
+        /* st.tabsのカスタムスタイル */
+        /* タブのコンテナ */
+        .stTabs [data-testid="stDataframeToolbar"] {
+            background-color: transparent; /* 背景を透明に */
         }
-        .stRadio > label:hover {
+
+        /* 個々のタブボタン */
+        .stTabs [data-testid="stTab"] {
+            background-color: #f0f2f6; /* タブの背景色 */
+            border-radius: 8px 8px 0 0; /* 角を丸く */
+            margin-right: 5px; /* タブ間のスペース */
+            padding: 10px 20px; /* パディング */
+            font-weight: bold;
+            color: #31333F; /* テキスト色 */
+            border: 1px solid #e0e0e0;
+            border-bottom: none; /* 下線をなくす */
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* 選択されていないタブのホバー */
+        .stTabs [data-testid="stTab"]:hover:not([aria-selected="true"]) {
+            background-color: #e6e6f0;
             color: #8A2BE2;
-            cursor: pointer;
         }
-        .stRadio [data-testid="stFlex"] {
-            flex-direction: column; /* 縦並びに変更 */
-            align-items: flex-start; /* 左寄せ */
+        
+        /* 選択されているタブ */
+        .stTabs [aria-selected="true"] {
+            background-color: #ffffff !important; /* 選択中のタブは白 */
+            border-color: #8A2BE2 !important; /* 選択中のタブのボーダー色 */
+            color: #8A2BE2 !important; /* 選択中のタブのテキスト色 */
+            border-bottom: 2px solid #ffffff !important; /* 下線と一体化 */
+            margin-bottom: -2px; /* 下線と重なるように調整 */
         }
+
+        /* タブの内容表示エリア */
+        .stTabs [data-testid="stVerticalBlock"] {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e0e0e0;
+            border-top: 2px solid #8A2BE2; /* 選択中のタブのアクセント色と合わせる */
+            border-radius: 0 0 15px 15px; /* 下側の角を丸く */
+            padding: 1.5em;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -226,41 +257,38 @@ youtube_data = {
     },
 }
 
-# --- サイドバーに選択肢を表示 ---
-st.sidebar.header("トピックを選択")
+# --- メインコンテンツエリアにタブを表示 ---
 
-# available=True の項目のみをサイドバーに表示
+# available=True の項目のみをタブとして表示
 available_topics = {k: v for k, v in youtube_data.items() if v["available"]}
 sorted_topics = sorted(available_topics.keys()) # 項目名をソート
 
-selected_topic = st.sidebar.radio(
-    "動画を見たい項目を選んでください：",
-    sorted_topics,
-    key="youtube_topic_selector"
-)
-
-# --- メインコンテンツエリア ---
-if selected_topic:
-    st.header(f"「{selected_topic}」について")
-    topic_data = youtube_data[selected_topic]
-
-    with st.container(border=True):
-        st.subheader("概要")
-        st.write(topic_data["description"])
-
-        # 動画IDが存在する場合のみ動画を表示
-        if topic_data["video_id"]:
-            st.subheader("関連動画")
-            # Streamlitの st.video を使用してYouTube動画を埋め込み
-            # YouTubeの埋め込みURLフォーマット: https://www.youtube.com/watch?v=VIDEO_ID
-            st.video(f"https://www.youtube.com/watch?v={topic_data['video_id']}")
-            
-            # YouTubeへの直接リンクも提供
-            st.markdown(f"動画をYouTubeで見る: [🔗 {selected_topic}](https://www.youtube.com/watch?v={topic_data['video_id']})")
-        else:
-            st.info("💡 このトピックに関する動画は現在準備中です。ご期待ください！")
+if not sorted_topics:
+    st.info("現在、表示できる動画トピックはありません。新しい動画が追加されるまでお待ちください。")
 else:
-    st.info("サイドバーからトピックを選択して、詳細と関連動画をご覧ください。")
+    # タブを作成
+    tabs = st.tabs(sorted_topics)
+
+    # 各タブの内容を定義
+    for i, topic_name in enumerate(sorted_topics):
+        with tabs[i]:
+            topic_data = youtube_data[topic_name]
+            
+            # タブ内の表示は、既存のカードデザインを踏襲
+            with st.container(border=True):
+                st.subheader(topic_name)
+                st.write(topic_data["description"])
+
+                # 動画IDが存在する場合のみ動画を表示
+                if topic_data["video_id"]:
+                    st.markdown("#### 関連動画")
+                    # Streamlitの st.video を使用してYouTube動画を埋め込み
+                    st.video(f"https://www.youtube.com/watch?v={topic_data['video_id']}")
+                    
+                    # YouTubeへの直接リンクも提供
+                    st.markdown(f"動画をYouTubeで見る: [🔗 {topic_name}](https://www.youtube.com/watch?v={topic_data['video_id']})")
+                else:
+                    st.info("💡 このトピックに関する動画は現在準備中です。ご期待ください！")
 
 
 # --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
