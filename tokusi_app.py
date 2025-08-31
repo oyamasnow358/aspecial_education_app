@@ -301,6 +301,7 @@ with col2:
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["plan_creation"])
 
+with col3:
     with st.container(border=True):
         st.markdown("### 📜 知的段階（学習指導要領）")
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
