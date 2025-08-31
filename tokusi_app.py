@@ -301,7 +301,6 @@ with col2:
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["plan_creation"])
 
-with col3:
     with st.container(border=True):
         st.markdown("### 📜 知的段階（学習指導要領）")
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
@@ -313,9 +312,8 @@ with col3:
     with st.container(border=True):
         st.markdown("### ▶️ YouTube動画ギャラリー")
         st.write("特別支援教育に関する動画と解説をまとめています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/8_YouTube動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_YouTube動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
 
-with col4:
     with st.container(border=True):
         st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
         st.write("支援方法について、AIとチャット形式で自由に相談できます。")
@@ -324,7 +322,7 @@ with col4:
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_フィードバック.py",), key="btn_feedback", use_container_width=True)
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/8_フィードバック.py",), key="btn_feedback", use_container_width=True)
 # --- ▲▲▲ 修正はここまで ▲▲▲ ---
 
 # --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
