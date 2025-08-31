@@ -218,7 +218,7 @@ youtube_data = {
     "自閉症スペクトラムの5種類": {
         "video_id": "NhlGDcpYZ3E",
         "description": "現在では「自閉症スペクトラム障害」として診断が統合されていますが、かつてはアスペルガー症候群、カナー型自閉症など、いくつかのタイプに分類されていました。ここでは、それらの歴史的分類とその特徴について解説します。",
-        "available": False # 動画がないので非表示
+        "available": True # 動画がないので非表示
     },
     "応用行動分析（ABA）": {
         "video_id": "CTd1gLHEFYM", # サンプルID
@@ -238,7 +238,7 @@ youtube_data = {
     "卒業後の進路": {
         "video_id": "rFjB2v3Hw24", # サンプルID
         "description": "特別支援学校卒業後の進路選択について、就労支援、進学、地域生活支援など、様々な選択肢とそれらをサポートする制度について解説します。",
-        "available": True
+        "available": False
     },
     "動作法": {
         "video_id": None, # 動画がまだない場合
@@ -246,14 +246,14 @@ youtube_data = {
         "available": False
     },
     "最新のICT教材": {
-        "video_id": "M7lc1UVf-VE", # サンプルID
+        "video_id":  None, # サンプルID
         "description": "特別支援教育で活用できる最新のICT教材を紹介します。タブレットアプリ、オンラインツール、ロボット教材など、学習意欲を高めるための多様なツールに焦点を当てます。",
-        "available": True
+        "available": False
     },
     "スイッチ教材": {
-        "video_id": "XbO_zJ2N87s", # サンプルID
+        "video_id":  None, # サンプルID
         "description": "重度の肢体不自由や認知発達の遅れがある子どもたちに、意思表示や操作の機会を提供するスイッチ教材について解説します。選び方や活用事例を紹介します。",
-        "available": True
+        "available": False
     },
 }
 
