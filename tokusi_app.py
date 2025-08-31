@@ -311,6 +311,12 @@ with col3:
             st.markdown(manuals["guideline_page"])
 
     with st.container(border=True):
+        st.markdown("### ▶️ YouTube動画ギャラリー")
+        st.write("特別支援教育に関する動画と解説をまとめています。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/8_YouTube動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
+
+with col4:
+    with st.container(border=True):
         st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
         st.write("支援方法について、AIとチャット形式で自由に相談できます。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
