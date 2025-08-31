@@ -211,7 +211,7 @@ youtube_data = {
         "available": True
     },
     "自閉症スペクトラム（ASD）": {
-        "video_id": "d1_jbL7C36Q", # サンプルID
+        "video_id": "zqjLOUau9eY", # サンプルID
         "description": "自閉症スペクトラム障害（ASD）の基本的な理解を深めます。コミュニケーションや社会性の特性、感覚過敏などについて詳しく説明し、効果的な支援方法を提案します。",
         "available": True
     },
