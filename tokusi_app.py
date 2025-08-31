@@ -311,9 +311,9 @@ with col3:
             st.markdown(manuals["guideline_page"])
 
     with st.container(border=True):
-        st.markdown("### ▶️ YouTube動画ギャラリー")
+        st.markdown("### ▶️ 動画ギャラリー")
         st.write("特別支援教育に関する動画と解説をまとめています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_YouTube動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
 
     with st.container(border=True):
         st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
