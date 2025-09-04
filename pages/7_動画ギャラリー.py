@@ -206,17 +206,17 @@ st.write("気になるトピックを選んで、関連する動画と解説を�
 # 'available': True の場合のみサイドバーに表示される
 youtube_data = {
     "ダウン症": {
-        "video_id": "a9taFsRWB94", # サンプルID、実際のものに置き換えてください
+        "video_id": "7gBd_iYF7TI", # サンプルID、実際のものに置き換えてください
         "description": "ダウン症に関する基本的な情報、特性、そして支援のポイントを解説します。社会生活や学習における具体的なアプローチについても触れています。",
         "available": True
     },
     "自閉症スペクトラム（ASD）": {
-        "video_id": "zqjLOUau9eY", # サンプルID
+        "video_id": "FyFmvcWrrvM", 
         "description": "自閉症スペクトラム障害（ASD）の基本的な理解を深めます。コミュニケーションや社会性の特性、感覚過敏などについて詳しく説明し、効果的な支援方法を提案します。",
         "available": True
     },
     "自閉症スペクトラムの5種類": {
-        "video_id": "NhlGDcpYZ3E",
+        "video_id": "b7nnOId_NVo",
         "description": "現在では「自閉症スペクトラム障害」として診断が統合されていますが、かつてはアスペルガー症候群、カナー型自閉症など、いくつかのタイプに分類されていました。ここでは、それらの歴史的分類とその特徴について解説します。",
         "available": True # 動画がないので非表示
     },
@@ -226,7 +226,7 @@ youtube_data = {
         "available": True
     },
     "注意欠如・多動症（ADHD）": {
-        "video_id": "6LTzAhv_XfU", # サンプルID
+        "video_id": "pzM3-J1LUG4", # サンプルID
         "description": "注意欠如・多動症（ADHD）の特性を理解し、集中力の困難、多動性、衝動性に対する支援策を学びます。学校や家庭での具体的な対応方法についても触れます。",
         "available": True
     },
