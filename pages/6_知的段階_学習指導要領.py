@@ -1,7 +1,7 @@
 # pages/6_知的段階_学習指導要領.py
 import streamlit as st
-# guideline_data.pyをインポート
-from guideline_data import data
+# guideline_data.pyをインポート (相対パスで上位ディレクトリを指定)
+from ..guideline_data import data
 
 # --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
 def load_css():
