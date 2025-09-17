@@ -319,11 +319,19 @@ with col3:
         st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
         st.write("支援方法について、AIとチャット形式で自由に相談できます。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
+    
+    with st.container(border=True):
+        st.markdown("### 🃏 授業カードライブラリー") # 新しい機能
+        st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["lesson_card_library"])
 
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/8_フィードバック.py",), key="btn_feedback", use_container_width=True)
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/9_フィードバック.py",), key="btn_feedback", use_container_width=True)
 # --- ▲▲▲ 修正はここまで ▲▲▲ ---
 
 # --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
