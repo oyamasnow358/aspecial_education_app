@@ -606,13 +606,7 @@ with st.sidebar:
     st.markdown("---")
     # 教科カテゴリーフィルター
     st.subheader("カテゴリーで絞り込み")
-    if "subject" in st.session_state.lesson_data.columns:
-      all_subjects = sorted(
-        st.session_state.lesson_data["subject"].dropna().unique().tolist()
-      )
-    else:
-      all_subjects = []
-
+    all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson)))
     
     # all_subjectsが空の場合に備える
     if not all_subjects:
