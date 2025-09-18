@@ -352,7 +352,9 @@ try:
     lesson_data_df = pd.read_csv(
         "lesson_cards.csv",
         converters={
-            'flow': lambda x: x.split(';') if pd.notna(x) else [],
+            'introduction_flow': lambda x: x.split(';') if pd.notna(x) else [], # 導入フロー
+            'activity_flow': lambda x: x.split(';') if pd.notna(x) else [],     # 活動フロー
+            'reflection_flow': lambda x: x.split(';') if pd.notna(x) else [],   # 振り返りフロー
             'points': lambda x: x.split(';') if pd.notna(x) else [],
             'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
             'material_photos': lambda x: x.split(';') if pd.notna(x) else []
@@ -391,7 +393,7 @@ def back_to_list():
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
     "id", "title", "catch_copy", "goal", "target_grade", "disability_type", 
-    "duration", "materials", "flow", "points", "hashtags", 
+    "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags", 
     "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use"
 ]
 
@@ -411,15 +413,17 @@ def get_excel_template():
         worksheet.write_comment('F1', '例: 知的障害')
         worksheet.write_comment('G1', '例: 45分×3コマ')
         worksheet.write_comment('H1', '例: 財布;お金;買い物リスト  (セミコロン区切り)')
-        worksheet.write_comment('I1', '例: 1.導入;2.活動;3.振り返り (セミコロン区切り)')
-        worksheet.write_comment('J1', '例: スモールステップで指導;具体物を用意 (セミコロン区切り)')
-        worksheet.write_comment('K1', '例: 生活単元,自立活動 (カンマ区切り)')
-        worksheet.write_comment('L1', 'メインとなる画像URL (無い場合は空欄でOK)')
-        worksheet.write_comment('M1', '教材写真などのURL (セミコロン区切り、無い場合は空欄でOK)')
-        worksheet.write_comment('N1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
-        worksheet.write_comment('O1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('P1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('Q1', 'TRUEまたはFALSE')
+        worksheet.write_comment('I1', '例: 導入の内容 (セミコロン区切りで複数行)') # 変更
+        worksheet.write_comment('J1', '例: 活動の内容 (セミコロン区切りで複数行)') # 変更
+        worksheet.write_comment('K1', '例: 振り返りの内容 (セミコロン区切りで複数行)') # 変更
+        worksheet.write_comment('L1', '例: スモールステップで指導;具体物を用意 (セミコロン区切り)')
+        worksheet.write_comment('M1', '例: 生活単元,自立活動 (カンマ区切り)')
+        worksheet.write_comment('N1', 'メインとなる画像URL (無い場合は空欄でOK)')
+        worksheet.write_comment('O1', '教材写真などのURL (セミコロン区切り、無い場合は空欄でOK)')
+        worksheet.write_comment('P1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
+        worksheet.write_comment('Q1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('S1', 'TRUEまたはFALSE')
     processed_data = output.getvalue()
     return processed_data
 
@@ -513,7 +517,9 @@ with st.sidebar:
                         return df[col_name].apply(lambda x: x.split(separator) if pd.notna(x) else [])
                     return [[]] * len(df) # カラムがない場合は空のリストを返す
 
-                new_data_df['flow'] = process_list_column(new_data_df, 'flow', ';')
+                new_data_df['introduction_flow'] = process_list_column(new_data_df, 'introduction_flow', ';')
+                new_data_df['activity_flow'] = process_list_column(new_data_df, 'activity_flow', ';')
+                new_data_df['reflection_flow'] = process_list_column(new_data_df, 'reflection_flow', ';')
                 new_data_df['points'] = process_list_column(new_data_df, 'points', ';')
                 new_data_df['hashtags'] = process_list_column(new_data_df, 'hashtags', ',')
                 new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
@@ -556,7 +562,9 @@ with st.sidebar:
                         'disability_type': row.get('disability_type', '不明'),
                         'duration': row.get('duration', '不明'),
                         'materials': row.get('materials', ''),
-                        'flow': row.get('flow', []),
+                        'introduction_flow': row.get('introduction_flow', []), # 変更
+                        'activity_flow': row.get('activity_flow', []),     # 変更
+                        'reflection_flow': row.get('reflection_flow', []),   # 変更
                         'points': row.get('points', []),
                         'hashtags': row.get('hashtags', []),
                         'image': row.get('image', ''),
@@ -608,14 +616,16 @@ if st.session_state.current_lesson_id is None:
         # Keyword search
         if st.session_state.search_query:
             search_lower = st.session_state.search_query.lower()
-            # 検索対象カラムを追加: catch_copy, materials, flow, points
+            # 検索対象カラムを追加: catch_copy, materials, introduction_flow, activity_flow, reflection_flow, points
             if not (search_lower in lesson['title'].lower() or
                     search_lower in lesson['catch_copy'].lower() or
                     search_lower in lesson['goal'].lower() or
                     search_lower in lesson['target_grade'].lower() or
                     search_lower in lesson['disability_type'].lower() or
                     search_lower in lesson['materials'].lower() or # materialsも検索対象に
-                    any(search_lower in step.lower() for step in lesson['flow']) or # flowも検索対象に
+                    any(search_lower in step.lower() for step in lesson['introduction_flow']) or # introduction_flowも検索対象に
+                    any(search_lower in step.lower() for step in lesson['activity_flow']) or     # activity_flowも検索対象に
+                    any(search_lower in step.lower() for step in lesson['reflection_flow']) or   # reflection_flowも検索対象に
                     any(search_lower in point.lower() for point in lesson['points']) or # pointsも検索対象に
                     any(search_lower in t.lower() for t in lesson['hashtags'])):
                 match_search = False
