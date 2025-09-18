@@ -301,6 +301,14 @@ with col1:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["analysis"])
+    
+    with st.container(border=True):
+        st.markdown("### 🃏 授業カードライブラリー") # 新しい機能
+        st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["lesson_card_library"])
 
 with col2:
     with st.container(border=True):
@@ -319,7 +327,7 @@ with col2:
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["plan_creation"])
 
-with col2:
+with col3:
     with st.container(border=True):
         st.markdown("### 📜 知的段階（学習指導要領）")
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
@@ -333,19 +341,12 @@ with col2:
         st.write("特別支援教育に関する動画と解説をまとめています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
 
-with col2:
-    with st.container(border=True):
-        st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
-        st.write("支援方法について、AIとチャット形式で自由に相談できます。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
+    #with st.container(border=True):
+     #   st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
+      #  st.write("支援方法について、AIとチャット形式で自由に相談できます。")
+       # st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
     
-    with st.container(border=True):
-        st.markdown("### 🃏 授業カードライブラリー") # 新しい機能
-        st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["lesson_card_library"])
+ 
 
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
