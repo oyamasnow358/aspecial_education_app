@@ -382,7 +382,8 @@ if 'search_query' not in st.session_state:
     st.session_state.search_query = ""
 if 'selected_hashtags' not in st.session_state:
     st.session_state.selected_hashtags = []
-# st.session_state.selected_subject の初期化は、all_subjects の生成後に移動
+if 'selected_subject' not in st.session_state: # 教科フィルターを追加
+    st.session_state.selected_subject = "全て"
 if 'lesson_data' not in st.session_state:
     st.session_state.lesson_data = lesson_data_raw # アプリ内でデータを更新できるようにセッションステートに保持
 if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
@@ -606,9 +607,12 @@ with st.sidebar:
     all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson)))
     all_subjects.insert(0, "全て") # 先頭に「全て」を追加
 
-    # selected_subjectをall_subjectsが確定した後に初期化または検証
-    if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
-        st.session_state.selected_subject = "全て" # デフォルト値を安全なものにリセット
+    # st.selectboxのデフォルト値がoptionsに含まれていない場合に発生するTypeErrorに対応
+    # ここでの問題は、`st.session_state.selected_subject`が更新された `all_subjects` の中に存在しない場合があることです。
+    # `st.selectbox` が呼ばれる前に、`st.session_state.selected_subject` が `all_subjects` の有効な値であることを確認する必要があります。
+    if 'selected_subject' in st.session_state and st.session_state.selected_subject not in all_subjects:
+        # 現在の選択が有効なオプションにない場合、デフォルトに戻す
+        st.session_state.selected_subject = "全て"
 
     st.session_state.selected_subject = st.selectbox(
         "教科を選択",
