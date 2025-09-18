@@ -382,8 +382,7 @@ if 'search_query' not in st.session_state:
     st.session_state.search_query = ""
 if 'selected_hashtags' not in st.session_state:
     st.session_state.selected_hashtags = []
-if 'selected_subject' not in st.session_state: # 教科フィルターを追加
-    st.session_state.selected_subject = "全て"
+# st.session_state.selected_subject の初期化は、all_subjects の生成後に移動
 if 'lesson_data' not in st.session_state:
     st.session_state.lesson_data = lesson_data_raw # アプリ内でデータを更新できるようにセッションステートに保持
 if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
@@ -607,8 +606,8 @@ with st.sidebar:
     all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson)))
     all_subjects.insert(0, "全て") # 先頭に「全て」を追加
 
-    # st.selectboxのデフォルト値がoptionsに含まれていない場合に発生するTypeErrorに対応
-    if st.session_state.selected_subject not in all_subjects:
+    # selected_subjectをall_subjectsが確定した後に初期化または検証
+    if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
         st.session_state.selected_subject = "全て" # デフォルト値を安全なものにリセット
 
     st.session_state.selected_subject = st.selectbox(
