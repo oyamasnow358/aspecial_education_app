@@ -16,119 +16,177 @@ def load_css():
     """カスタムCSSを読み込む関数"""
     st.markdown("""
     <style>
-        /* General styling from main app */
+        /* General styling from main app (adjust as needed for consistency) */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
         [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
         [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
+            background-color: rgba(240, 242, 246, 0.95);
         }
-        h1, h2, h3 { 
+        h1, h2, h3, h4, h5, h6 { 
             color: #2c3e50; 
-            text-align: center; /* ページタイトルを中央揃えに */
-            padding-bottom: 10px;
-            font-weight: bold;
+            font-weight: 700;
+        }
+        h1 {
+            text-align: center; 
+            padding-bottom: 20px;
+            font-size: 2.5em;
+            color: #4a90e2; /* メインカラーを使用 */
         }
         h2 {
             text-align: left;
             border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
+            padding-left: 15px;
             margin-top: 40px;
+            font-size: 1.8em;
         }
         h3 {
             text-align: left;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
+            border-bottom: 2px solid #8A2BE2; /* 青のアクセントを紫に変更 */
             padding-bottom: 8px;
             margin-top: 30px;
+            font-size: 1.4em;
+            color: #34495e;
         }
 
+        /* Streamlit widget styling */
+        .stTextInput>div>div>input {
+            border-radius: 25px;
+            padding: 10px 18px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .stTextInput>div>div>input:focus {
+            border-color: #8A2BE2;
+            box-shadow: 0 0 0 0.2rem rgba(138,43,226,0.25);
+        }
+        .stMultiSelect>div>div>div { /* multiselect container */
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .stMultiSelect>div>div>div:focus-within { /* when multiselect is active */
+            border-color: #8A2BE2;
+            box-shadow: 0 0 0 0.2rem rgba(138,43,226,0.25);
+        }
+        .stMultiSelect div[data-testid="stMultiSelectOptions"] {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
         /* Card grid specific styles */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* カードサイズを微調整 */
+            gap: 25px; /* カード間の余白を広げる */
             padding: 20px 0;
         }
         .lesson-card {
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+            border: none; /* ボーダーを削除 */
+            border-radius: 15px; /* 角丸を大きく */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* 影を強調 */
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
         .lesson-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-8px); /* ホバー時の浮き上がりを強調 */
+            box-shadow: 0 15px 30px rgba(74, 144, 226, 0.2); /* ホバー時の影をアクセントカラーに */
         }
         .lesson-card-image {
             width: 100%;
-            height: 180px; /* 固定の高さ */
-            object-fit: cover; /* 画像がカードに収まるようにトリミング */
+            height: 180px; 
+            object-fit: cover; 
             border-bottom: 1px solid #f0f0f0;
         }
         .lesson-card-content {
-            padding: 15px;
+            padding: 20px; /* パディングを増やす */
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         .lesson-card-title {
-            font-size: 1.2em;
-            font-weight: bold;
+            font-size: 1.3em; /* フォントサイズを大きく */
+            font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             line-height: 1.4;
         }
-        .lesson-card-goal {
+        .lesson-card-catchcopy { /* キャッチコピーを追加 */
             font-size: 0.9em;
+            color: #6a0dad; /* 紫色 */
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            font-style: italic;
+        }
+        .lesson-card-goal {
+            font-size: 0.95em;
             color: #555;
-            margin-bottom: 10px;
-            border-left: 3px solid #8A2BE2;
-            padding-left: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4a90e2; /* アクセントカラー */
+            padding-left: 10px;
+            line-height: 1.5;
         }
         .lesson-card-meta {
-            font-size: 0.8em;
+            font-size: 0.85em;
             color: #777;
             display: flex;
-            justify-content: space-between;
+            flex-wrap: wrap; /* 小さな画面で折り返す */
+            gap: 10px; /* アイテム間の隙間 */
             align-items: center;
             margin-top: 10px;
+        }
+        .lesson-card-meta span {
+            display: flex;
+            align-items: center;
+            background-color: #f7f9fc; /* 少し明るい背景 */
+            padding: 5px 10px;
+            border-radius: 8px;
         }
         .lesson-card-tags {
             font-size: 0.8em;
             color: #4a90e2;
-            margin-top: 10px;
-            word-break: break-word; /* ハッシュタグが長い場合に改行 */
-            min-height: 30px; /* タグがないカードとの高さのズレを緩和 */
+            margin-top: 15px;
+            min-height: 30px; 
+            display: flex; /* Flexboxでタグをきれいに配置 */
+            flex-wrap: wrap;
+            gap: 5px;
         }
         .tag-badge {
             display: inline-block;
-            background-color: #e3f2fd;
+            background-color: #e3f2fd; /* 明るい青 */
             color: #2196f3;
-            border-radius: 5px;
-            padding: 3px 8px;
-            margin-right: 5px;
-            margin-bottom: 5px;
+            border-radius: 12px; /* 角丸を大きく */
+            padding: 5px 10px;
             font-size: 0.75em;
             white-space: nowrap;
-            cursor: pointer; /* タグをクリック可能にする */
+            transition: background-color 0.2s;
+            cursor: pointer;
         }
         .tag-badge:hover {
             background-color: #bbdefb;
+            color: #1976d2;
         }
 
         /* Icons */
         .icon {
-            margin-right: 5px;
-            vertical-align: middle;
+            margin-right: 8px;
+            font-size: 1.1em; /* アイコンサイズを少し大きく */
+            color: #8A2BE2; /* アイコンの色 */
         }
 
         /* Detail Button Styling */
@@ -137,16 +195,17 @@ def load_css():
             border-radius: 25px;
             color: #4a90e2;
             background-color: #ffffff;
-            padding: 8px 20px; /* ボタンのパディングを調整 */
+            padding: 10px 24px;
             font-weight: bold;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            margin-top: 15px; /* ボタンとコンテンツの間の余白 */
+            width: 100%; /* カード幅いっぱいに */
         }
         .stButton>button:hover {
             border-color: #8A2BE2;
             color: white;
             background-color: #8A2BE2;
-            transform: scale(1.03); /* ホバー時の拡大を少し控えめに */
+            transform: scale(1.02); 
         }
 
         /* Detail page specific styles */
@@ -157,159 +216,81 @@ def load_css():
         .detail-section h3 {
             border-bottom: 2px solid #8A2BE2;
             padding-bottom: 5px;
-            margin-top: 25px;
+            margin-top: 35px;
             margin-bottom: 15px;
         }
-        .detail-section p, .detail-section ul {
+        .detail-section p, .detail-section ul, .detail-section ol {
             font-size: 1.05em;
-            line-height: 1.6;
+            line-height: 1.7;
             color: #333;
+            margin-bottom: 10px;
         }
-        .detail-section ul {
-            list-style-type: disc;
-            margin-left: 20px;
+        .detail-section ul, .detail-section ol {
+            margin-left: 25px;
+            padding-left: 0;
         }
         .detail-section li {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
-        .detail-image {
+        .detail-image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .detail-image-gallery img {
             max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
+            height: 200px; /* 固定の高さ */
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
         }
-        .stVideo { /* Streamlit video player */
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .detail-image-gallery img:hover {
+            transform: scale(1.03);
+        }
+        .stVideo {
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            margin-top: 20px;
+            margin-bottom: 30px;
         }
         .detail-tag-container {
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 25px;
+            margin-bottom: 25px;
+        }
+        .stAlert {
+            border-radius: 10px;
+            font-size: 0.95em;
         }
     </style>
     """, unsafe_allow_html=True)
 
 load_css()
 
-# --- Sample Data (Replace with your actual data source) ---
-# Wordファイルはbase64でエンコードしてダミーコンテンツとして保持
-# 実際には、サーバーサイドでファイルを管理し、URLとして提供するのが一般的です。
-# ここではデモのため、最小限のWordファイル内容をPythonで生成しています。
-def create_dummy_word_file(title="指導案", content="ここに指導案の具体的な内容が入ります。"):
-    # docxライブラリがないため、ここではテキストファイルを.docxとして偽装します。
-    # 実際のWordファイルを作成するには `python-docx` ライブラリが必要です。
-    # pip install python-docx
-    # import docx
-    # doc = docx.Document()
-    # doc.add_heading(title, level=1)
-    # doc.add_paragraph(content)
-    # bio = io.BytesIO()
-    # doc.save(bio)
-    # return bio.getvalue()
+# --- Load Data from CSV ---
+# 'pages'フォルダと同じ階層に lesson_cards.csv を置いてください。
+try:
+    lesson_data_df = pd.read_csv(
+        "lesson_cards.csv",
+        converters={
+            'flow': lambda x: x.split(';') if pd.notna(x) else [],
+            'points': lambda x: x.split(';') if pd.notna(x) else [],
+            'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
+            'material_photos': lambda x: x.split(';') if pd.notna(x) else []
+        }
+    )
+    # ICT活用有無のTRUE/FALSEをbool型に変換
+    lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
+    lesson_data_raw = lesson_data_df.to_dict(orient='records')
+except FileNotFoundError:
+    st.error("`lesson_cards.csv` ファイルが見つかりませんでした。`pages` フォルダと同じ階層に配置してください。")
+    st.stop()
+except Exception as e:
+    st.error(f"CSVファイルの読み込み中にエラーが発生しました: {e}")
+    st.stop()
 
-    # 簡単なテキストをWordファイルのように見せかけるダミー
-    dummy_content = f"--- {title} ---\n\n{content}\n\nこのファイルは指導案のサンプルです。\n\n"
-    return dummy_content.encode('utf-8')
-
-
-lesson_data_raw = [
-    {
-        "id": 1,
-        "image": "https://i.imgur.com/example_shopping.jpg", # 生徒がレジで支払いをしている写真
-        "title": "高等部 生活単元学習「買い物体験」",
-        "catch_copy": "失敗しても笑って学べる買い物授業！",
-        "goal": "自分でお金を支払う",
-        "target_grade": "高等部",
-        "disability_type": "知的中度",
-        "duration": "45分",
-        "materials": "値段カード, 財布・模擬硬貨, 実店舗（スーパー）",
-        "flow": [
-            "値段カードで事前練習（いくら払うか、おつりはいくつか）",
-            "実店舗で商品を選び、カゴに入れる",
-            "レジでお金を支払う（店員さんとのやりとり練習を含む）"
-        ],
-        "points": [
-            "視覚支援（値段カード、支払いステップシート）で「支払う」流れを事前確認",
-            "失敗しても先生が適切にフォローし、成功体験につなげる",
-            "少人数グループでの実施で個別のサポートを充実"
-        ],
-        "ict_use": True, # タブレットの計算アプリ活用などを想定
-        "hashtags": ["高等部", "生活単元", "お金", "自立活動", "買い物", "社会生活"],
-        "detail_pdf_url": "https://example.com/shopping_lesson_plan.pdf", # 指導略案PDF
-        "detail_word_data": create_dummy_word_file(
-            title="高等部 買い物体験 指導案",
-            content="【単元名】生活単元学習「買い物体験を通じて、お金の使い方と社会参加を学ぶ」\n【ねらい】金銭の支払いを通して、買い物の手順を理解し、社会生活に必要な態度や習慣を身に付ける。\n【評価規準】〇〇できる。\n【本時の目標】レジで店員に「お願いします」「ありがとうございました」と伝え、自分の順番でお金を支払うことができる。\n【指導の流れ】\n1. 導入：今日の買い物テーマを確認。値段カードの復習。\n2. 展開：実店舗へ移動。買い物リストに基づき商品を選ぶ。レジでの支払い練習。\n3. まとめ：購入品の確認。振り返り。\n"
-        ),
-        "material_photos": [
-            "https://i.imgur.com/example_price_card.jpg", # 値段カードの写真
-            "https://i.imgur.com/example_payment_sheet.jpg" # 支払いステップシートの写真
-        ],
-        "video_link": "https://www.youtube.com/watch?v=example_shopping_video" # 活動中の動画
-    },
-    {
-        "id": 2,
-        "image": "https://i.imgur.com/example_cooking.jpg", # 生徒が調理している写真
-        "title": "中学部 生活単元学習「自分でお弁当を作ろう」",
-        "catch_copy": "得意なことを見つけて、自立へ一歩！",
-        "goal": "手順に沿って調理し、お弁当を完成させる",
-        "target_grade": "中学部",
-        "disability_type": "知的中度",
-        "duration": "90分",
-        "materials": "食材一式, 調理器具, レシピカード",
-        "flow": [
-            "今日のメニューと役割分担の確認",
-            "レシピカードを見ながら調理（計量、切る、炒めるなど）",
-            "お弁当箱に盛り付け、片付け"
-        ],
-        "points": [
-            "写真付きレシピカードで視覚的に手順を支援",
-            "包丁や火の扱いなど、安全指導を徹底",
-            "役割分担を明確にし、協力して作業する経験を積む"
-        ],
-        "ict_use": False,
-        "hashtags": ["中学部", "生活単元", "調理", "自立活動", "食育", "家庭科"],
-        "detail_pdf_url": "https://example.com/cooking_lesson_plan.pdf",
-        "detail_word_data": create_dummy_word_file(
-            title="中学部 お弁当作り 指導案",
-            content="【単元名】生活単元学習「栄養満点！オリジナル弁当を作ろう」\n【ねらい】調理を通して、食に関する知識を深め、食生活を豊かにしようとする態度を養う。\n【評価規準】〇〇できる。\n【本時の目標】レシピカードを見て、安全に配慮しながら一品を調理することができる。\n"
-        ),
-        "material_photos": [
-            "https://i.imgur.com/example_recipe_card.jpg" # レシピカードの写真
-        ],
-        "video_link": None
-    },
-    {
-        "id": 3,
-        "image": "https://i.imgur.com/example_art.jpg", # 生徒が絵を描いている写真
-        "title": "小学部 図画工作「季節を感じるちぎり絵」",
-        "catch_copy": "指先の感触で、豊かな表現力を育む",
-        "goal": "様々な色の紙を使って、季節の風景をちぎり絵で表現する",
-        "target_grade": "小学部",
-        "disability_type": "知的軽度",
-        "duration": "45分",
-        "materials": "色紙, 台紙, のり",
-        "flow": [
-            "季節の風景（紅葉、雪景色など）の絵本を見る",
-            "好きな色の紙を選び、手でちぎる",
-            "台紙に貼って風景を完成させる"
-        ],
-        "points": [
-            "色の組み合わせの楽しさを伝え、自由に表現できる雰囲気を作る",
-            "指先を使うことで、微細運動能力の発達を促す",
-            "完成した作品は教室に飾り、達成感を味わわせる"
-        ],
-        "ict_use": False,
-        "hashtags": ["小学部", "図画工作", "表現", "季節", "アート"],
-        "detail_pdf_url": None,
-        "detail_word_data": create_dummy_word_file(
-            title="小学部 ちぎり絵 指導案",
-            content="【単元名】図画工作「指で表現！秋のちぎり絵」\n【ねらい】季節の変化に気づき、色紙の持つ特性を生かして、ちぎり絵で表現することを楽しむ。\n【評価規準】〇〇できる。\n【本時の目標】秋の風景をイメージし、色紙をちぎって台紙に貼り、作品を完成させることができる。\n"
-        ),
-        "material_photos": [],
-        "video_link": None
-    }
-]
 
 # st.session_stateの初期化
 if 'current_lesson_id' not in st.session_state:
@@ -321,32 +302,6 @@ if 'selected_hashtags' not in st.session_state:
 
 
 # --- Helper Functions ---
-def display_lesson_card(lesson):
-    """個別の授業カードを表示する関数"""
-    with st.container():
-        st.markdown(f"""
-        <div class="lesson-card">
-            <img class="lesson-card-image" src="{lesson['image']}" alt="{lesson['title']}">
-            <div class="lesson-card-content">
-                <div>
-                    <div class="lesson-card-title">{lesson['title']}</div>
-                    <div class="lesson-card-goal">🎯 {lesson['goal']}</div>
-                    <div class="lesson-card-meta">
-                        <span><span class="icon">🎓</span>{lesson['target_grade']}・{lesson['disability_type']}</span>
-                        <span><span class="icon">⏱</span>{lesson['duration']}</span>
-                    </div>
-                </div>
-                <div class="lesson-card-tags">
-                    {''.join(f'<span class="tag-badge" onclick="Streamlit.setComponentValue(\'selected_tag_{tag}\', true)">#{tag}</span>' for tag in lesson['hashtags'])}
-                </div>
-                {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        # 上記の onclick イベントは、Streamlitのカスタムコンポーネントを使わないと直接動作しません。
-        # 代わりに Streamlitのbuttonを使用します。HTML内のタグは表示用とします。
-
-
 def set_detail_page(lesson_id):
     """詳細ページへの遷移をトリガーする関数"""
     st.session_state.current_lesson_id = lesson_id
@@ -362,15 +317,14 @@ if st.session_state.current_lesson_id is None:
     st.write("先生方の実践授業アイデアを検索し、日々の指導に役立てましょう！")
 
     # Search and Filter Section
-    search_col, tag_col = st.columns([0.7, 0.3])
+    search_col, tag_col = st.columns([0.6, 0.4]) # レイアウト調整
     with search_col:
         st.session_state.search_query = st.text_input("キーワードで検索", st.session_state.search_query, placeholder="例: 買い物、生活単元、小学部", key="search_input")
     
     # Extract all unique hashtags
-    all_hashtags = sorted(list(set(tag for lesson in lesson_data_raw for tag in lesson['hashtags'])))
+    all_hashtags = sorted(list(set(tag for lesson in lesson_data_raw for tag in lesson['hashtags'] if tag))) # 空のタグを除外
 
     with tag_col:
-        # st.multiselectでハッシュタグを選択できるようにする
         st.session_state.selected_hashtags = st.multiselect(
             "ハッシュタグで絞り込み", 
             options=all_hashtags, 
@@ -387,10 +341,11 @@ if st.session_state.current_lesson_id is None:
         if st.session_state.search_query:
             search_lower = st.session_state.search_query.lower()
             if not (search_lower in lesson['title'].lower() or
+                    search_lower in lesson['catch_copy'].lower() or
                     search_lower in lesson['goal'].lower() or
                     search_lower in lesson['target_grade'].lower() or
                     search_lower in lesson['disability_type'].lower() or
-                    any(search_lower in tag.lower() for tag in lesson['hashtags'])):
+                    any(search_lower in t.lower() for t in lesson['hashtags'])):
                 match_search = False
         
         # Hashtag filter
@@ -404,16 +359,16 @@ if st.session_state.current_lesson_id is None:
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
     if filtered_lessons:
         for lesson in filtered_lessons:
-            # st.columnを使って各カードを囲むと、gridレイアウトが崩れる可能性があるため
-            # HTMLとCSSで直接gridを構築します。st.button は grid item の中に配置します。
-            # st.markdownを使って各カードをHTMLとしてレンダリングし、その中にStreamlitボタンを埋め込む
+            # 各カードをHTMLとStreamlitボタンの組み合わせで表示
+            # Streamlitのbuttonは、その親がHTML要素であっても機能します。
             st.markdown(f"""
                 <div class="lesson-card">
                     <img class="lesson-card-image" src="{lesson['image']}" alt="{lesson['title']}">
                     <div class="lesson-card-content">
                         <div>
                             <div class="lesson-card-title">{lesson['title']}</div>
-                            <div class="lesson-card-goal">🎯 {lesson['goal']}</div>
+                            <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
+                            <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
                             <div class="lesson-card-meta">
                                 <span><span class="icon">🎓</span>{lesson['target_grade']}・{lesson['disability_type']}</span>
                                 <span><span class="icon">⏱</span>{lesson['duration']}</span>
@@ -441,25 +396,27 @@ else:
         st.markdown(f"<h1 class='detail-header'>{selected_lesson['title']}</h1>", unsafe_allow_html=True)
         st.markdown(f"<h3 class='detail-header'>{selected_lesson['catch_copy']}</h3>", unsafe_allow_html=True)
 
-        st.image(selected_lesson['image'], caption=selected_lesson['title'], use_container_width=True, class_name="detail-image")
+        # メインイメージ
+        st.image(selected_lesson['image'], caption=selected_lesson['title'], use_container_width=True)
 
         st.markdown("---")
         
+        # 基本情報と活動の流れを横並びに
         col_info1, col_info2 = st.columns(2)
         with col_info1:
             st.subheader("🎯 ねらい")
-            st.write(f"**{selected_lesson['goal']}**")
+            st.markdown(f"<p>{selected_lesson['goal']}</p>", unsafe_allow_html=True)
             st.subheader("👥 対象学年・障害特性")
-            st.write(f"**{selected_lesson['target_grade']}**・**{selected_lesson['disability_type']}**")
+            st.markdown(f"<p>{selected_lesson['target_grade']}・{selected_lesson['disability_type']}</p>", unsafe_allow_html=True)
             st.subheader("⏱ 所要時間・準備物")
-            st.write(f"**所要時間**: {selected_lesson['duration']}")
-            st.write(f"**準備物**: {selected_lesson['materials']}")
+            st.markdown(f"<p>所要時間: **{selected_lesson['duration']}**</p>", unsafe_allow_html=True)
+            st.markdown(f"<p>準備物: **{selected_lesson['materials']}**</p>", unsafe_allow_html=True)
             st.subheader("💻 ICT活用有無")
-            st.write("あり" if selected_lesson['ict_use'] else "なし")
+            st.markdown(f"<p>{'あり' if selected_lesson['ict_use'] else 'なし'}</p>", unsafe_allow_html=True)
 
         with col_info2:
             st.subheader("📖 活動の流れ")
-            st.markdown("<ul>" + "".join(f"<li>{step}</li>" for step in selected_lesson['flow']) + "</ul>", unsafe_allow_html=True)
+            st.markdown("<ol>" + "".join(f"<li>{step}</li>" for step in selected_lesson['flow']) + "</ol>", unsafe_allow_html=True)
 
             st.subheader("💡 ポイント・工夫")
             st.markdown("<ul>" + "".join(f"<li>{point}</li>" for point in selected_lesson['points']) + "</ul>", unsafe_allow_html=True)
@@ -474,44 +431,57 @@ else:
         st.header("詳細資料")
 
         # 指導案 (Wordファイルダウンロード)
-        if selected_lesson['detail_word_data']:
-            st.subheader("📄 指導略案 (Word)")
-            st.download_button(
-                label="Wordファイルをダウンロード",
-                data=selected_lesson['detail_word_data'],
-                file_name=f"{selected_lesson['title']}_指導案.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="download_word_btn"
-            )
-            st.info("※Wordファイルは直接プレビューできません。ダウンロードしてご確認ください。")
+        if selected_lesson['detail_word_url']:
+            st.subheader("📄 指導略案 (Wordファイル)")
+            # Wordファイルは直接Streamlitで表示できないため、ダウンロードリンクを提供
+            st.markdown(f"""
+            <a href="{selected_lesson['detail_word_url']}" download="{selected_lesson['title']}_指導案.docx" target="_blank">
+                <button style="
+                    background-color: #4a90e2; color: white; border: none; padding: 10px 20px;
+                    border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
+                    transition: background-color 0.3s, transform 0.2s;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                " onmouseover="this.style.backgroundColor='#357ABD'; this.style.transform='scale(1.03)';" onmouseout="this.style.backgroundColor='#4a90e2'; this.style.transform='scale(1.0)';">
+                    Wordファイルをダウンロード ⬇️
+                </button>
+            </a>
+            """, unsafe_allow_html=True)
+            st.info("※Wordファイルは直接プレビューできません。ダウンロードして内容をご確認ください。")
         elif selected_lesson['detail_pdf_url']:
-            st.subheader("📄 指導略案 (PDF)")
+            st.subheader("📄 指導略案 (PDFファイル)")
             st.markdown(f"[指導略案PDFをダウンロード]({selected_lesson['detail_pdf_url']})", unsafe_allow_html=True)
+            st.info("※PDFファイルはブラウザで開くかダウンロードしてご確認ください。")
         else:
-            st.info("この授業カードには指導略案がありません。")
+            st.warning("この授業カードには指導略案が登録されていません。")
 
         # 配布資料・教材写真
         if selected_lesson['material_photos']:
             st.subheader("🖼️ 配布資料・教材写真")
-            cols_photos = st.columns(len(selected_lesson['material_photos']))
-            for i, photo_url in enumerate(selected_lesson['material_photos']):
-                with cols_photos[i]:
-                    st.image(photo_url, use_container_width=True, class_name="detail-image")
+            st.markdown("<div class='detail-image-gallery'>", unsafe_allow_html=True)
+            for photo_url in selected_lesson['material_photos']:
+                # Streamlitのimageで直接ギャラリーを構築
+                st.image(photo_url, use_column_width="always") 
+            st.markdown("</div>", unsafe_allow_html=True)
+            # Streamlitのグリッド機能で画像を並べる方が綺麗かもしれません
+            # cols_photos = st.columns(min(3, len(selected_lesson['material_photos'])))
+            # for i, photo_url in enumerate(selected_lesson['material_photos']):
+            #     with cols_photos[i % 3]:
+            #         st.image(photo_url, use_container_width=True)
         else:
-            st.info("この授業カードには配布資料・教材写真がありません。")
+            st.info("この授業カードには配布資料・教材写真が登録されていません。")
 
         # 動画リンク
         if selected_lesson['video_link']:
             st.subheader("▶️ 活動の様子 (動画)")
-            # YouTube動画埋め込み対応 (要URLフォーマット確認)
             youtube_match = re.match(r"(?:https?://)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)/(?:watch\?v=|embed/|v/)?([a-zA-Z0-9_-]{11})", selected_lesson['video_link'])
             if youtube_match:
                 video_id = youtube_match.group(1)
                 st.video(f"https://www.youtube.com/watch?v={video_id}")
             else:
+                st.warning("動画URLの形式が正しくないか、YouTube以外の動画です。")
                 st.video(selected_lesson['video_link']) # その他の動画URLをそのまま埋め込み試行
         else:
-            st.info("この授業カードには活動の様子の動画がありません。")
+            st.warning("この授業カードには活動の様子の動画が登録されていません。")
 
     else:
         st.error("指定された授業カードが見つかりませんでした。")
