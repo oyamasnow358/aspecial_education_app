@@ -382,8 +382,10 @@ if 'search_query' not in st.session_state:
     st.session_state.search_query = ""
 if 'selected_hashtags' not in st.session_state:
     st.session_state.selected_hashtags = []
-if 'selected_subject' not in st.session_state: # 教科フィルターを追加
-    st.session_state.selected_subject = "全て"
+# 'selected_subject'の初期化は、利用可能なsubjectに基づいて行うように変更
+if 'selected_subject' not in st.session_state:
+    st.session_state.selected_subject = "全て" # 初期ロード時はとりあえず"全て"に設定
+
 if 'lesson_data' not in st.session_state:
     st.session_state.lesson_data = lesson_data_raw # アプリ内でデータを更新できるようにセッションステートに保持
 if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
@@ -605,19 +607,27 @@ with st.sidebar:
     # 教科カテゴリーフィルター
     st.subheader("カテゴリーで絞り込み")
     all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson)))
+    
+    # all_subjectsが空の場合に備える
+    if not all_subjects:
+        all_subjects.append("その他") # デフォルトの選択肢を追加
+    
     all_subjects.insert(0, "全て") # 先頭に「全て」を追加
 
-    # st.selectboxのデフォルト値がoptionsに含まれていない場合に発生するTypeErrorに対応
-    # ここでの問題は、`st.session_state.selected_subject`が更新された `all_subjects` の中に存在しない場合があることです。
-    # `st.selectbox` が呼ばれる前に、`st.session_state.selected_subject` が `all_subjects` の有効な値であることを確認する必要があります。
-    if 'selected_subject' in st.session_state and st.session_state.selected_subject not in all_subjects:
-        # 現在の選択が有効なオプションにない場合、デフォルトに戻す
+    # `st.session_state.selected_subject`が`all_subjects`に存在するか厳密にチェックし、存在しない場合はリセット
+    if st.session_state.selected_subject not in all_subjects:
         st.session_state.selected_subject = "全て"
+    
+    # default引数に渡すインデックスも安全に取得する
+    try:
+        default_index = all_subjects.index(st.session_state.selected_subject)
+    except ValueError:
+        default_index = 0 # 見つからなければ「全て」をデフォルトにする
 
     st.session_state.selected_subject = st.selectbox(
         "教科を選択",
         options=all_subjects,
-        default=st.session_state.selected_subject,
+        index=default_index, # default引数をindexに変更
         key="subject_filter"
     )
 
@@ -892,4 +902,3 @@ else:
 
     else:
         st.error("指定された授業カードが見つかりませんでした。")
-        
