@@ -385,10 +385,18 @@ if 'lesson_data' not in st.session_state:
 def set_detail_page(lesson_id):
     """詳細ページへの遷移をトリガーする関数"""
     st.session_state.current_lesson_id = lesson_id
+    # 詳細ページに遷移する際に、フロー表示状態をリセット
+    st.session_state.show_introduction_flow = False
+    st.session_state.show_activity_flow = False
+    st.session_state.show_reflection_flow = False
 
 def back_to_list():
     """一覧ページに戻る関数"""
     st.session_state.current_lesson_id = None
+    # リストに戻る際にも、フロー表示状態をリセット
+    st.session_state.show_introduction_flow = False
+    st.session_state.show_activity_flow = False
+    st.session_state.show_reflection_flow = False
 
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
@@ -413,9 +421,9 @@ def get_excel_template():
         worksheet.write_comment('F1', '例: 知的障害')
         worksheet.write_comment('G1', '例: 45分×3コマ')
         worksheet.write_comment('H1', '例: 財布;お金;買い物リスト  (セミコロン区切り)')
-        worksheet.write_comment('I1', '例: 導入の内容 (セミコロン区切りで複数行)') # 変更
-        worksheet.write_comment('J1', '例: 活動の内容 (セミコロン区切りで複数行)') # 変更
-        worksheet.write_comment('K1', '例: 振り返りの内容 (セミコロン区切りで複数行)') # 変更
+        worksheet.write_comment('I1', '例: 課題の提示;本時の目標共有 (セミコロン区切りで複数行)') # 変更
+        worksheet.write_comment('J1', '例: 商品選び;お金の支払い練習 (セミコロン区切りで複数行)') # 変更
+        worksheet.write_comment('K1', '例: できたことの共有;次回の課題 (セミコロン区切りで複数行)') # 変更
         worksheet.write_comment('L1', '例: スモールステップで指導;具体物を用意 (セミコロン区切り)')
         worksheet.write_comment('M1', '例: 生活単元,自立活動 (カンマ区切り)')
         worksheet.write_comment('N1', 'メインとなる画像URL (無い場合は空欄でOK)')
@@ -562,9 +570,9 @@ with st.sidebar:
                         'disability_type': row.get('disability_type', '不明'),
                         'duration': row.get('duration', '不明'),
                         'materials': row.get('materials', ''),
-                        'introduction_flow': row.get('introduction_flow', []), # 変更
-                        'activity_flow': row.get('activity_flow', []),     # 変更
-                        'reflection_flow': row.get('reflection_flow', []),   # 変更
+                        'introduction_flow': row.get('introduction_flow', []), 
+                        'activity_flow': row.get('activity_flow', []),     
+                        'reflection_flow': row.get('reflection_flow', []),   
                         'points': row.get('points', []),
                         'hashtags': row.get('hashtags', []),
                         'image': row.get('image', ''),
@@ -622,11 +630,11 @@ if st.session_state.current_lesson_id is None:
                     search_lower in lesson['goal'].lower() or
                     search_lower in lesson['target_grade'].lower() or
                     search_lower in lesson['disability_type'].lower() or
-                    search_lower in lesson['materials'].lower() or # materialsも検索対象に
-                    any(search_lower in step.lower() for step in lesson['introduction_flow']) or # introduction_flowも検索対象に
-                    any(search_lower in step.lower() for step in lesson['activity_flow']) or     # activity_flowも検索対象に
-                    any(search_lower in step.lower() for step in lesson['reflection_flow']) or   # reflection_flowも検索対象に
-                    any(search_lower in point.lower() for point in lesson['points']) or # pointsも検索対象に
+                    lesson['materials'] and search_lower in lesson['materials'].lower() or 
+                    any(search_lower in step.lower() for step in lesson['introduction_flow']) or 
+                    any(search_lower in step.lower() for step in lesson['activity_flow']) or     
+                    any(search_lower in step.lower() for step in lesson['reflection_flow']) or   
+                    any(search_lower in point.lower() for point in lesson['points']) or 
                     any(search_lower in t.lower() for t in lesson['hashtags'])):
                 match_search = False
         
@@ -641,9 +649,6 @@ if st.session_state.current_lesson_id is None:
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
     if filtered_lessons:
         for lesson in filtered_lessons:
-            # 各カードをHTMLとStreamlitボタンの組み合わせで表示
-            # Streamlitのbuttonは、その親がHTML要素であっても機能します。
-            # ボタンのクリック時にset_detail_pageを呼び出す
             st.markdown(f"""
                 <div class="lesson-card">
                     <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
@@ -685,3 +690,188 @@ else:
 
         # メインイメージ
         st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['title'], use_container_width=True)
+
+        st.markdown("""
+            <style>
+                .flow-section {
+                    background-color: #f9f9f9;
+                    border-left: 5px solid #8A2BE2;
+                    padding: 15px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                }
+                .flow-section h4 {
+                    color: #8A2BE2;
+                    font-weight: 600;
+                    margin-bottom: 10px;
+                    font-size: 1.2em;
+                }
+                .flow-list {
+                    list-style-type: decimal; /* 箇条書きを数字に */
+                    margin-left: 20px;
+                    padding-left: 0;
+                }
+                .flow-list li {
+                    margin-bottom: 5px;
+                    line-height: 1.6;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
+        st.subheader("授業の流れ")
+        flow_cols = st.columns(3)
+
+        with flow_cols[0]:
+            if st.button("導入を表示", key=f"show_intro_{selected_lesson['id']}"):
+                st.session_state.show_introduction_flow = not st.session_state.show_introduction_flow
+                st.session_state.show_activity_flow = False
+                st.session_state.show_reflection_flow = False
+        with flow_cols[1]:
+            if st.button("活動を表示", key=f"show_activity_{selected_lesson['id']}"):
+                st.session_state.show_activity_flow = not st.session_state.show_activity_flow
+                st.session_state.show_introduction_flow = False
+                st.session_state.show_reflection_flow = False
+        with flow_cols[2]:
+            if st.button("振り返りを表示", key=f"show_reflection_{selected_lesson['id']}"):
+                st.session_state.show_reflection_flow = not st.session_state.show_reflection_flow
+                st.session_state.show_introduction_flow = False
+                st.session_state.show_activity_flow = False
+        
+        # 導入フローの表示
+        if st.session_state.show_introduction_flow:
+            if selected_lesson['introduction_flow']:
+                st.markdown("<div class='flow-section'>", unsafe_allow_html=True)
+                st.markdown("<h4><span class='icon'>🚀</span>導入</h4>", unsafe_allow_html=True)
+                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
+                for step in selected_lesson['introduction_flow']:
+                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
+                st.markdown("</ol>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.info("導入の記載はありません。")
+        
+        # 活動フローの表示
+        if st.session_state.show_activity_flow:
+            if selected_lesson['activity_flow']:
+                st.markdown("<div class='flow-section'>", unsafe_allow_html=True)
+                st.markdown("<h4><span class='icon'>💡</span>活動</h4>", unsafe_allow_html=True)
+                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
+                for step in selected_lesson['activity_flow']:
+                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
+                st.markdown("</ol>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.info("活動の記載はありません。")
+
+        # 振り返りフローの表示
+        if st.session_state.show_reflection_flow:
+            if selected_lesson['reflection_flow']:
+                st.markdown("<div class='flow-section'>", unsafe_allow_html=True)
+                st.markdown("<h4><span class='icon'>💭</span>振り返り</h4>", unsafe_allow_html=True)
+                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
+                for step in selected_lesson['reflection_flow']:
+                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
+                st.markdown("</ol>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                st.info("振り返りの記載はありません。")
+
+        st.markdown("---")
+
+        # ねらい
+        st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+        st.markdown("<h3><span class='header-icon'>🎯</span>ねらい</h3>", unsafe_allow_html=True)
+        st.markdown(f"<p>{selected_lesson['goal']}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # 対象・種別・時間
+        st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+        st.markdown("<h3><span class='header-icon'>ℹ️</span>基本情報</h3>", unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.markdown(f"**対象学年:** {selected_lesson['target_grade']}")
+        with col2:
+            st.markdown(f"**障害種別:** {selected_lesson['disability_type']}")
+        with col3:
+            st.markdown(f"**時間:** {selected_lesson['duration']}")
+        with col4:
+            st.markdown(f"**ICT活用:** {'あり' if selected_lesson['ict_use'] else 'なし'}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # 準備物
+        if selected_lesson['materials']:
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>🎒</span>準備物</h3>", unsafe_allow_html=True)
+            st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 指導のポイント
+        if selected_lesson['points']:
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>💡</span>指導のポイント</h3>", unsafe_allow_html=True)
+            st.markdown("<ul class='flow-list'>", unsafe_allow_html=True)
+            for point in selected_lesson['points']:
+                st.markdown(f"<li>{point}</li>", unsafe_allow_html=True)
+            st.markdown("</ul>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 教材写真ギャラリー
+        if selected_lesson['material_photos']:
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>📸</span>教材写真</h3>", unsafe_allow_html=True)
+            st.markdown("<div class='detail-image-gallery'>", unsafe_allow_html=True)
+            for photo_url in selected_lesson['material_photos']:
+                st.image(photo_url, use_column_width=False, width=280) # 固定幅で表示
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 参考動画
+        if selected_lesson['video_link']:
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
+            st.video(selected_lesson['video_link'])
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # ハッシュタグ
+        if selected_lesson['hashtags']:
+            st.markdown("<div class='detail-section detail-tag-container'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>🏷️</span>タグ</h3>", unsafe_allow_html=True)
+            st.markdown("<div class='lesson-card-tags'>", unsafe_allow_html=True)
+            for tag in selected_lesson['hashtags']:
+                st.markdown(f"<span class='tag-badge'>#{tag}</span>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 指導案ダウンロード
+        if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url']:
+            st.markdown("<div class='download-button-wrapper'>", unsafe_allow_html=True)
+            download_cols = st.columns(2)
+            if selected_lesson['detail_word_url']:
+                with download_cols[0]:
+                    st.markdown(
+                        f"""
+                        <a href="{selected_lesson['detail_word_url']}" target="_blank">
+                            <button>
+                                <span class="icon">📄</span>Word指導案をダウンロード
+                            </button>
+                        </a>
+                        """, unsafe_allow_html=True
+                    )
+            if selected_lesson['detail_pdf_url']:
+                with download_cols[1]:
+                    st.markdown(
+                        f"""
+                        <a href="{selected_lesson['detail_pdf_url']}" target="_blank">
+                            <button>
+                                <span class="icon">⬇️</span>PDF指導案をダウンロード
+                            </button>
+                        </a>
+                        """, unsafe_allow_html=True
+                    )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
+
+    else:
+        st.error("指定された授業カードが見つかりませんでした。")
