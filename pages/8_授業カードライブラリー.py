@@ -4,6 +4,7 @@ import base64
 import re # ハッシュタグ抽出用
 import io # Word/Excelファイルダウンロード・アップロード用
 from io import BytesIO # Excelアップロード用
+import xlsxwriter # エラー解決のためにインポートを追加
 
 st.set_page_config(
     page_title="授業カードライブラリー",
@@ -36,7 +37,7 @@ def load_css():
         }
         [data-testid="stHeader"] { /* Streamlitヘッダーの背景色を調整 */
             background-color: #ffffff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,2,0,0.05);
         }
         
         h1, h2, h3, h4, h5, h6 { 
@@ -387,13 +388,16 @@ def back_to_list():
     """一覧ページに戻る関数"""
     st.session_state.current_lesson_id = None
 
+# 授業カードのヘッダーカラム定義
+LESSON_CARD_COLUMNS = [
+    "id", "title", "catch_copy", "goal", "target_grade", "disability_type", 
+    "duration", "materials", "flow", "points", "hashtags", 
+    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use"
+]
+
 # Excelテンプレートダウンロード関数
 def get_excel_template():
-    template_df = pd.DataFrame(columns=[
-        "id", "title", "catch_copy", "goal", "target_grade", "disability_type", 
-        "duration", "materials", "flow", "points", "hashtags", 
-        "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use"
-    ])
+    template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         template_df.to_excel(writer, index=False, sheet_name='授業カードテンプレート')
@@ -416,6 +420,15 @@ def get_excel_template():
         worksheet.write_comment('O1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('P1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('Q1', 'TRUEまたはFALSE')
+    processed_data = output.getvalue()
+    return processed_data
+
+# CSVテンプレートダウンロード関数
+def get_csv_template():
+    template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
+    output = BytesIO()
+    # CSVではコメント機能がないため、データフレームのみを書き出す
+    template_df.to_csv(output, index=False, encoding='utf-8-sig') # Excelで開いたときに文字化けしないように'utf-8-sig'
     processed_data = output.getvalue()
     return processed_data
 
@@ -450,32 +463,48 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.subheader("② Excelテンプレート方式")
+    st.subheader("② ファイルテンプレート方式")
     st.info("""
-        Excelテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
+        ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
     """)
 
     # Excelテンプレートのダウンロード
-    excel_data = get_excel_template()
+    excel_data_for_download = get_excel_template() # 関数呼び出し
     st.download_button(
         label="⬇️ Excelテンプレートをダウンロード",
-        data=excel_data,
+        data=excel_data_for_download,
         file_name="授業カードテンプレート.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
     )
 
-    # Excelファイルのアップロード
-    uploaded_file = st.file_uploader("⬆️ Excelファイルをアップロード", type=["xlsx"], help="入力済みのExcelファイルをアップロードして、データを追加します。")
+    # CSVテンプレートのダウンロード
+    csv_data_for_download = get_csv_template() # 関数呼び出し
+    st.download_button(
+        label="⬇️ CSVテンプレートをダウンロード",
+        data=csv_data_for_download,
+        file_name="授業カードテンプレート.csv",
+        mime="text/csv",
+        help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
+    )
+
+    # ファイルのアップロード
+    uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。")
 
     if uploaded_file is not None:
         try:
-            new_data_df = pd.read_excel(uploaded_file)
+            if uploaded_file.name.endswith('.xlsx'):
+                new_data_df = pd.read_excel(uploaded_file)
+            elif uploaded_file.name.endswith('.csv'):
+                new_data_df = pd.read_csv(uploaded_file)
+            else:
+                st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
+                st.stop()
             
             # 必須カラムの存在チェック
             required_cols = ["title", "goal"] # 例としてタイトルとねらいを必須とする
             if not all(col in new_data_df.columns for col in required_cols):
-                st.error(f"Excelファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
+                st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
             else:
                 # コンバータと同様の処理をアップロードデータにも適用
                 # 存在しないカラムはエラーにならないように.get()を使用
@@ -490,7 +519,8 @@ with st.sidebar:
                 new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
 
                 if 'ict_use' in new_data_df.columns:
-                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(bool)
+                    # Excelから読み込むと'TRUE'/'FALSE'文字列になる場合があるので変換
+                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().map({'true': True, 'false': False}).fillna(False)
                 else:
                     new_data_df['ict_use'] = False # デフォルト値
 
@@ -506,7 +536,14 @@ with st.sidebar:
                         max_id += 1
                         row_id = max_id
                     else:
-                        row_id = int(current_id)
+                        try:
+                            row_id = int(current_id)
+                            if row_id in existing_ids: # Excel/CSV内の重複も考慮
+                                max_id += 1
+                                row_id = max_id
+                        except ValueError: # idが数値でない場合
+                            max_id += 1
+                            row_id = max_id
                     
                     # 辞書に変換する前に、存在しないカラムにデフォルト値を設定
                     # CSVの読み込み時のカラムと整合性を取る
@@ -533,14 +570,11 @@ with st.sidebar:
                     existing_ids.add(row_id) # 新しく追加されたIDも記録
 
                 # 既存データと新しいデータを結合
-                # IDが重複しないことを保証しつつ、効率的にデータを結合
-                # ここでは、既存データは維持し、Excelからの新しいデータのみを追加する
-                # もしExcelで既存データを更新したい場合は、もう少し複雑なマージロジックが必要
                 st.session_state.lesson_data.extend(new_entries)
-                st.success(f"{len(new_entries)}件の授業カードをExcelファイルから追加しました！")
+                st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
                 st.experimental_rerun() # データ更新後に再描画
         except Exception as e:
-            st.error(f"Excelファイルの読み込みまたは処理中にエラーが発生しました: {e}")
+            st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
             st.exception(e) # 詳細なエラーメッセージを表示
     st.markdown("---")
 

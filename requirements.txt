@@ -21,3 +21,4 @@ python-docx
 langchain
 langchain-google-genai
 faiss-cpu
+xlsxwriter
