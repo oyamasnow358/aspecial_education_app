@@ -640,4 +640,4 @@ else:
             st.markdown("<br>", unsafe_allow_html=True) # レイアウト調整
 
         # メインイメージ
-          st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['title'], use_container_width=True)
+        st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['title'], use_container_width=True)
