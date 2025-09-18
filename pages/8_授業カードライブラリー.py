@@ -483,6 +483,7 @@ else:
         else:
             st.warning("この授業カードには活動の様子の動画が登録されていません。")
 
+
     else:
         st.error("指定された授業カードが見つかりませんでした。")
         st.button("↩️ 一覧に戻る", on_click=back_to_list)
