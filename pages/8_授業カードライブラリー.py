@@ -352,9 +352,9 @@ try:
     lesson_data_df = pd.read_csv(
         "lesson_cards.csv",
         converters={
-            'introduction_flow': lambda x: x.split(';') if pd.notna(x) else [], # 導入フロー
-            'activity_flow': lambda x: x.split(';') if pd.notna(x) else [],     # 活動フロー
-            'reflection_flow': lambda x: x.split(';') if pd.notna(x) else [],   # 振り返りフロー
+            'introduction_flow': lambda x: x.split(';') if pd.notna(x) else [],  # 導入フロー
+            'activity_flow': lambda x: x.split(';') if pd.notna(x) else [],      # 活動フロー
+            'reflection_flow': lambda x: x.split(';') if pd.notna(x) else [],    # 振り返りフロー
             'points': lambda x: x.split(';') if pd.notna(x) else [],
             'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
             'material_photos': lambda x: x.split(';') if pd.notna(x) else []
@@ -362,14 +362,18 @@ try:
     )
     # ICT活用有無のTRUE/FALSEをbool型に変換
     lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
+    
+    # 'subject'カラムが存在しない場合、デフォルト値「その他」で作成
+    if 'subject' not in lesson_data_df.columns:
+        lesson_data_df['subject'] = 'その他'
+
     lesson_data_raw = lesson_data_df.to_dict(orient='records')
 except FileNotFoundError:
-    st.error("`lesson_cards.csv` ファイルが見つかりませんでした。`pages` フォルダと同じ階層に配置してください。")
+    st.error("lesson_cards.csv ファイルが見つかりませんでした。pages フォルダと同じ階層に配置してください。")
     st.stop()
 except Exception as e:
     st.error(f"CSVファイルの読み込み中にエラーが発生しました: {e}")
     st.stop()
-
 
 # st.session_stateの初期化
 if 'current_lesson_id' not in st.session_state:
@@ -386,6 +390,7 @@ if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラ�
     st.session_state.show_all_flow = False
 
 # --- Helper Functions ---
+
 def set_detail_page(lesson_id):
     """詳細ページへの遷移をトリガーする関数"""
     st.session_state.current_lesson_id = lesson_id
@@ -400,11 +405,10 @@ def toggle_all_flow_display():
     """授業の流れ全体の表示を切り替える関数"""
     st.session_state.show_all_flow = not st.session_state.show_all_flow
 
-
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
-    "id", "title", "catch_copy", "goal", "target_grade", "disability_type", 
-    "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags", 
+    "id", "title", "catch_copy", "goal", "target_grade", "disability_type",
+    "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
     "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use", "subject" # subjectカラムを追加
 ]
 
@@ -449,28 +453,29 @@ def get_csv_template():
     return processed_data
 
 # --- Sidebar for Data Entry and Filters ---
+
 with st.sidebar:
     st.header("📚 データ登録・管理")
     st.markdown("---")
 
     st.subheader("① Googleフォーム方式")
     st.info("""
-        Googleフォームで入力されたデータは、自動的にGoogleスプレッドシートに蓄積され、このアプリに反映されます。
-        以下のボタンからフォームを開き、新しい授業カードを登録してください。
+    Googleフォームで入力されたデータは、自動的にGoogleスプレッドシートに蓄積され、このアプリに反映されます。
+    以下のボタンからフォームを開き、新しい授業カードを登録してください。
     """)
-    # !!! ここに実際のGoogleフォームのリンクを貼り付けてください !!!
-    google_form_link = "https://forms.gle/YOUR_GOOGLE_FORM_LINK" 
+    #!!! ここに実際のGoogleフォームのリンクを貼り付けてください !!!
+    google_form_link = "https://forms.gle/YOUR_GOOGLE_FORM_LINK"
     st.markdown(
         f"""
         <a href="{google_form_link}" target="_blank">
-            <button style="
-                background-color: #4CAF50; color: white; border: none; padding: 10px 20px;
-                border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
-                transition: background-color 0.3s, transform 0.2s;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;
-            ">
-                📝 Googleフォームを開く
-            </button>
+        <button style="
+        background-color: #4CAF50; color: white; border: none; padding: 10px 20px;
+        border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
+        transition: background-color 0.3s, transform 0.2s;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;
+        ">
+        📝 Googleフォームを開く
+        </button>
         </a>
         """, unsafe_allow_html=True
     )
@@ -481,9 +486,8 @@ with st.sidebar:
 
     st.subheader("② ファイルテンプレート方式")
     st.info("""
-        ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
+    ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
     """)
-
     # Excelテンプレートのダウンロード
     excel_data_for_download = get_excel_template() # 関数呼び出し
     st.download_button(
@@ -493,7 +497,6 @@ with st.sidebar:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
     )
-
     # CSVテンプレートのダウンロード
     csv_data_for_download = get_csv_template() # 関数呼び出し
     st.download_button(
@@ -516,7 +519,7 @@ with st.sidebar:
             else:
                 st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
                 st.stop()
-            
+
             # 必須カラムの存在チェック
             required_cols = ["title", "goal"] # 例としてタイトルとねらいを必須とする
             if not all(col in new_data_df.columns for col in required_cols):
@@ -597,13 +600,17 @@ with st.sidebar:
         except Exception as e:
             st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
             st.exception(e) # 詳細なエラーメッセージを表示
-    st.markdown("---")
 
+    st.markdown("---")
     # 教科カテゴリーフィルター
     st.subheader("カテゴリーで絞り込み")
     all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson)))
     all_subjects.insert(0, "全て") # 先頭に「全て」を追加
-    
+
+    # st.selectboxのデフォルト値がoptionsに含まれていない場合に発生するTypeErrorに対応
+    if st.session_state.selected_subject not in all_subjects:
+        st.session_state.selected_subject = "全て" # デフォルト値を安全なものにリセット
+
     st.session_state.selected_subject = st.selectbox(
         "教科を選択",
         options=all_subjects,
@@ -612,8 +619,10 @@ with st.sidebar:
     )
 
 # --- Main Page Logic ---
+
 if st.session_state.current_lesson_id is None:
     # --- Lesson Card List View ---
+
     st.markdown("<h1>🃏 授業カードライブラリー</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 1.1em; color: #555;'>先生方の実践授業アイデアを検索し、日々の指導に役立てましょう！</p>", unsafe_allow_html=True)
 
@@ -621,18 +630,17 @@ if st.session_state.current_lesson_id is None:
     search_col, tag_col = st.columns([0.6, 0.4])
     with search_col:
         st.session_state.search_query = st.text_input("キーワードで検索", st.session_state.search_query, placeholder="例: 買い物、生活単元、小学部", key="search_input")
-    
     # Extract all unique hashtags from current lesson data
     all_hashtags = sorted(list(set(tag for lesson in st.session_state.lesson_data for tag in lesson['hashtags'] if tag)))
 
     with tag_col:
         st.session_state.selected_hashtags = st.multiselect(
-            "ハッシュタグで絞り込み", 
-            options=all_hashtags, 
+            "ハッシュタグで絞り込み",
+            options=all_hashtags,
             default=st.session_state.selected_hashtags,
             placeholder="選択してください"
         )
-    
+
     filtered_lessons = []
     for lesson in st.session_state.lesson_data:
         match_search = True
@@ -654,7 +662,7 @@ if st.session_state.current_lesson_id is None:
                     any(search_lower in point.lower() for point in lesson['points']) or 
                     any(search_lower in t.lower() for t in lesson['hashtags'])):
                 match_search = False
-        
+
         # Hashtag filter
         if st.session_state.selected_hashtags:
             if not all(tag in lesson['hashtags'] for tag in st.session_state.selected_hashtags):
@@ -664,7 +672,7 @@ if st.session_state.current_lesson_id is None:
         if st.session_state.selected_subject != "全て":
             if lesson.get('subject') != st.session_state.selected_subject:
                 match_subject = False
-        
+
         if match_search and match_tags and match_subject:
             filtered_lessons.append(lesson)
 
@@ -672,33 +680,33 @@ if st.session_state.current_lesson_id is None:
     if filtered_lessons:
         for lesson in filtered_lessons:
             st.markdown(f"""
-                <div class="lesson-card">
-                    <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
-                    <div class="lesson-card-content">
-                        <div>
-                            <div class="lesson-card-title">{lesson['title']}</div>
-                            <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
-                            <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
-                            <div class="lesson-card-meta">
-                                <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
-                                <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
-                                <span><span class="icon">⏱</span>{lesson['duration']}</span>
-                            </div>
-                        </div>
-                        <div class="lesson-card-tags">
-                            {''.join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
-                        </div>
-                        {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
-                    </div>
-                </div>
+            <div class="lesson-card">
+            <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
+            <div class="lesson-card-content">
+            <div>
+            <div class="lesson-card-title">{lesson['title']}</div>
+            <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
+            <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
+            <div class="lesson-card-meta">
+            <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
+            <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
+            <span><span class="icon">⏱</span>{lesson['duration']}</span>
+            </div>
+            </div>
+            <div class="lesson-card-tags">
+            {''.join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+            </div>
+            {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
+            </div>
+            </div>
             """, unsafe_allow_html=True)
-            
     else:
         st.info("条件に一致する授業カードは見つかりませんでした。")
     st.markdown("</div>", unsafe_allow_html=True)
 
 else:
     # --- Lesson Card Detail View ---
+
     selected_lesson = next((lesson for lesson in st.session_state.lesson_data if lesson['id'] == st.session_state.current_lesson_id), None)
 
     if selected_lesson:
@@ -743,7 +751,7 @@ else:
 
         st.subheader("授業の流れ")
         st.button(f"{'授業の流れを非表示' if st.session_state.show_all_flow else '授業の流れを表示'} 🔃", on_click=toggle_all_flow_display, key=f"toggle_all_flow_{selected_lesson['id']}")
-        
+
         if st.session_state.show_all_flow:
             # 導入フローの表示
             if selected_lesson['introduction_flow']:
@@ -841,7 +849,7 @@ else:
 
         # ハッシュタグ
         if selected_lesson['hashtags']:
-            st.markdown("<div class='detail-section detail-tag-container'>", unsafe_allow_html=True)
+            st.markdown("<div classt class='detail-section detail-tag-container'>", unsafe_allow_html=True)
             st.markdown("<h3><span class='header-icon'>🏷️</span>タグ</h3>", unsafe_allow_html=True)
             st.markdown("<div class='lesson-card-tags'>", unsafe_allow_html=True)
             for tag in selected_lesson['hashtags']:
