@@ -680,6 +680,7 @@ if st.session_state.current_lesson_id is None:
         if st.session_state.search_query:
             search_lower = st.session_state.search_query.lower()
             if not (search_lower in lesson['title'].lower() or
+                    search_lower in lesson['subject'].lower() or
                     search_lower in lesson['catch_copy'].lower() or
                     search_lower in lesson['goal'].lower() or
                     search_lower in lesson['target_grade'].lower() or
@@ -720,6 +721,7 @@ if st.session_state.current_lesson_id is None:
             <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
             <div class="lesson-card-content">
             <div>
+            <div class="lesson-card-subject">{lesson['subject']}</div>
             <div class="lesson-card-title">{lesson['title']}</div>
             <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
             <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
