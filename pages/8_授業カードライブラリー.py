@@ -1,8 +1,352 @@
 import streamlit as st
 import pandas as pd
-from io import BytesIO
+import base64
+import re # ハッシュタグ抽出用
+import io # Word/Excelファイルダウンロード・アップロード用
+from io import BytesIO # Excelアップロード用
+import xlsxwriter # エラー解決のためにインポートを追加
 
-# --- Load Data from CSV ---
+st.set_page_config(
+    page_title="授業カードライブラリー",
+    page_icon="🃏",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# --- CSS for Card Layout and General Styling ---
+def load_css():
+    """カスタムCSSを読み込む関数"""
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f0f2f6; /* 全体の背景色を調整 */
+        }
+        [data-testid="stAppViewContainer"] > .main {
+            background-color: #f0f2f6; /* メインコンテンツの背景色も合わせる */
+            background-image: none; /* 背景画像を削除するか、控えめに */
+            padding-top: 30px; /* 全体的な上部パディング */
+            padding-bottom: 30px;
+        }
+        [data-testid="stSidebar"] {
+            background-color: #ffffff; /* サイドバーの背景を白に */
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        [data-testid="stHeader"] { /* Streamlitヘッダーの背景色を調整 */
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,2,0,0.05);
+        }
+        
+        h1, h2, h3, h4, h5, h6 { 
+            font-family: 'Poppins', 'Noto Sans JP', sans-serif; /* 見出しはPoppinsを優先 */
+            color: #2c3e50; 
+            font-weight: 700;
+        }
+        h1 {
+            text-align: center; 
+            padding-bottom: 25px;
+            font-size: 2.8em; /* H1サイズを調整 */
+            color: #4A90E2; /* メインカラーを使用 */
+            letter-spacing: -0.5px;
+        }
+        h2 {
+            text-align: left;
+            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
+            padding-left: 15px;
+            margin-top: 45px;
+            font-size: 1.9em;
+            color: #34495e;
+        }
+        h3 {
+            text-align: left;
+            border-bottom: 2px solid #e0e0e0; /* 細い線で区切り */
+            padding-bottom: 8px;
+            margin-top: 35px;
+            font-size: 1.5em;
+            color: #34495e;
+            display: flex; /* アイコンを横に並べる */
+            align-items: center;
+        }
+        h3 .header-icon {
+            margin-right: 10px;
+            color: #8A2BE2;
+        }
+        
+        p, li {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        /* Streamlit widget styling */
+        .stTextInput>div>div>input, .stMultiSelect>div>div>div, .stSelectbox>div>div {
+            border-radius: 12px; /* 少し角丸を小さく */
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.2s ease-in-out;
+            background-color: #ffffff;
+        }
+        .stTextInput>div>div>input:focus, .stMultiSelect>div>div>div:focus-within, .stSelectbox>div>div:focus-within {
+            border-color: #4A90E2; /* フォーカス時にメインカラー */
+            box-shadow: 0 0 0 0.2rem rgba(74,144,226,0.15);
+        }
+        .stMultiSelect div[data-testid="stMultiSelectOptions"] {
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        /* Card grid specific styles */
+        .lesson-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); /* カードサイズを調整 */
+            gap: 30px; /* カード間の余白 */
+            padding: 25px 0;
+        }
+        .lesson-card {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 18px; /* 角丸を大きく */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); /* 影を強調 */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .lesson-card:hover {
+            transform: translateY(-10px); /* ホバー時の浮き上がりを強調 */
+            box-shadow: 0 18px 35px rgba(74, 144, 226, 0.18); /* ホバー時の影をアクセントカラーに */
+        }
+        .lesson-card-image {
+            width: 100%;
+            height: 200px; /* 画像の高さを少し高く */
+            object-fit: cover; 
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .lesson-card-content {
+            padding: 22px; /* パディングを増やす */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .lesson-card-title {
+            font-size: 1.4em; /* フォントサイズを大きく */
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .lesson-card-catchcopy {
+            font-size: 0.95em;
+            color: #6a0dad; /* 紫色 */
+            font-weight: 500;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+        .lesson-card-goal {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 12px;
+            border-left: 4px solid #4a90e2; /* アクセントカラー */
+            padding-left: 10px;
+            line-height: 1.5;
+            min-height: 60px; /* 高さのばらつきを抑える */
+            display: flex;
+            align-items: center;
+        }
+        .lesson-card-meta {
+            font-size: 0.85em;
+            color: #777;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .lesson-card-meta span {
+            display: flex;
+            align-items: center;
+            background-color: #f0f8ff; /* 明るい青の背景 */
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid #e3f2fd;
+        }
+        .lesson-card-tags {
+            font-size: 0.8em;
+            margin-top: 15px;
+            min-height: 35px; 
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .tag-badge {
+            display: inline-block;
+            background-color: #e3f2fd; /* 明るい青 */
+            color: #2196f3;
+            border-radius: 15px; /* 角丸を大きく */
+            padding: 6px 12px;
+            font-size: 0.75em;
+            white-space: nowrap;
+            transition: background-color 0.2s, color 0.2s;
+            cursor: pointer;
+            border: 1px solid rgba(33, 150, 243, 0.2);
+        }
+        .tag-badge:hover {
+            background-color: #bbdefb;
+            color: #1976d2;
+        }
+
+        /* Icons for card meta and details */
+        .icon {
+            margin-right: 8px;
+            font-size: 1.2em; /* アイコンサイズを少し大きく */
+            color: #8A2BE2; /* アイコンの色 */
+        }
+
+        /* Detail Button Styling */
+        .stButton>button {
+            border: 2px solid #4a90e2;
+            border-radius: 25px;
+            color: #4a90e2;
+            background-color: #ffffff;
+            padding: 10px 24px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px; /* ボタンとコンテンツの間の余白 */
+            width: 100%; /* カード幅いっぱいに */
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+        }
+        .stButton>button:hover {
+            border-color: #8A2BE2;
+            color: white;
+            background-color: #8A2BE2;
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 15px rgba(138,43,226,0.2);
+        }
+        
+        /* Detail page specific styles */
+        .detail-header {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+        .detail-main-image {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .detail-section h3 {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .detail-section p, .detail-section ul, .detail-section ol {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .detail-section ul, .detail-section ol {
+            margin-left: 25px;
+            padding-left: 0;
+            list-style-position: inside; /* リストマーカーを内側に */
+        }
+        .detail-section li {
+            margin-bottom: 8px;
+            padding-left: 5px; /* マーカーとの間隔 */
+        }
+        .detail-image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* ギャラリー画像サイズ調整 */
+            gap: 20px;
+            margin-top: 25px;
+            margin-bottom: 35px;
+        }
+        .detail-image-gallery img {
+            max-width: 100%;
+            height: 220px; /* 固定の高さ */
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        .detail-image-gallery img:hover {
+            transform: scale(1.02);
+        }
+        .stVideo {
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            margin-top: 25px;
+            margin-bottom: 35px;
+        }
+        .detail-tag-container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .stAlert {
+            border-radius: 10px;
+            font-size: 0.95em;
+            background-color: #e6f7ff; /* Alert背景色調整 */
+            border-left: 5px solid #4A90E2;
+            color: #333;
+            padding: 12px 18px;
+        }
+        .stWarning {
+            border-radius: 10px;
+            font-size: 0.95em;
+            background-color: #fffbe6;
+            border-left: 5px solid #faad14;
+        }
+        .stInfo {
+            border-radius: 10px;
+            font-size: 0.95em;
+            background-color: #e6f7ff;
+            border-left: 5px solid #1890ff;
+        }
+
+        /* Download button for details page */
+        .download-button-wrapper {
+            margin-top: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .download-button-wrapper a > button {
+            background-color: #4A90E2; 
+            color: white; 
+            border: none; 
+            padding: 12px 28px;
+            border-radius: 30px; 
+            cursor: pointer; 
+            font-size: 1.1em; 
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 6px 15px rgba(74, 144, 226, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .download-button-wrapper a > button:hover {
+            background-color: #357ABD; 
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.35);
+        }
+        .download-button-wrapper a > button .icon {
+            color: white; /* ダウンロードアイコンの色も白に */
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+load_css()
+
+
 # 'pages'フォルダと同じ階層に lesson_cards.csv を置いてください。
 try:
     lesson_data_df = pd.read_csv(
@@ -386,7 +730,7 @@ if st.session_state.current_lesson_id is None:
             </div>
             </div>
             <div class="lesson-card-tags">
-            {''.join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+            {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
             </div>
             {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
             </div>
@@ -548,46 +892,45 @@ else:
             
             # durationを数値としてソートするために整形（例: "45分×3コマ" -> 3）
             def extract_duration_order(duration_str):
-                import re
-                match = re.search(r'(\d+)\s*コマ', duration_str)
+                # 'コマ'が含まれない場合も考慮し、デフォルト値0を返す
+                match = re.search(r'(\d+)\s*コマ', str(duration_str)) 
                 if match:
                     return int(match.group(1))
                 return 9999 # マッチしない場合は最後に表示されるように大きい値を返す
             
             # ソート
-            related_lessons_sorted = sorted(
-                related_lessons_raw,
-                key=lambda x: extract_duration_order(x.get('duration', '0コマ'))
-            )
+            related_lessons_sorted = sorted(related_lessons_raw, key=lambda x: extract_duration_order(x.get('duration', '')))
 
             if related_lessons_sorted:
                 st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
-                st.markdown(f"<h3><span class='header-icon'>🔗</span>同じ単元の他の授業カード（{unit_name_to_search}）</h3>", unsafe_allow_html=True)
-                st.info("単元での系統性を考慮し、授業時間順に並べています。")
-                for related_card in related_lessons_sorted:
-                    # 関連カードの表示を簡略化し、ボタンで詳細へ遷移
-                                    col1, col2 = st.columns([0.7, 0.3])
-                with col1:
+                st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の他の授業カード</h3>", unsafe_allow_html=True)
+                for rel_lesson in related_lessons_sorted:
+                    # 関連カードをクリックで詳細に飛ぶボタン
+                    # CSSでボタンに見えないように調整し、全体をクリック可能にする
                     st.markdown(f"""
-                        <div class="related-lesson-card">
-                            <img src="{related_card['image'] if related_card['image'] else 'https://via.placeholder.com/80x50?text=No+Image'}" alt="{related_card['title']}">
+                        <div class="related-lesson-card" onclick="document.getElementById('related_detail_btn_{rel_lesson['id']}').click();">
+                            <img src="{rel_lesson['image'] if rel_lesson['image'] else 'https://via.placeholder.com/80x50?text=No+Image'}" alt="{rel_lesson['title']}">
                             <div class="related-lesson-card-content">
-                                <div class="related-lesson-card-title">{related_card['title']}</div>
+                                <div class="related-lesson-card-title">{rel_lesson['title']}</div>
                                 <div class="related-lesson-card-meta">
-                                    <span>{related_card['target_grade']} | </span>
-                                    <span>{related_card['disability_type']} | </span>
-                                    <span>{related_card['duration']}</span>
+                                    {rel_lesson['target_grade']} | {rel_lesson['disability_type']} | {rel_lesson['duration']}
                                 </div>
                             </div>
                         </div>
+                        <button id="related_detail_btn_{rel_lesson['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_{rel_lesson['id']}\"]').click()"></button>
                     """, unsafe_allow_html=True)
-                with col2:
-                    st.button("詳細へ", key=f"related_detail_btn_{related_card['id']}", on_click=set_detail_page, args=(related_card['id'],))
-            st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            st.info(f"この単元（{unit_name_to_search}）の他の授業カードはまだ登録されていません。")
-    
+                    # 実際にはこのボタンがクリックされる
+                    st.button("", key=f"related_detail_btn_{rel_lesson['id']}", on_click=set_detail_page, args=(rel_lesson['id'],), help="クリックで詳細を表示", type="secondary")
+                st.markdown("</div>", unsafe_allow_html=True)
+
         st.markdown("---")
+
+        # 準備物
+        if selected_lesson['materials']:
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>✂️</span>準備物</h3>", unsafe_allow_html=True)
+            st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # 指導のポイント
         if selected_lesson['points']:
@@ -599,168 +942,151 @@ else:
             st.markdown("</ul>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # 準備物
-        if selected_lesson['materials']:
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
-            st.markdown("<h3><span class='header-icon'>📦</span>準備物</h3>", unsafe_allow_html=True)
-            st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
         # ハッシュタグ
         if selected_lesson['hashtags']:
             st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
             st.markdown("<h3><span class='header-icon'>#️⃣</span>ハッシュタグ</h3>", unsafe_allow_html=True)
-            st.markdown(f"<div class='lesson-card-tags'>{''.join(f'<span class='tag-badge'>#{tag}</span>' for tag in selected_lesson['hashtags'] if tag)}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<p>{''.join(f'<span class=\"tag-badge\" style=\"margin-right: 5px;\">#{tag}</span>' for tag in selected_lesson['hashtags'])}</p>",
+                unsafe_allow_html=True
+            )
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # 関連資料
-        st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
-        st.markdown("<h3><span class='header-icon'>📎</span>関連資料</h3>", unsafe_allow_html=True)
-        
         # 教材写真
         if selected_lesson['material_photos']:
-            st.subheader("教材写真")
-            # 2カラムで表示
-            cols_photos = st.columns(2)
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>📸</span>教材写真</h3>", unsafe_allow_html=True)
+            cols = st.columns(3)
             for i, photo_url in enumerate(selected_lesson['material_photos']):
-                if photo_url: # URLが空でない場合のみ表示
-                    with cols_photos[i % 2]:
-                        try:
-                            st.image(photo_url, caption=f"教材写真 {i+1}", use_container_width=True)
-                        except Exception:
-                            st.warning(f"教材写真の表示に失敗しました。URLを確認してください: {photo_url}")
-        else:
-            st.info("教材写真はありません。")
+                with cols[i % 3]:
+                    st.image(photo_url, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # 動画リンク
         if selected_lesson['video_link']:
-            st.subheader("動画")
-            try:
-                st.video(selected_lesson['video_link'])
-            except Exception:
-                st.warning(f"動画の表示に失敗しました。URLを確認してください: {selected_lesson['video_link']}")
-        else:
-            st.info("関連動画はありません。")
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
+            st.video(selected_lesson['video_link'])
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # 詳細資料ダウンロード
         if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url']:
-            st.subheader("詳細資料ダウンロード")
+            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>📄</span>詳細資料ダウンロード</h3>", unsafe_allow_html=True)
             if selected_lesson['detail_word_url']:
-                st.markdown(f"""
-                <a href="{selected_lesson['detail_word_url']}" target="_blank">
-                <button style="
-                background-color: #286090; color: white; border: none; padding: 10px 20px;
-                border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
-                transition: background-color 0.3s, transform 0.2s;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-right: 10px; margin-bottom: 10px;
-                ">
-                📄 指導案 (Word) をダウンロード
-                </button>
-                </a>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>', unsafe_allow_html=True)
             if selected_lesson['detail_pdf_url']:
-                st.markdown(f"""
-                <a href="{selected_lesson['detail_pdf_url']}" target="_blank">
-                <button style="
-                background-color: #D32F2F; color: white; border: none; padding: 10px 20px;
-                border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
-                transition: background-color 0.3s, transform 0.2s;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 10px;
-                ">
-                📄 指導案 (PDF) をダウンロード
-                </button>
-                </a>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("ダウンロード可能な指導案はありません。")
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown(f'<a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em;">📚 指導案 (PDF)</button></a>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
 
     else:
-        st.error("指定された授業カードが見つかりません。")
-        st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_error")
+        st.error("指定された授業カードが見つかりませんでした。")
+        st.button("↩️ 一覧に戻る", on_click=back_to_list)
 
 # --- Custom CSS for Styling ---
 st.markdown("""
 <style>
-    /* General Body Styles */
+    /* General body and text */
     body {
         font-family: 'Noto Sans JP', sans-serif;
         color: #333;
         background-color: #f0f2f6;
     }
-
-    /* Header Styles */
+    .stApp {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #2c3e50;
+        font-weight: 700;
+    }
     h1 {
-        color: #8A2BE2; /* 紫色 */
         text-align: center;
+        color: #8A2BE2; /* 紫 */
         font-size: 2.5em;
         margin-bottom: 20px;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
     }
-    h2 {
-        color: #6A1B9A;
-        font-size: 1.8em;
-        border-bottom: 2px solid #EEE;
-        padding-bottom: 10px;
-        margin-top: 30px;
-        margin-bottom: 20px;
-    }
-    h3 {
-        color: #4A148C;
-        font-size: 1.5em;
-        margin-top: 25px;
-        margin-bottom: 15px;
-    }
     .detail-header {
         text-align: center;
         color: #8A2BE2;
-        margin-top: 20px;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
     }
-    .header-icon {
-        margin-right: 8px;
-        color: #8A2BE2;
+    p {
+        line-height: 1.6;
+        font-size: 1.05em;
+    }
+    .stButton > button {
+        background-color: #8A2BE2; /* ボタンの背景色 */
+        color: white;
+        border-radius: 20px;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .stButton > button:hover {
+        background-color: #6A1EB2; /* ホバー時の色 */
+        transform: translateY(-2px);
+    }
+    /* Secondary buttons (e.g., related lessons) */
+    button[aria-label="クリックで詳細を表示"] {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        display: none !important; /* 見えないように */
     }
 
-    /* Sidebar Styles */
-    .css-1d391kg, .css-vk3252 { /* Sidebar wrapper */
-        background-color: #ffffff;
-        padding: 20px;
-        border-right: 1px solid #e0e0e0;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+    /* Sidebar specific styles */
+    .stSidebar .stSelectbox, .stSidebar .stMultiSelect, .stSidebar .stTextInput {
+        margin-bottom: 10px;
     }
-    .css-1d391kg h2, .css-vk3252 h2 { /* Sidebar headers */
-        color: #6A1B9A;
-        font-size: 1.5em;
-        border-bottom: 1px solid #EEE;
+    .stSidebar .stButton > button {
+        width: 100%;
+        margin-top: 5px;
+    }
+    .stSidebar .stFileUploader {
+        margin-top: 15px;
+    }
+    .stSidebar h2, .stSidebar h3 {
+        color: #8A2BE2;
+        border-bottom: 2px solid #eee;
         padding-bottom: 5px;
         margin-bottom: 15px;
+    }
+    .stSidebar .stInfo, .stSidebar .stWarning {
+        font-size: 0.9em;
     }
 
     /* Lesson Card Grid */
     .lesson-card-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
-        padding: 20px 0;
+        gap: 30px;
+        margin-top: 30px;
     }
-
-    /* Individual Lesson Card */
     .lesson-card {
-        background-color: #ffffff;
+        background-color: white;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
         overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
         display: flex;
         flex-direction: column;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid #e0e0e0;
     }
     .lesson-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
     .lesson-card-image {
         width: 100%;
@@ -770,38 +1096,38 @@ st.markdown("""
     }
     .lesson-card-content {
         padding: 20px;
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        flex-grow: 1;
     }
     .lesson-card-title {
-        font-size: 1.3em;
+        font-size: 1.5em;
         font-weight: bold;
-        color: #4A148C;
+        color: #333;
         margin-bottom: 8px;
-        line-height: 1.4;
+        line-height: 1.3;
     }
     .lesson-card-catchcopy {
-        font-size: 0.95em;
-        color: #555;
-        margin-bottom: 12px;
-        line-height: 1.5;
+        font-size: 0.9em;
+        color: #777;
+        margin-bottom: 10px;
+        min-height: 2.5em; /* 複数行対応 */
     }
     .lesson-card-goal {
-        font-size: 0.9em;
-        color: #666;
-        margin-bottom: 10px;
-        border-top: 1px dashed #eee;
-        padding-top: 10px;
+        font-size: 0.95em;
+        color: #555;
+        margin-bottom: 15px;
+        border-left: 3px solid #FF6347;
+        padding-left: 8px;
+        min-height: 3em; /* 複数行対応 */
     }
     .lesson-card-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 15px;
-        font-size: 0.85em;
-        color: #777;
-        margin-top: 10px;
+        gap: 10px;
+        font-size: 0.9em;
+        color: #666;
         margin-bottom: 15px;
     }
     .lesson-card-meta span .icon {
@@ -810,105 +1136,70 @@ st.markdown("""
     }
     .lesson-card-tags {
         margin-top: 15px;
-        margin-bottom: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        min-height: 30px; /* タグがないときもレイアウトが崩れないように */
+        margin-bottom: 15px;
+        min-height: 3em; /* 複数行対応 */
     }
     .tag-badge {
-        background-color: #E0BBE4; /* 薄い紫色 */
-        color: #4A148C; /* 濃い紫色 */
+        display: inline-block;
+        background-color: #e6e6fa; /* 薄い紫 */
+        color: #8A2BE2;
         padding: 5px 10px;
         border-radius: 15px;
         font-size: 0.8em;
-        font-weight: 500;
+        margin-right: 5px;
+        margin-bottom: 5px;
         white-space: nowrap;
     }
-
-    /* Streamlit Button Styling (general) */
-    .stButton>button {
+    .lesson-card .stButton > button {
         width: 100%;
-        background-color: #8A2BE2; /* 紫色 */
-        color: white;
-        border-radius: 25px;
-        padding: 10px 20px;
-        font-size: 1em;
-        font-weight: bold;
-        border: none;
-        transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .stButton>button:hover {
-        background-color: #6A1B9A; /* 濃い紫色 */
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-    .stButton>button:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-top: auto; /* ボタンをカードの下部に固定 */
     }
 
-    /* Detail Page Specifics */
+    /* Detail Page Styles */
     .detail-section {
-        background-color: #ffffff;
+        background-color: white;
         border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         padding: 25px 30px;
-        margin-bottom: 30px;
-        line-height: 1.7;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        border: 1px solid #e0e0e0;
     }
     .detail-section h3 {
         color: #8A2BE2;
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
+        font-size: 1.6em;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f0e6fa;
         display: flex;
         align-items: center;
     }
-    .detail-section p {
-        margin-bottom: 10px;
+    .detail-section h3 .header-icon {
+        margin-right: 10px;
+        font-size: 1.2em;
+        color: #FF6347; /* 目を引くアイコンカラー */
     }
     .detail-section ul {
         list-style-type: disc;
-        margin-left: 20px;
+        margin-left: 25px;
         padding-left: 0;
     }
     .detail-section li {
         margin-bottom: 8px;
-    }
-    .stVideo {
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-top: 15px;
-        margin-bottom: 20px;
+        line-height: 1.6;
+        font-size: 1.05em;
     }
     .stImage > img {
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        margin-bottom: 20px;
     }
 
-    /* Info/Warning Messages */
-    .stAlert {
-        border-radius: 8px;
-        padding: 15px;
+    /* Streamlit specific adjustments */
+    .css-1d391kg.e16z5j6o2 { /* main content area */
+        padding-top: 30px;
+        padding-bottom: 30px;
     }
-    .stAlert p {
-        margin-bottom: 0;
+    .css-1lcbmhc.e16z5j6o3, .css-1lcbmhc.e1fb7f71 { /* sidebar width */
+        width: 350px;
     }
-
-    /* Streamlit widgets */
-    .stTextInput>div>div>input, .stSelectbox>div>div>select, .stMultiSelect>div>div>div {
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        padding: 8px 12px;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .stTextInput label, .stSelectbox label, .stMultiSelect label {
-        font-weight: bold;
-        color: #4A148C;
-    }
-
 </style>
 """, unsafe_allow_html=True)
