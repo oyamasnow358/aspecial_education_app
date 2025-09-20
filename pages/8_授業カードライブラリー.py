@@ -605,55 +605,55 @@ with st.sidebar:
     st.markdown("---")
     # 教科カテゴリーフィルター
     st.subheader("カテゴリーで絞り込み")
-    all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
-    if not all_subjects:
-        all_subjects.append("その他")
-    all_subjects.insert(0, "全て")
-    
-    # セッションステートに値がない場合の初期化、または選択肢にない場合の「全て」へのリセット
+
+    # 1. 全ての教科を取得し、"全て"オプションを追加
+    all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
+    all_subjects = ["全て"] + all_subjects_raw
+
+    # 2. selected_subject の初期化と、現在の選択が有効なオプションに含まれるかのチェック
     if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
         st.session_state.selected_subject = "全て"
     
-    # デフォルトインデックスを正しく設定
+    # 3. selectbox の現在の選択肢のインデックスを決定
     default_subject_index = all_subjects.index(st.session_state.selected_subject)
-    
-    selected_subject_from_box = st.selectbox(
+
+    # 4. selectbox を表示し、その選択結果を直接セッションステートに代入
+    st.session_state.selected_subject = st.selectbox(
         "教科を選択",
         options=all_subjects,
         index=default_subject_index,
-        key="subject_filter_box" # 既存のキーと異なる新しいキーを指定
+        key="sidebar_subject_filter" # ユニークなキーに変更
     )
-    # セッションステートを更新
-    st.session_state.selected_subject = selected_subject_from_box
-
 
     # --- 単元名フィルターの追加 ---
-    # 選択された教科に基づいて単元をフィルタリング
+    # 5. 選択された教科に基づいて利用可能な単元をフィルタリング
     if st.session_state.selected_subject == "全て":
-        available_units = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'])))
+        available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'])))
     else:
-        available_units = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson.get('subject') == st.session_state.selected_subject)))
-    
-    if not available_units:
-        available_units.append("単元なし")
-    available_units.insert(0, "全て")
-    
-    # セッションステートに値がない場合の初期化、または選択肢にない場合の「全て」へのリセット
+        available_units_raw = sorted(list(set(
+            lesson['unit_name'] for lesson in st.session_state.lesson_data 
+            if 'unit_name' in lesson and lesson['unit_name'] and lesson.get('subject') == st.session_state.selected_subject
+        )))
+
+    available_units = ["全て"] + available_units_raw
+
+    # 6. selected_unit の初期化と、現在の選択が有効なオプションに含まれるかのチェック
+    #    教科が変更された際に、以前の単元選択が新しい教科の単元リストにない場合は"全て"にリセットする
     if 'selected_unit' not in st.session_state or st.session_state.selected_unit not in available_units:
         st.session_state.selected_unit = "全て"
-
-    # デフォルトインデックスを正しく設定
+    
+    # 7. selectbox の現在の選択肢のインデックスを決定
     default_unit_index = available_units.index(st.session_state.selected_unit)
 
-    selected_unit_from_box = st.selectbox(
+    # 8. selectbox を表示し、その選択結果を直接セッションステートに代入
+    st.session_state.selected_unit = st.selectbox(
         "単元を選択",
         options=available_units,
         index=default_unit_index,
-        key="unit_filter_box" # 既存のキーと異なる新しいキーを指定
+        key="sidebar_unit_filter" # ユニークなキーに変更
     )
-    # セッションステートを更新
-    st.session_state.selected_unit = selected_unit_from_box
     st.markdown("---")
+
     
 # --- Main Page Logic ---
 
