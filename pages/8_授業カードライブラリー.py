@@ -605,47 +605,56 @@ with st.sidebar:
     st.markdown("---")
     # 教科カテゴリーフィルター
     st.subheader("カテゴリーで絞り込み")
-    all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson)))
+    all_subjects = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
     if not all_subjects:
         all_subjects.append("その他")
     all_subjects.insert(0, "全て")
-
-    if st.session_state.selected_subject not in all_subjects:
+    
+    # セッションステートに値がない場合の初期化、または選択肢にない場合の「全て」へのリセット
+    if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
         st.session_state.selected_subject = "全て"
-    try:
-        default_subject_index = all_subjects.index(st.session_state.selected_subject)
-    except ValueError:
-        default_subject_index = 0
-
-    st.session_state.selected_subject = st.selectbox(
+    
+    # デフォルトインデックスを正しく設定
+    default_subject_index = all_subjects.index(st.session_state.selected_subject)
+    
+    selected_subject_from_box = st.selectbox(
         "教科を選択",
         options=all_subjects,
         index=default_subject_index,
-        key="subject_filter"
+        key="subject_filter_box" # 既存のキーと異なる新しいキーを指定
     )
+    # セッションステートを更新
+    st.session_state.selected_subject = selected_subject_from_box
+
 
     # --- 単元名フィルターの追加 ---
-    all_units = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson)))
-    if not all_units:
-        all_units.append("単元なし")
-    all_units.insert(0, "全て")
-
-    if st.session_state.selected_unit not in all_units:
+    # 選択された教科に基づいて単元をフィルタリング
+    if st.session_state.selected_subject == "全て":
+        available_units = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'])))
+    else:
+        available_units = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson.get('subject') == st.session_state.selected_subject)))
+    
+    if not available_units:
+        available_units.append("単元なし")
+    available_units.insert(0, "全て")
+    
+    # セッションステートに値がない場合の初期化、または選択肢にない場合の「全て」へのリセット
+    if 'selected_unit' not in st.session_state or st.session_state.selected_unit not in available_units:
         st.session_state.selected_unit = "全て"
-    try:
-        default_unit_index = all_units.index(st.session_state.selected_unit)
-    except ValueError:
-        default_unit_index = 0
 
-    st.session_state.selected_unit = st.selectbox(
+    # デフォルトインデックスを正しく設定
+    default_unit_index = available_units.index(st.session_state.selected_unit)
+
+    selected_unit_from_box = st.selectbox(
         "単元を選択",
-        options=all_units,
+        options=available_units,
         index=default_unit_index,
-        key="unit_filter"
+        key="unit_filter_box" # 既存のキーと異なる新しいキーを指定
     )
+    # セッションステートを更新
+    st.session_state.selected_unit = selected_unit_from_box
     st.markdown("---")
-
-
+    
 # --- Main Page Logic ---
 
 if st.session_state.current_lesson_id is None:
