@@ -358,16 +358,27 @@ try:
             'points': lambda x: x.split(';') if pd.notna(x) else [],
             'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
             'material_photos': lambda x: x.split(';') if pd.notna(x) else []
+            # !!! ここに unit_name のコンバーターを追加/修正 !!!
+            # unit_name は通常単一の文字列なので、リスト変換は不要。
+            # ただし、NaN値は空文字列として扱うと良い。
+            ,'unit_name': lambda x: str(x) if pd.notna(x) else '' # NaN値を空文字列に変換
         }
     )
     # ICT活用有無のTRUE/FALSEをbool型に変換
-    lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
-    
+    if 'ict_use' in lesson_data_df.columns:
+        lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
+    else:
+        lesson_data_df['ict_use'] = False # カラムがない場合はデフォルトでFalse
+
     # 'subject', 'unit_name', 'group_type' カラムが存在しない場合、デフォルト値で作成
     if 'subject' not in lesson_data_df.columns:
         lesson_data_df['subject'] = 'その他'
-    if 'unit_name' not in lesson_data_df.columns: # 新規追加
-        lesson_data_df['unit_name'] = '単元なし'
+    if 'unit_name' not in lesson_data_df.columns: # ここを修正
+        lesson_data_df['unit_name'] = '単元なし' # カラムがない場合はデフォルト値
+    # !!! 既存のデータが空文字列の場合に '単元なし' に変換する処理を追加 !!!
+    lesson_data_df['unit_name'] = lesson_data_df['unit_name'].apply(lambda x: '単元なし' if str(x).strip() == '' or str(x).lower() == 'nan' else str(x).strip())
+
+
     if 'group_type' not in lesson_data_df.columns: # 新規追加
         lesson_data_df['group_type'] = '全体' # 例: 全体, 小グループ, 個別 など
 
@@ -377,6 +388,7 @@ except FileNotFoundError:
     st.stop()
 except Exception as e:
     st.error(f"CSVファイルの読み込み中にエラーが発生しました: {e}")
+    st.exception(e) # デバッグのために例外の詳細を表示
     st.stop()
 
 # st.session_stateの初期化
@@ -518,6 +530,7 @@ with st.sidebar:
     # ファイルのアップロード
     uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。")
 
+        
     if uploaded_file is not None:
         try:
             if uploaded_file.name.endswith('.xlsx'):
@@ -531,11 +544,20 @@ with st.sidebar:
             required_cols = ["title", "goal"]
             if not all(col in new_data_df.columns for col in required_cols):
                 st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
+                # どのカラムが不足しているか具体的に示す
+                missing_cols = [col for col in required_cols if col not in new_data_df.columns]
+                st.info(f"不足しているカラム: {', '.join(missing_cols)}")
             else:
                 def process_list_column(df, col_name, separator):
                     if col_name in df.columns:
-                        return df[col_name].apply(lambda x: x.split(separator) if pd.notna(x) else [])
+                        return df[col_name].apply(lambda x: x.split(separator) if pd.notna(x) and str(x).strip() != '' else [])
                     return [[]] * len(df)
+                
+                # 単一文字列カラムのNaN/空文字列処理も同様に強化
+                def process_string_column(df, col_name, default_value):
+                    if col_name in df.columns:
+                        return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
+                    return [default_value] * len(df)
 
                 new_data_df['introduction_flow'] = process_list_column(new_data_df, 'introduction_flow', ';')
                 new_data_df['activity_flow'] = process_list_column(new_data_df, 'activity_flow', ';')
@@ -545,9 +567,15 @@ with st.sidebar:
                 new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
 
                 if 'ict_use' in new_data_df.columns:
-                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().map({'true': True, 'false': False}).fillna(False)
+                    # 'true', 'True', 'TRUE' などに対応し、NaNはFalseに
+                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().apply(lambda x: True if x == 'true' else False)
                 else:
                     new_data_df['ict_use'] = False
+
+                # !!! 新規追加：subject, unit_name, group_type も同様に処理 !!!
+                new_data_df['subject'] = process_string_column(new_data_df, 'subject', 'その他')
+                new_data_df['unit_name'] = process_string_column(new_data_df, 'unit_name', '単元なし')
+                new_data_df['group_type'] = process_string_column(new_data_df, 'group_type', '全体')
 
                 existing_ids = {d['id'] for d in st.session_state.lesson_data}
                 max_id = max(existing_ids) if existing_ids else 0
@@ -561,10 +589,11 @@ with st.sidebar:
                     else:
                         try:
                             row_id = int(current_id)
+                            # アップロードされたIDが既存の場合も新しいIDを振る
                             if row_id in existing_ids:
                                 max_id += 1
                                 row_id = max_id
-                        except ValueError:
+                        except ValueError: # idが数値でない場合
                             max_id += 1
                             row_id = max_id
                     
@@ -589,18 +618,20 @@ with st.sidebar:
                         'detail_pdf_url': row.get('detail_pdf_url', ''),
                         'ict_use': row.get('ict_use', False),
                         'subject': row.get('subject', 'その他'),
-                        'unit_name': row.get('unit_name', '単元なし'), # 新規追加
-                        'group_type': row.get('group_type', '全体') # 新規追加
+                        'unit_name': row.get('unit_name', '単元なし'), # ここもデフォルト値取得ロジックを強化
+                        'group_type': row.get('group_type', '全体') 
                     }
                     new_entries.append(lesson_dict)
-                    existing_ids.add(row_id)
+                    existing_ids.add(row_id) # 新しく生成されたIDも既存IDに加える
 
                 st.session_state.lesson_data.extend(new_entries)
                 st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
                 st.experimental_rerun()
         except Exception as e:
             st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
-            st.exception(e)
+            st.exception(e) # デバッグのために例外の詳細を表示
+
+  
 
     st.markdown("---")
     # 教科カテゴリーフィルター
