@@ -341,6 +341,27 @@ def load_css():
         .download-button-wrapper a > button .icon {
             color: white; /* ダウンロードアイコンの色も白に */
         }
+                .card-subject-unit {
+            font-size: 0.9em;
+            color: #4A90E2; /* メインカラー */
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            background-color: #e6f7ff; /* 明るい背景 */
+            padding: 5px 10px;
+            border-radius: 8px;
+            width: fit-content; /* 内容に合わせて幅を調整 */
+            border: 1px solid #cceeff;
+        }
+        .card-subject-unit .icon {
+            margin-right: 6px;
+            font-size: 1.1em;
+            color: #4A90E2;
+        }
+                .flow-content-wrapper {
+            margin-top: 20px; /* ボタンとコンテンツの間に余白を持たせる */
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -633,7 +654,7 @@ with st.sidebar:
 
   
 
-    st.markdown("---")
+        st.markdown("---")
     # 教科カテゴリーフィルター
     st.subheader("カテゴリーで絞り込み")
 
@@ -646,27 +667,37 @@ with st.sidebar:
         st.session_state.selected_subject = "全て"
     
     # 3. selectbox の現在の選択肢のインデックスを決定
-    default_subject_index = all_subjects.index(st.session_state.selected_subject)
+    #    このインデックスが正しくなければ表示が安定しない
+    try:
+        default_subject_index = all_subjects.index(st.session_state.selected_subject)
+    except ValueError:
+        default_subject_index = 0 # 見つからない場合は「全て」に設定
 
     # 4. selectbox を表示し、その選択結果を直接セッションステートに代入
+    #    ここでユーザーの選択が st.session_state.selected_subject に格納される
     st.session_state.selected_subject = st.selectbox(
         "教科を選択",
         options=all_subjects,
         index=default_subject_index,
-        key="sidebar_subject_filter" # ユニークなキーに変更
+        key="sidebar_subject_filter_v2" # よりユニークなキーに変更
     )
 
     # --- 単元名フィルターの追加 ---
     # 5. 選択された教科に基づいて利用可能な単元をフィルタリング
     if st.session_state.selected_subject == "全て":
-        available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'])))
+        available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
     else:
         available_units_raw = sorted(list(set(
             lesson['unit_name'] for lesson in st.session_state.lesson_data 
-            if 'unit_name' in lesson and lesson['unit_name'] and lesson.get('subject') == st.session_state.selected_subject
+            if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
         )))
 
     available_units = ["全て"] + available_units_raw
+    if not available_units_raw and st.session_state.selected_subject != "全て": # 特定の教科で単元がない場合
+         available_units = ["全て", "単元なし"]
+    elif not available_units_raw: # 全体で単元がない場合
+         available_units = ["全て", "単元なし"]
+
 
     # 6. selected_unit の初期化と、現在の選択が有効なオプションに含まれるかのチェック
     #    教科が変更された際に、以前の単元選択が新しい教科の単元リストにない場合は"全て"にリセットする
@@ -674,14 +705,17 @@ with st.sidebar:
         st.session_state.selected_unit = "全て"
     
     # 7. selectbox の現在の選択肢のインデックスを決定
-    default_unit_index = available_units.index(st.session_state.selected_unit)
+    try:
+        default_unit_index = available_units.index(st.session_state.selected_unit)
+    except ValueError:
+        default_unit_index = 0 # 見つからない場合は「全て」に設定
 
     # 8. selectbox を表示し、その選択結果を直接セッションステートに代入
     st.session_state.selected_unit = st.selectbox(
         "単元を選択",
         options=available_units,
         index=default_unit_index,
-        key="sidebar_unit_filter" # ユニークなキーに変更
+        key="sidebar_unit_filter_v2" # よりユニークなキーに変更
     )
     st.markdown("---")
 
@@ -752,10 +786,23 @@ if st.session_state.current_lesson_id is None:
 
         if match_search and match_tags and match_subject and match_unit: # フィルター条件に追加
             filtered_lessons.append(lesson)
-
+    
+            
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
     if filtered_lessons:
         for lesson in filtered_lessons:
+            # 教科と単元名が空文字列や'単元なし'の場合は表示しない
+            display_subject = lesson['subject'] if lesson['subject'] and lesson['subject'] != 'その他' else ''
+            display_unit = lesson['unit_name'] if lesson['unit_name'] and lesson['unit_name'] != '単元なし' else ''
+            
+            # 教科と単元名を組み合わせる
+            subject_unit_display = ""
+            if display_subject and display_unit:
+                subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject} / {display_unit}</span>"
+            elif display_subject:
+                subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject}</span>"
+            elif display_unit:
+                subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
             st.markdown(f"""
             <div class="lesson-card">
             <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
@@ -862,8 +909,13 @@ else:
             </style>
         """, unsafe_allow_html=True)
 
+        # 授業の流れセクション
         st.subheader("授業の流れ")
+        # ボタンとコンテンツの間に明確な区切りを入れる
         st.button(f"{'授業の流れを非表示' if st.session_state.show_all_flow else '授業の流れを表示'} 🔃", on_click=toggle_all_flow_display, key=f"toggle_all_flow_{selected_lesson['id']}")
+        
+        # ここにコンテンツを表示するDivを追加し、CSSで上部の余白を調整
+        st.markdown("<div class='flow-content-wrapper'>", unsafe_allow_html=True)
 
         if st.session_state.show_all_flow:
             if selected_lesson['introduction_flow']:
@@ -892,7 +944,9 @@ else:
                     st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
                 st.markdown("</ol>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
-
+        
+        st.markdown("</div>", unsafe_allow_html=True) # flow-content-wrapper の閉じタグ
+        
         st.markdown("---")
 
         # ねらい
