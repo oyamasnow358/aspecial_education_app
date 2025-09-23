@@ -768,7 +768,37 @@ if st.session_state.current_lesson_id is None:
             label_visibility="visible"
         )
     
-            
+    with col_unit:
+        # 選択された教科に基づいて単元をフィルタリング
+        if st.session_state.selected_subject == "全て":
+            available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
+        else:
+            available_units_raw = sorted(list(set(
+                lesson['unit_name'] for lesson in st.session_state.lesson_data
+                if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
+            )))
+
+        all_units = ["全て"] + available_units_raw
+
+        def update_unit_selection():
+            st.session_state.selected_unit = st.session_state.main_page_unit_filter_v4
+
+        if st.session_state.selected_unit not in all_units:
+            st.session_state.selected_unit = "全て"
+
+        try:
+            default_unit_index = all_units.index(st.session_state.selected_unit)
+        except ValueError:
+            default_unit_index = 0
+
+        st.selectbox(
+            "単元を選択",
+            options=all_units,
+            index=default_unit_index,
+            key="main_page_unit_filter_v4",
+            on_change=update_unit_selection,
+            label_visibility="visible"
+        )       
 
         
 
