@@ -805,36 +805,26 @@ if st.session_state.current_lesson_id is None:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
             st.markdown(f"""
             <div class="lesson-card">
-            <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
-            <div class="lesson-card-content">
-            <div>
-            <div>
-                {subject_unit_display} {/* 新しく追加した教科/単元名の表示 */}
-                <div class="lesson-card-title">{lesson['title']}</div>
-                <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
-                <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
-                <div class="lesson-card-meta">
-                    <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
-                    <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
-                    <span><span class="icon">⏱</span>{lesson['duration']}</span>
-            </div>
-            </div>
-            <div class="lesson-card-tags">
-                {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
-            </div>
-            {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
-            </div>
-            </div>
-            <div class="lesson-card-tags">
-            {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
-            </div>
-            {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
-            </div>
+                <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
+                <div class="lesson-card-content">
+                    <div>
+                        {subject_unit_display} # 新しく追加した教科/単元名の表示
+                        <div class="lesson-card-title">{lesson['title']}</div>
+                        <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
+                        <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
+                        <div class="lesson-card-meta">
+                            <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
+                            <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
+                            <span><span class="icon">⏱</span>{lesson['duration']}</span>
+                        </div>
+                    </div>
+                    <div class="lesson-card-tags">
+                        {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+                    </div>
+                    {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
+                </div>
             </div>
             """, unsafe_allow_html=True)
-    else:
-        st.info("条件に一致する授業カードは見つかりませんでした。")
-    st.markdown("</div>", unsafe_allow_html=True)
 
 else:
     # --- Lesson Card Detail View ---
