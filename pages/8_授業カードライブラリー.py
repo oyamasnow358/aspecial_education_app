@@ -1088,7 +1088,7 @@ else:
 
         # 指導のポイント
         if selected_lesson['points']:
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            
             st.markdown("<h3><span class='header-icon'>💡</span>指導のポイント</h3>", unsafe_allow_html=True)
             st.markdown("<ul>", unsafe_allow_html=True)
             for point in selected_lesson['points']:
@@ -1108,7 +1108,7 @@ else:
 
         # 教材写真
         if selected_lesson['material_photos']:
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            
             st.markdown("<h3><span class='header-icon'>📸</span>授業・教材写真</h3>", unsafe_allow_html=True)
             cols = st.columns(3)
             for i, photo_url in enumerate(selected_lesson['material_photos']):
@@ -1118,7 +1118,7 @@ else:
 
          # 動画リンク
         if selected_lesson['video_link']: # video_linkが空文字列でないことを確認
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            
             st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
             try:
                 st.video(selected_lesson['video_link'])
