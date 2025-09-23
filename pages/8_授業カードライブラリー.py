@@ -700,7 +700,8 @@ if st.session_state.current_lesson_id is None:
             default=st.session_state.selected_hashtags,
             placeholder="選択してください"
         )
-        # カテゴリーで絞り込みのセクション
+        
+# カテゴリーで絞り込みのセクション
     st.markdown("---") # 区切り線
     st.subheader("カテゴリーで絞り込み")
 
@@ -769,6 +770,8 @@ if st.session_state.current_lesson_id is None:
             st.experimental_rerun() # 選択が変更されたら再実行
 
     st.markdown("---") # 区切り線
+
+  
     filtered_lessons = []
     for lesson in st.session_state.lesson_data:
         match_search = True
@@ -829,13 +832,12 @@ if st.session_state.current_lesson_id is None:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject}</span>"
             elif display_unit:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
-             # HTML文字列の中に直接ボタンを埋め込むのではなく、ボタンのプレースホルダーを置く
-            st.markdown("""
+            st.markdown(f"""
             <div class="lesson-card">
                 <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
                 <div class="lesson-card-content">
                     <div>
-                        {subject_unit_display}
+                        {subject_unit_display} # 新しく追加した教科/単元名の表示
                         <div class="lesson-card-title">{lesson['title']}</div>
                         <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
                         <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
@@ -848,17 +850,10 @@ if st.session_state.current_lesson_id is None:
                     <div class="lesson-card-tags">
                         {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
                     </div>
-                    <div id="button-placeholder-{lesson['id']}"></div> {/* ボタンのためのプレースホルダー */}
+                    {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-            # Markdownの外でst.buttonを呼び出し、ボタンを配置したい場所（プレースホルダー）に挿入する
-            # colを一時的に作成して、ボタンをカードの真下に配置する
-            with st.container(): # 各カードごとに新しいコンテナを作成
-                if st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],)):
-                    pass # 何もしないが、on_clickで状態が更新される
-            # === ここまで修正 ===
 
 else:
     # --- Lesson Card Detail View ---
