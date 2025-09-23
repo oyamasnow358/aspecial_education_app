@@ -1012,7 +1012,7 @@ else:
         st.markdown("<h3><span class='header-icon'>🎯</span>ねらい</h3>", unsafe_allow_html=True)
         st.markdown(f"<p>{selected_lesson['goal']}</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
+        st.markdown("---")
         # 対象・種別・時間・教科・単元・学習集団の単位 (表示カラム追加)
         
         st.markdown("<h3><span class='header-icon'>ℹ️</span>基本情報</h3>", unsafe_allow_html=True)
@@ -1048,9 +1048,9 @@ else:
             # 単元内での順番 (unit_order) でソート
             # unit_order が存在しないか不正な場合は最後に表示されるように大きい値にする
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
-
+        
             if sorted_lessons_in_unit:
-                st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+                
                 st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
 
@@ -1081,7 +1081,7 @@ else:
 
         # 準備物
         if selected_lesson['materials']:
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            
             st.markdown("<h3><span class='header-icon'>✂️</span>準備物</h3>", unsafe_allow_html=True)
             st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
@@ -1098,7 +1098,7 @@ else:
 
         # ハッシュタグ
         if selected_lesson['hashtags']:
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            
             st.markdown("<h3><span class='header-icon'>#️⃣</span>ハッシュタグ</h3>", unsafe_allow_html=True)
             st.markdown(
                 f"<p>{''.join(f'<span class=\"tag-badge\" style=\"margin-right: 5px;\">#{tag}</span>' for tag in selected_lesson['hashtags'])}</p>",
