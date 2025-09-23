@@ -402,9 +402,16 @@ try:
             # !!! ここに unit_name のコンバーターを追加/修正 !!!
             # unit_name は通常単一の文字列なので、リスト変換は不要。
             # ただし、NaN値は空文字列として扱うと良い。
-            ,'unit_name': lambda x: str(x) if pd.notna(x) else '' # NaN値を空文字列に変換
+            ,'unit_name': lambda x: str(x) if pd.notna(x) else '',
+             'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999, # 数値に変換、ない場合は大きい値
+             'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '' # 新規追加
         }
     )
+    # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
+    if 'unit_order' not in lesson_data_df.columns:
+        lesson_data_df['unit_order'] = 9999
+    if 'unit_lesson_title' not in lesson_data_df.columns:
+        lesson_data_df['unit_lesson_title'] = lesson_data_df['title'] # デフォルトでtitleを使用     
     # ICT活用有無のTRUE/FALSEをbool型に変換
     if 'ict_use' in lesson_data_df.columns:
         lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
@@ -469,7 +476,7 @@ LESSON_CARD_COLUMNS = [
     "id", "title", "catch_copy", "goal", "target_grade", "disability_type",
     "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
     "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use", "subject",
-    "unit_name", "group_type" # 新規追加
+    "unit_name", "group_type", "unit_order", "unit_lesson_title" # 新規追加
 ]
 
 # Excelテンプレートダウンロード関数
@@ -599,7 +606,26 @@ with st.sidebar:
                     if col_name in df.columns:
                         return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
                     return [default_value] * len(df)
-
+                # 新規追加：unit_order, unit_lesson_title の処理
+                # unit_order は数値として扱う。NaNや空欄はデフォルトで高い値（例: 9999）に
+                if 'unit_order' in new_data_df.columns:
+                    new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
+                else:
+                    new_data_df['unit_order'] = 9999 # カラムがない場合はデフォルト値
+             
+                if 'unit_lesson_title' in new_data_df.columns:
+                    new_data_df['unit_lesson_title'] = new_data_df['unit_lesson_title'].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '')
+                else:
+                   new_data_df['unit_lesson_title'] = new_data_df.get('title', '単元内の授業') # カラムがない場合はデフォルトでtitleを使用
+               
+                # ... 既存の lesson_dict の構築部分で新しいカラムを追加 ...
+                lesson_dict = {
+                    # ... 既存の項目 ...
+                   'unit_name': row.get('unit_name', '単元なし'),
+                    'group_type': row.get('group_type', '全体'),
+                    'unit_order': row.get('unit_order', 9999), # ここもデフォルト値取得ロジックを強化
+                    'unit_lesson_title': row.get('unit_lesson_title', row.get('title', '単元内の授業')) # デフォルトでtitleを使用
+               }
                 new_data_df['introduction_flow'] = process_list_column(new_data_df, 'introduction_flow', ';')
                 new_data_df['activity_flow'] = process_list_column(new_data_df, 'activity_flow', ';')
                 new_data_df['reflection_flow'] = process_list_column(new_data_df, 'reflection_flow', ';')
@@ -716,9 +742,13 @@ if st.session_state.current_lesson_id is None:
     col_subject, col_unit = st.columns(2) # 2カラムに分割して表示
 
     with col_subject:
-        # st.session_state.lesson_data が空の場合に備えてデフォルト値を設定
         all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
         all_subjects = ["全て"] + all_subjects_raw
+
+        # on_changeコールバック関数を定義
+        def update_subject_selection():
+            st.session_state.selected_subject = st.session_state.main_page_subject_filter_v4 # selectboxのkeyで直接値を取得
+            st.session_state.selected_unit = "全て" # 教科が変わったら単元フィルターをリセット
 
         # selected_subject が有効なオプションに含まれていない場合、"全て"にリセット
         if st.session_state.selected_subject not in all_subjects:
@@ -729,30 +759,16 @@ if st.session_state.current_lesson_id is None:
         except ValueError:
             default_subject_index = 0 # 見つからない場合は「全て」に設定
 
-        selected_subject_from_box = st.selectbox(
+        st.selectbox(
             "教科を選択",
             options=all_subjects,
             index=default_subject_index,
-            key="main_page_subject_filter_v4", # キーを再度変更してみる
-            label_visibility="visible" # これでラベルが常に見えるようになる
+            key="main_page_subject_filter_v4",
+            on_change=update_subject_selection, # on_changeイベントハンドラを設定
+            label_visibility="visible"
         )
-        # st.session_stateに値をセット
-        # これにより、ユーザーの選択が即座に反映され、必要に応じてアプリが再実行される
-        if selected_subject_from_box != st.session_state.selected_subject:
-            st.session_state.selected_subject = selected_subject_from_box
-            st.experimental_rerun() # 選択が変更されたら再実行
-
-    with col_unit:
-        # 選択された教科に基づいて単元をフィルタリング
-        if st.session_state.selected_subject == "全て":
-            # 全ての教科の単元を対象とするが、'単元なし'は除外してソート
-            available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
-        else:
-            # 選択された教科に属する単元のみを対象とする
-            available_units_raw = sorted(list(set(
-                lesson['unit_name'] for lesson in st.session_state.lesson_data
-                if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
-            )))
+    
+            
 
         
 
@@ -991,47 +1007,47 @@ else:
         st.markdown("</div>", unsafe_allow_html=True)
 
         # --- この単元の他の授業カード --- (新規追加)
+        # --- 単元の授業の流れ (新規追加または既存セクションを拡張) ---
         if selected_lesson.get('unit_name') and selected_lesson.get('unit_name') != '単元なし':
             unit_name_to_search = selected_lesson['unit_name']
-            related_lessons_raw = [
-                lesson for lesson in st.session_state.lesson_data 
-                if lesson.get('unit_name') == unit_name_to_search and lesson['id'] != selected_lesson['id']
+            all_lessons_in_unit = [
+                lesson for lesson in st.session_state.lesson_data
+                if lesson.get('unit_name') == unit_name_to_search
             ]
-            
-            # durationを数値としてソートするために整形（例: "45分×3コマ" -> 3）
-            def extract_duration_order(duration_str):
-                # 'コマ'が含まれない場合も考慮し、デフォルト値0を返す
-                match = re.search(r'(\d+)\s*コマ', str(duration_str)) 
-                if match:
-                    return int(match.group(1))
-                return 9999 # マッチしない場合は最後に表示されるように大きい値を返す
-            
-            # ソート
-            related_lessons_sorted = sorted(related_lessons_raw, key=lambda x: extract_duration_order(x.get('duration', '')))
+        
+            # 単元内での順番 (unit_order) でソート
+            # unit_order が存在しないか不正な場合は最後に表示されるように大きい値にする
+            sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
 
-            if related_lessons_sorted:
+            if sorted_lessons_in_unit:
                 st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
-                st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の他の授業カード</h3>", unsafe_allow_html=True)
-                for rel_lesson in related_lessons_sorted:
-                    # 関連カードをクリックで詳細に飛ぶボタン
-                    # CSSでボタンに見えないように調整し、全体をクリック可能にする
-                    st.markdown(f"""
-                        <div class="related-lesson-card" onclick="document.getElementById('related_detail_btn_{rel_lesson['id']}').click();">
-                            <img src="{rel_lesson['image'] if rel_lesson['image'] else 'https://via.placeholder.com/80x50?text=No+Image'}" alt="{rel_lesson['title']}">
-                            <div class="related-lesson-card-content">
-                                <div class="related-lesson-card-title">{rel_lesson['title']}</div>
-                                <div class="related-lesson-card-meta">
-                                    {rel_lesson['target_grade']} | {rel_lesson['disability_type']} | {rel_lesson['duration']}
-                                </div>
-                            </div>
-                        </div>
-                        <button id="related_detail_btn_{rel_lesson['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_{rel_lesson['id']}\"]').click()"></button>
-                    """, unsafe_allow_html=True)
-                    # 実際にはこのボタンがクリックされる
-                    st.button("", key=f"related_detail_btn_{rel_lesson['id']}", on_click=set_detail_page, args=(rel_lesson['id'],), help="クリックで詳細を表示", type="secondary")
+                st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
+                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
+
+                for lesson_in_unit in sorted_lessons_in_unit:
+                    display_title = lesson_in_unit.get('unit_lesson_title') or lesson_in_unit['title']
+                    is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
+        
+                    if is_current_lesson:
+                        st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
+                    else:
+                        # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
+                        st.markdown(f"""
+                            <li>
+                                <a href="#" onclick="document.getElementById('unit_flow_link_{lesson_in_unit['id']}').click(); return false;" style="text-decoration: none; color: inherit;">
+                                    {display_title}
+                                </a>
+                                <button id="unit_flow_link_{lesson_in_unit['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_{lesson_in_unit['id']}\"]').click()"></button>
+                            </li>
+                        """, unsafe_allow_html=True)
+                        # 実際の遷移を処理する非表示のボタン
+                        st.button("", key=f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}", on_click=set_detail_page, args=(lesson_in_unit['id'],), type="secondary")
+        
+                st.markdown("</ol>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("---")
+        st.markdown("---") # 区切り線
+        # 既存の「準備物」以下のセクションはそのまま残す
 
         # 準備物
         if selected_lesson['materials']:
