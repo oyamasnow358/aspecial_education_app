@@ -1116,11 +1116,14 @@ else:
                     st.image(photo_url, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # 動画リンク
-        if selected_lesson['video_link']:
+         # 動画リンク
+        if selected_lesson['video_link']: # video_linkが空文字列でないことを確認
             st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
             st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
-            st.video(selected_lesson['video_link'])
+            try:
+                st.video(selected_lesson['video_link'])
+            except Exception as e:
+                st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
             st.markdown("</div>", unsafe_allow_html=True)
 
         # 詳細資料ダウンロード
