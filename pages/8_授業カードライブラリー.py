@@ -966,7 +966,7 @@ else:
 
         if st.session_state.show_all_flow:
             if selected_lesson['introduction_flow']:
-                st.markdown("<div class='flow-section'>", unsafe_allow_html=True)
+                
                 st.markdown("<h4><span class='icon'>🚀</span>導入</h4>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
                 for step in selected_lesson['introduction_flow']:
@@ -983,7 +983,7 @@ else:
                 st.markdown("</div>", unsafe_allow_html=True)
 
             if selected_lesson['reflection_flow']:
-                st.markdown("<div class='flow-section'>", unsafe_allow_html=True)
+                
                 st.markdown("<h4><span class='icon'>💭</span>振り返り</h4>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
                 for step in selected_lesson['reflection_flow']:
