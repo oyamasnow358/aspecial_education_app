@@ -975,7 +975,6 @@ else:
                 st.markdown("</div>", unsafe_allow_html=True)
             
             if selected_lesson['activity_flow']:
-                st.markdown("<div class='flow-section'>", unsafe_allow_html=True)
                 st.markdown("<h4><span class='icon'>💡</span>活動</h4>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
                 for step in selected_lesson['activity_flow']:
