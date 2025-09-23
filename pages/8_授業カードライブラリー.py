@@ -754,41 +754,7 @@ if st.session_state.current_lesson_id is None:
                 if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
             )))
 
-        # 常に「全て」と「単元なし」を含めるロジックを修正
-        available_units = ["全て"] 
-        if "単元なし" not in available_units_raw: # '単元なし'がデータに存在しない場合のみ追加
-            available_units.append("単元なし")
-        available_units.extend(available_units_raw) # フィルタリングされた単元を追加
         
-        # 重複を削除し、再度ソート（'全て'と'単元なし'の位置を保証しつつ）
-        available_units = ["全て"] + sorted(list(set(available_units) - {"全て"}))
-        # '単元なし'がデータにない場合でも選択肢として表示するため、調整
-        if "単元なし" in available_units_raw:
-            pass # 既に追加されているので何もしない
-        elif "単元なし" not in available_units:
-            available_units.insert(1, "単元なし") # '全て'の次に追加
-
-        # selected_unit が有効なオプションに含まれていない場合、"全て"にリセット
-        if st.session_state.selected_unit not in available_units:
-            st.session_state.selected_unit = "全て"
-
-        try:
-            default_unit_index = available_units.index(st.session_state.selected_unit)
-        except ValueError:
-            default_unit_index = 0 # 見つからない場合は「全て」に設定
-
-        selected_unit_from_box = st.selectbox(
-            "単元を選択",
-            options=available_units,
-            index=default_unit_index,
-            key="main_page_unit_filter_v4", # キーを再度変更してみる
-            label_visibility="visible" # これでラベルが常に見えるようになる
-        )
-        # st.session_stateに値をセット
-        # これにより、ユーザーの選択が即座に反映され、必要に応じてアプリが再実行される
-        if selected_unit_from_box != st.session_state.selected_unit:
-            st.session_state.selected_unit = selected_unit_from_box
-            st.experimental_rerun() # 選択が変更されたら再実行
 
     st.markdown("---") # 区切り線
 
@@ -858,7 +824,7 @@ if st.session_state.current_lesson_id is None:
                 <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
                 <div class="lesson-card-content">
                     <div>
-                        {subject_unit_display} # 新しく追加した教科/単元名の表示
+                        {subject_unit_display}
                         <div class="lesson-card-title">{lesson['title']}</div>
                         <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
                         <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
