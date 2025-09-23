@@ -655,69 +655,7 @@ with st.sidebar:
   
 
         st.markdown("---")
-    # 教科カテゴリーフィルター
-    st.subheader("カテゴリーで絞り込み")
-
-    # 1. 全ての教科を取得し、"全て"オプションを追加
-    all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
-    all_subjects = ["全て"] + all_subjects_raw
-
-    # 2. selected_subject の初期化と、現在の選択が有効なオプションに含まれるかのチェック
-    if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
-        st.session_state.selected_subject = "全て"
     
-    # 3. selectbox の現在の選択肢のインデックスを決定
-    #    このインデックスが正しくなければ表示が安定しない
-    try:
-        default_subject_index = all_subjects.index(st.session_state.selected_subject)
-    except ValueError:
-        default_subject_index = 0 # 見つからない場合は「全て」に設定
-
-    # 4. selectbox を表示し、その選択結果を直接セッションステートに代入
-    #    ここでユーザーの選択が st.session_state.selected_subject に格納される
-    st.session_state.selected_subject = st.selectbox(
-        "教科を選択",
-        options=all_subjects,
-        index=default_subject_index,
-        key="sidebar_subject_filter_v2" # よりユニークなキーに変更
-    )
-
-    # --- 単元名フィルターの追加 ---
-    # 5. 選択された教科に基づいて利用可能な単元をフィルタリング
-    if st.session_state.selected_subject == "全て":
-        available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
-    else:
-        available_units_raw = sorted(list(set(
-            lesson['unit_name'] for lesson in st.session_state.lesson_data 
-            if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
-        )))
-
-    available_units = ["全て"] + available_units_raw
-    if not available_units_raw and st.session_state.selected_subject != "全て": # 特定の教科で単元がない場合
-         available_units = ["全て", "単元なし"]
-    elif not available_units_raw: # 全体で単元がない場合
-         available_units = ["全て", "単元なし"]
-
-
-    # 6. selected_unit の初期化と、現在の選択が有効なオプションに含まれるかのチェック
-    #    教科が変更された際に、以前の単元選択が新しい教科の単元リストにない場合は"全て"にリセットする
-    if 'selected_unit' not in st.session_state or st.session_state.selected_unit not in available_units:
-        st.session_state.selected_unit = "全て"
-    
-    # 7. selectbox の現在の選択肢のインデックスを決定
-    try:
-        default_unit_index = available_units.index(st.session_state.selected_unit)
-    except ValueError:
-        default_unit_index = 0 # 見つからない場合は「全て」に設定
-
-    # 8. selectbox を表示し、その選択結果を直接セッションステートに代入
-    st.session_state.selected_unit = st.selectbox(
-        "単元を選択",
-        options=available_units,
-        index=default_unit_index,
-        key="sidebar_unit_filter_v2" # よりユニークなキーに変更
-    )
-    st.markdown("---")
 
     
 # --- Main Page Logic ---
@@ -742,7 +680,69 @@ if st.session_state.current_lesson_id is None:
             default=st.session_state.selected_hashtags,
             placeholder="選択してください"
         )
+    # (教科と単元フィルター)
+    st.markdown("---") # 区切り線
+    st.subheader("カテゴリーで絞り込み")
 
+    col_subject, col_unit = st.columns(2) # 2カラムに分割して表示
+
+    with col_subject:
+        # 1. 全ての教科を取得し、"全て"オプションを追加
+        all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
+        all_subjects = ["全て"] + all_subjects_raw
+
+        # 2. selected_subject の初期化と、現在の選択が有効なオプションに含まれるかのチェック
+        if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
+            st.session_state.selected_subject = "全て"
+
+        # 3. selectbox の現在の選択肢のインデックスを決定
+        try:
+            default_subject_index = all_subjects.index(st.session_state.selected_subject)
+        except ValueError:
+            default_subject_index = 0 # 見つからない場合は「全て」に設定
+
+        # 4. selectbox を表示し、その選択結果を直接セッションステートに代入
+        st.session_state.selected_subject = st.selectbox(
+            "教科を選択",
+            options=all_subjects,
+            index=default_subject_index,
+            key="main_page_subject_filter" # キーを変更
+        )
+
+    with col_unit:
+        # 5. 選択された教科に基づいて利用可能な単元をフィルタリング
+        if st.session_state.selected_subject == "全て":
+            available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
+        else:
+            available_units_raw = sorted(list(set(
+                lesson['unit_name'] for lesson in st.session_state.lesson_data
+                if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
+            )))
+
+        available_units = ["全て"] + available_units_raw
+        if not available_units_raw and st.session_state.selected_subject != "全て": # 特定の教科で単元がない場合
+             available_units = ["全て", "単元なし"]
+        elif not available_units_raw: # 全体で単元がない場合
+             available_units = ["全て", "単元なし"]
+
+        # 6. selected_unit の初期化と、現在の選択が有効なオプションに含まれるかのチェック
+        if 'selected_unit' not in st.session_state or st.session_state.selected_unit not in available_units:
+            st.session_state.selected_unit = "全て"
+
+        # 7. selectbox の現在の選択肢のインデックスを決定
+        try:
+            default_unit_index = available_units.index(st.session_state.selected_unit)
+        except ValueError:
+            default_unit_index = 0 # 見つからない場合は「全て」に設定
+
+        # 8. selectbox を表示し、その選択結果を直接セッションステートに代入
+        st.session_state.selected_unit = st.selectbox(
+            "単元を選択",
+            options=available_units,
+            index=default_unit_index,
+            key="main_page_unit_filter" # キーを変更
+        )
+    st.markdown("---") # 区切り線
     filtered_lessons = []
     for lesson in st.session_state.lesson_data:
         match_search = True
@@ -808,14 +808,21 @@ if st.session_state.current_lesson_id is None:
             <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
             <div class="lesson-card-content">
             <div>
-            <div class="lesson-card-subject">{lesson['subject']}</div>
-            <div class="lesson-card-title">{lesson['title']}</div>
-            <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
-            <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
-            <div class="lesson-card-meta">
-            <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
-            <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
-            <span><span class="icon">⏱</span>{lesson['duration']}</span>
+            <div>
+                {subject_unit_display} {/* 新しく追加した教科/単元名の表示 */}
+                <div class="lesson-card-title">{lesson['title']}</div>
+                <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
+                <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
+                <div class="lesson-card-meta">
+                    <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
+                    <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
+                    <span><span class="icon">⏱</span>{lesson['duration']}</span>
+            </div>
+            </div>
+            <div class="lesson-card-tags">
+                {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+            </div>
+            {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
             </div>
             </div>
             <div class="lesson-card-tags">
