@@ -1128,7 +1128,7 @@ else:
 
         # 詳細資料ダウンロード
         if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url']:
-            st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+            
             st.markdown("<h3><span class='header-icon'>📄</span>詳細資料ダウンロード</h3>", unsafe_allow_html=True)
             if selected_lesson['detail_word_url']:
                 st.markdown(f'<a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>', unsafe_allow_html=True)
