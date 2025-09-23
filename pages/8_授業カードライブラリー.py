@@ -1014,7 +1014,7 @@ else:
         st.markdown("</div>", unsafe_allow_html=True)
 
         # 対象・種別・時間・教科・単元・学習集団の単位 (表示カラム追加)
-        st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+        
         st.markdown("<h3><span class='header-icon'>ℹ️</span>基本情報</h3>", unsafe_allow_html=True)
         # 6カラムに変更
         col1, col2, col3, col4, col5, col6 = st.columns(6) 
