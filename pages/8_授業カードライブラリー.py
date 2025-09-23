@@ -362,6 +362,26 @@ def load_css():
                 .flow-content-wrapper {
             margin-top: 20px; /* ボタンとコンテンツの間に余白を持たせる */
         }
+                /* Detail Button Styling (上書きまたは追加) */
+        .lesson-card .stButton > button { /* .lesson-card 内のボタンにスタイルを適用 */
+            border: 2px solid #4a90e2;
+            border-radius: 25px;
+            color: #4a90e2;
+            background-color: #ffffff;
+            padding: 10px 24px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px; /* ボタンとコンテンツの間の余白 */
+            width: 100%; /* カード幅いっぱいに */
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+        }
+        .lesson-card .stButton > button:hover {
+            border-color: #8A2BE2;
+            color: white;
+            background-color: #8A2BE2;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(138,43,226,0.2);
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -680,37 +700,39 @@ if st.session_state.current_lesson_id is None:
             default=st.session_state.selected_hashtags,
             placeholder="選択してください"
         )
-    # (教科と単元フィルター)
+        # カテゴリーで絞り込みのセクション
     st.markdown("---") # 区切り線
     st.subheader("カテゴリーで絞り込み")
 
     col_subject, col_unit = st.columns(2) # 2カラムに分割して表示
 
     with col_subject:
-        # 1. 全ての教科を取得し、"全て"オプションを追加
         all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
         all_subjects = ["全て"] + all_subjects_raw
 
-        # 2. selected_subject の初期化と、現在の選択が有効なオプションに含まれるかのチェック
-        if 'selected_subject' not in st.session_state or st.session_state.selected_subject not in all_subjects:
+        # selected_subject が有効なオプションに含まれていない場合、"全て"にリセット
+        if st.session_state.selected_subject not in all_subjects:
             st.session_state.selected_subject = "全て"
 
-        # 3. selectbox の現在の選択肢のインデックスを決定
         try:
             default_subject_index = all_subjects.index(st.session_state.selected_subject)
         except ValueError:
             default_subject_index = 0 # 見つからない場合は「全て」に設定
 
-        # 4. selectbox を表示し、その選択結果を直接セッションステートに代入
-        st.session_state.selected_subject = st.selectbox(
+        # === ここを修正 ===
+        # keyはユニークであることを確認し、必要であれば少し変更する
+        selected_subject_from_box = st.selectbox(
             "教科を選択",
             options=all_subjects,
             index=default_subject_index,
-            key="main_page_subject_filter" # キーを変更
+            key="main_page_subject_filter_v3" # キーを再度変更してみる
         )
+        # st.session_stateに値をセット
+        if selected_subject_from_box != st.session_state.selected_subject:
+            st.session_state.selected_subject = selected_subject_from_box
+            st.experimental_rerun() # 選択が変更されたら再実行
 
     with col_unit:
-        # 5. 選択された教科に基づいて利用可能な単元をフィルタリング
         if st.session_state.selected_subject == "全て":
             available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
         else:
@@ -720,28 +742,32 @@ if st.session_state.current_lesson_id is None:
             )))
 
         available_units = ["全て"] + available_units_raw
-        if not available_units_raw and st.session_state.selected_subject != "全て": # 特定の教科で単元がない場合
+        if not available_units_raw and st.session_state.selected_subject != "全て":
              available_units = ["全て", "単元なし"]
-        elif not available_units_raw: # 全体で単元がない場合
+        elif not available_units_raw:
              available_units = ["全て", "単元なし"]
 
-        # 6. selected_unit の初期化と、現在の選択が有効なオプションに含まれるかのチェック
-        if 'selected_unit' not in st.session_state or st.session_state.selected_unit not in available_units:
+        # selected_unit が有効なオプションに含まれていない場合、"全て"にリセット
+        if st.session_state.selected_unit not in available_units:
             st.session_state.selected_unit = "全て"
 
-        # 7. selectbox の現在の選択肢のインデックスを決定
         try:
             default_unit_index = available_units.index(st.session_state.selected_unit)
         except ValueError:
             default_unit_index = 0 # 見つからない場合は「全て」に設定
 
-        # 8. selectbox を表示し、その選択結果を直接セッションステートに代入
-        st.session_state.selected_unit = st.selectbox(
+        # === ここを修正 ===
+        selected_unit_from_box = st.selectbox(
             "単元を選択",
             options=available_units,
             index=default_unit_index,
-            key="main_page_unit_filter" # キーを変更
+            key="main_page_unit_filter_v3" # キーを再度変更してみる
         )
+        # st.session_stateに値をセット
+        if selected_unit_from_box != st.session_state.selected_unit:
+            st.session_state.selected_unit = selected_unit_from_box
+            st.experimental_rerun() # 選択が変更されたら再実行
+
     st.markdown("---") # 区切り線
     filtered_lessons = []
     for lesson in st.session_state.lesson_data:
@@ -803,12 +829,13 @@ if st.session_state.current_lesson_id is None:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject}</span>"
             elif display_unit:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
-            st.markdown(f"""
+             # HTML文字列の中に直接ボタンを埋め込むのではなく、ボタンのプレースホルダーを置く
+            st.markdown("""
             <div class="lesson-card">
                 <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
                 <div class="lesson-card-content">
                     <div>
-                        {subject_unit_display} # 新しく追加した教科/単元名の表示
+                        {subject_unit_display}
                         <div class="lesson-card-title">{lesson['title']}</div>
                         <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
                         <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
@@ -821,10 +848,17 @@ if st.session_state.current_lesson_id is None:
                     <div class="lesson-card-tags">
                         {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
                     </div>
-                    {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
+                    <div id="button-placeholder-{lesson['id']}"></div> {/* ボタンのためのプレースホルダー */}
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+            # Markdownの外でst.buttonを呼び出し、ボタンを配置したい場所（プレースホルダー）に挿入する
+            # colを一時的に作成して、ボタンをカードの真下に配置する
+            with st.container(): # 各カードごとに新しいコンテナを作成
+                if st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],)):
+                    pass # 何もしないが、on_clickで状態が更新される
+            # === ここまで修正 ===
 
 else:
     # --- Lesson Card Detail View ---
