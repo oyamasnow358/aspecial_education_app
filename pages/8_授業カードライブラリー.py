@@ -689,7 +689,14 @@ if st.session_state.current_lesson_id is None:
     # Search and Filter Section
     search_col, tag_col = st.columns([0.6, 0.4])
     with search_col:
-        st.session_state.search_query = st.text_input("キーワードで検索", st.session_state.search_query, placeholder="例: 買い物、生活単元、小学部", key="search_input")
+        # キーワード検索のスタイル修正: label_visibility="visible" を追加
+        st.session_state.search_query = st.text_input(
+            "キーワードで検索",
+            st.session_state.search_query,
+            placeholder="例: 買い物、生活単元、小学部",
+            key="search_input",
+            label_visibility="visible" # これでラベルが常に見えるようになる
+        )
     
     all_hashtags = sorted(list(set(tag for lesson in st.session_state.lesson_data for tag in lesson['hashtags'] if tag)))
 
@@ -698,7 +705,8 @@ if st.session_state.current_lesson_id is None:
             "ハッシュタグで絞り込み",
             options=all_hashtags,
             default=st.session_state.selected_hashtags,
-            placeholder="選択してください"
+            placeholder="選択してください",
+            label_visibility="visible" # これでラベルが常に見えるようになる
         )
         
 # カテゴリーで絞り込みのセクション
@@ -708,6 +716,7 @@ if st.session_state.current_lesson_id is None:
     col_subject, col_unit = st.columns(2) # 2カラムに分割して表示
 
     with col_subject:
+        # st.session_state.lesson_data が空の場合に備えてデフォルト値を設定
         all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
         all_subjects = ["全て"] + all_subjects_raw
 
@@ -720,33 +729,44 @@ if st.session_state.current_lesson_id is None:
         except ValueError:
             default_subject_index = 0 # 見つからない場合は「全て」に設定
 
-        # === ここを修正 ===
-        # keyはユニークであることを確認し、必要であれば少し変更する
         selected_subject_from_box = st.selectbox(
             "教科を選択",
             options=all_subjects,
             index=default_subject_index,
-            key="main_page_subject_filter_v3" # キーを再度変更してみる
+            key="main_page_subject_filter_v4", # キーを再度変更してみる
+            label_visibility="visible" # これでラベルが常に見えるようになる
         )
         # st.session_stateに値をセット
+        # これにより、ユーザーの選択が即座に反映され、必要に応じてアプリが再実行される
         if selected_subject_from_box != st.session_state.selected_subject:
             st.session_state.selected_subject = selected_subject_from_box
             st.experimental_rerun() # 選択が変更されたら再実行
 
     with col_unit:
+        # 選択された教科に基づいて単元をフィルタリング
         if st.session_state.selected_subject == "全て":
+            # 全ての教科の単元を対象とするが、'単元なし'は除外してソート
             available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
         else:
+            # 選択された教科に属する単元のみを対象とする
             available_units_raw = sorted(list(set(
                 lesson['unit_name'] for lesson in st.session_state.lesson_data
                 if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
             )))
 
-        available_units = ["全て"] + available_units_raw
-        if not available_units_raw and st.session_state.selected_subject != "全て":
-             available_units = ["全て", "単元なし"]
-        elif not available_units_raw:
-             available_units = ["全て", "単元なし"]
+        # 常に「全て」と「単元なし」を含めるロジックを修正
+        available_units = ["全て"] 
+        if "単元なし" not in available_units_raw: # '単元なし'がデータに存在しない場合のみ追加
+            available_units.append("単元なし")
+        available_units.extend(available_units_raw) # フィルタリングされた単元を追加
+        
+        # 重複を削除し、再度ソート（'全て'と'単元なし'の位置を保証しつつ）
+        available_units = ["全て"] + sorted(list(set(available_units) - {"全て"}))
+        # '単元なし'がデータにない場合でも選択肢として表示するため、調整
+        if "単元なし" in available_units_raw:
+            pass # 既に追加されているので何もしない
+        elif "単元なし" not in available_units:
+            available_units.insert(1, "単元なし") # '全て'の次に追加
 
         # selected_unit が有効なオプションに含まれていない場合、"全て"にリセット
         if st.session_state.selected_unit not in available_units:
@@ -757,14 +777,15 @@ if st.session_state.current_lesson_id is None:
         except ValueError:
             default_unit_index = 0 # 見つからない場合は「全て」に設定
 
-        # === ここを修正 ===
         selected_unit_from_box = st.selectbox(
             "単元を選択",
             options=available_units,
             index=default_unit_index,
-            key="main_page_unit_filter_v3" # キーを再度変更してみる
+            key="main_page_unit_filter_v4", # キーを再度変更してみる
+            label_visibility="visible" # これでラベルが常に見えるようになる
         )
         # st.session_stateに値をセット
+        # これにより、ユーザーの選択が即座に反映され、必要に応じてアプリが再実行される
         if selected_unit_from_box != st.session_state.selected_unit:
             st.session_state.selected_unit = selected_unit_from_box
             st.experimental_rerun() # 選択が変更されたら再実行
