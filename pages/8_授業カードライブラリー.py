@@ -871,7 +871,7 @@ if st.session_state.current_lesson_id is None:
                     <div class="lesson-card-tags">
                         {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
                     </div>
-                    {st.button("詳細を見る ➡", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
+                    {st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
                 </div>
             </div>
             """, unsafe_allow_html=True)
