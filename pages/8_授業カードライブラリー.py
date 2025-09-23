@@ -1008,7 +1008,7 @@ else:
         st.markdown("---")
 
         # ねらい
-        st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
+       
         st.markdown("<h3><span class='header-icon'>🎯</span>ねらい</h3>", unsafe_allow_html=True)
         st.markdown(f"<p>{selected_lesson['goal']}</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
