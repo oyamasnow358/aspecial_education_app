@@ -1109,7 +1109,7 @@ else:
         # 教材写真
         if selected_lesson['material_photos']:
             st.markdown("<div class='detail-section'>", unsafe_allow_html=True)
-            st.markdown("<h3><span class='header-icon'>📸</span>教材写真</h3>", unsafe_allow_html=True)
+            st.markdown("<h3><span class='header-icon'>📸</span>授業・教材写真</h3>", unsafe_allow_html=True)
             cols = st.columns(3)
             for i, photo_url in enumerate(selected_lesson['material_photos']):
                 with cols[i % 3]:
