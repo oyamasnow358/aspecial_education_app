@@ -391,7 +391,7 @@ if st.session_state.selected_method:
         st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
         # 統計ツールをイメージする画像を追加
-        st.image("https://imgur.com/a/K5gWfjB.png", caption="データ分析をサポートするツール群", use_container_width=True)
+        st.image("https://imgur.com/a/K5gWfjB.jpg", caption="データ分析をサポートするツール群", use_container_width=True)
         
         
 
