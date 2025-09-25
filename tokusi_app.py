@@ -337,6 +337,7 @@ else: # アニメーションが表示済み、またはアニメーションフ
 
     st.header("各機能の紹介")
 
+
     col1, col2, col3 = st.columns(3)
 
     with col1:
