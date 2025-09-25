@@ -384,18 +384,17 @@ if st.session_state.selected_method:
         st.markdown("#### ✨ 特にオススメ！アンケート分析ツール ✨")
         st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
         st.markdown("多くの方に有効なアンケートデータの総合分析ツールです！ぜひご活用ください。")
-        # 統計ツールをイメージする画像を追加
-        st.image(img_stats_tools, caption="データ分析をサポートするツール群", use_container_width=True)
-        
-        
-
         st.markdown("#### その他の統計分析ツール")
         st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
         st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
         st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
         st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-    
+        # 統計ツールをイメージする画像を追加
+        st.image(img_stats_tools, caption="データ分析をサポートするツール群", use_container_width=True)
+        
+        
+
     st.markdown('</div>', unsafe_allow_html=True) # IDを付与したdivの閉じタグ
 
 # フッターの区切り線
