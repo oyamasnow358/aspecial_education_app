@@ -383,7 +383,7 @@ if st.session_state.selected_method:
         # アンケート分析ツールを強調
         st.markdown("#### ✨ 特にオススメ！アンケート分析ツール ✨")
         st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
-        st.markdown("多くの方に有効なアンケートデータの総合分析ツールです！ぜひご活用ください。")
+        st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
         st.markdown("#### その他の統計分析ツール")
         st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
         st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
@@ -391,7 +391,7 @@ if st.session_state.selected_method:
         st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
         # 統計ツールをイメージする画像を追加
-        st.image(img_stats_tools, caption="データ分析をサポートするツール群", use_container_width=True)
+        st.image(img_stats_tools, caption="https://imgur.com/a/ASnp6PS.png", use_container_width=True)
         
         
 
