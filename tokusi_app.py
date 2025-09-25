@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 from streamlit_lottie import st_lottie
-
+import time # ★追加
 # --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
@@ -282,7 +282,6 @@ if "animation_shown" not in st.session_state:
     st.session_state.animation_shown = False
 
 if not st.session_state.animation_shown:
-    # アニメーション表示用のコンテナ
     animation_placeholder = st.empty()
     with animation_placeholder:
         st_lottie(
@@ -293,12 +292,10 @@ if not st.session_state.animation_shown:
             height="500px",
             key="initial_animation"
         )
-    # アニメーション表示後、フラグをTrueにする
+    # アニメーションが表示されるのを待つ（デバッグ用）
+    # time.sleep(3) # ★追加して試してみてください。
     st.session_state.animation_shown = True
-    # アニメーションコンテナをクリア（または非表示にする）
     animation_placeholder.empty()
-    # アニメーションが再生されている間に他のコンテンツがちらつくのを防ぐため、
-    # st.rerun() を使用してアニメーション後にメインコンテンツをロードする
     st.rerun()
 else:
     # アニメーション表示後、または2回目以降のアクセスではメインコンテンツを表示
