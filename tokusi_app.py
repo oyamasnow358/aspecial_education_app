@@ -5,9 +5,16 @@ def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif; /* 全体のフォントを親しみやすいものに */
+        }
+
         /* --- 背景画像の設定 --- */
         [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+            /* 新しい背景画像URLに更新 */
+            background-image: linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.88)), url("https://i.imgur.com/your-new-image-url.png"); /* ここに新しい画像のURLを設定 */
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -16,13 +23,19 @@ def load_css():
 
         /* サイドバーの背景を少し透過 */
         [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
+            background-color: rgba(240, 242, 246, 0.95); /* 少し明るめに、透明度を維持 */
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05); /* サイドバーに軽い影を追加 */
         }
                 /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
             position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
+            width: 2.2rem !important; /* 少し大きく */
+            height: 2.2rem !important; /* 少し大きく */
+            top: 10px !important; /* 少し下に調整 */
+            left: 10px !important; /* 少し右に調整 */
+            background-color: #f0f2f6 !important; /* 背景色を追加 */
+            border-radius: 50% !important; /* 丸くする */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 影を追加 */
         }
         /* 元のアイコンを完全に非表示にする */
         [data-testid="stSidebarNavCollapseButton"] * {
@@ -40,87 +53,103 @@ def load_css():
             height: 100% !important;
             top: 0 !important;
             left: 0 !important;
-            font-size: 24px !important;
+            font-size: 26px !important; /* フォントサイズを大きく */
             font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
+            color: #555 !important; /* 色を少し濃く */
+            transition: background-color 0.2s, color 0.2s, transform 0.2s !important;
+            border-radius: 50%; /* 親要素に合わせて丸くする */
         }
         [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
+            background-color: #E0E2E6 !important; /* ホバー時の背景色 */
+            color: #6A0DAD !important; /* ホバー時の強調色 (少し深い紫) */
+            transform: scale(1.1); /* ホバー時に少し拡大 */
         }
         /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
 
 
         /* --- 見出しのスタイル --- */
         h1 {
-            color: #2c3e50; /* ダークブルー */
+            font-family: 'M PLUS Rounded 1c', sans-serif; /* h1に丸みのあるフォントを適用 */
+            color: #3f51b5; /* より鮮やかな青 */
             text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
+            padding-bottom: 25px;
+            font-weight: 700; /* 太字 */
+            letter-spacing: 1.5px; /* 文字間隔を少し開ける */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.08); /* 軽い影を追加 */
         }
         h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
-            margin-top: 40px;
+            font-family: 'Noto Sans JP', sans-serif;
+            color: #4CAF50; /* 鮮やかなグリーン */
+            border-left: 8px solid #FFC107; /* 暖色系のアクセント（オレンジ） */
+            padding-left: 15px;
+            margin-top: 50px;
+            font-weight: 700;
         }
         h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
-            padding-bottom: 8px;
-            margin-top: 30px;
+            font-family: 'Noto Sans JP', sans-serif;
+            color: #607d8b;
+            border-bottom: 3px solid #03A9F4; /* 明るい水色 */
+            padding-bottom: 10px;
+            margin-top: 35px;
+            font-weight: 700;
         }
 
         /* --- カードデザイン (st.container(border=True)のスタイル) --- */
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.98); /* 透明度を減らし、より白く */
             border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 1.5em 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 20px; /* 角をさらに丸く */
+            padding: 1.8em 1.8em; /* パディングを増やす */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* 影を強調 */
             transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
+            margin-bottom: 25px; /* カード間の余白 */
         }
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
-            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(76, 175, 80, 0.3); /* ホバー時の影をグリーン系に */
+            transform: translateY(-8px) scale(1.01); /* 浮き上がりとわずかな拡大 */
         }
         
         /* --- ボタンのスタイル --- */
         .stButton>button {
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            color: #4a90e2;
+            font-family: 'Noto Sans JP', sans-serif;
+            border: 2px solid #03A9F4; /* 明るい水色 */
+            border-radius: 30px; /* 角をさらに丸く */
+            color: #03A9F4;
             background-color: #ffffff;
-            padding: 10px 24px;
-            font-weight: bold;
+            padding: 12px 28px; /* パディングを増やす */
+            font-weight: 700;
+            font-size: 1.05rem; /* フォントサイズを少し大きく */
             transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ボタンに影 */
         }
         .stButton>button:hover {
-            border-color: #8A2BE2;
+            border-color: #9C27B0; /* ホバー時に紫 */
             color: white;
-            background-color: #8A2BE2;
-            transform: scale(1.05);
+            background-color: #9C27B0;
+            transform: translateY(-2px) scale(1.05); /* 浮き上がりと拡大 */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         /* Primaryボタン */
         .stButton>button[kind="primary"] {
-            background-color: #4a90e2;
+            background-color: #4CAF50; /* Primaryボタンは鮮やかなグリーン */
             color: white;
             border: none;
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
         }
         .stButton>button[kind="primary"]:hover {
-            background-color: #357ABD;
-            border-color: #357ABD;
-            transform: scale(1.05);
+            background-color: #388E3C; /* ホバー時は濃いグリーン */
+            border-color: #388E3C;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
         }
 
         /* --- st.infoのカスタムスタイル --- */
         .st-emotion-cache-1wivap1 {
-             background-color: rgba(232, 245, 253, 0.7);
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
+             background-color: rgba(200, 230, 201, 0.85); /* 柔らかいグリーン系の背景 */
+             border-left: 6px solid #4CAF50; /* 鮮やかなグリーンのボーダー */
+             border-radius: 12px; /* 角を丸く */
+             padding: 15px 20px; /* パディングを調整 */
+             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
@@ -131,10 +160,17 @@ def load_css():
         /* --- フッターの区切り線 --- */
         .footer-hr {
             border: none;
-            height: 3px;
-            background: linear-gradient(to right, #4a90e2, #8A2BE2);
-            margin-top: 40px;
-            margin-bottom: 20px;
+            height: 4px; /* 太くする */
+            background: linear-gradient(to right, #4CAF50, #9C27B0, #03A9F4); /* 複数の色でグラデーション */
+            margin-top: 50px;
+            margin-bottom: 30px;
+            border-radius: 2px;
+        }
+
+        /* マニュアルのポップオーバー内のH3も調整 */
+        .stPopover h3 {
+            border-bottom: 2px solid #9C27B0; /* ポップオーバー内の見出し色 */
+            color: #673AB7; /* 濃い紫 */
         }
     </style>
     """
@@ -268,7 +304,8 @@ if "page_to_visit" in st.session_state:
 
 st.title("🌟 特別支援教育サポートアプリ")
 
-# メインイメージ
+# メインイメージ - 新しい背景画像に合わせたデザインに
+# 背景画像と同じイラストを使うと、タイトルとの一体感が出ます
 st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
 
 st.header("ようこそ！")
@@ -282,7 +319,6 @@ st.write("""
 
 st.header("各機能の紹介")
 
-# --- ▼▼▼【ここから全体を修正】▼▼▼ ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -341,18 +377,10 @@ with col3:
         st.write("特別支援教育に関する動画と解説をまとめています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
 
-    #with st.container(border=True):
-     #   st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
-      #  st.write("支援方法について、AIとチャット形式で自由に相談できます。")
-       # st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
-    
- 
-
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/9_フィードバック.py",), key="btn_feedback", use_container_width=True)
-# --- ▲▲▲ 修正はここまで ▲▲▲ ---
 
 # --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
