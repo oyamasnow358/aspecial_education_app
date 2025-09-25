@@ -1,7 +1,4 @@
 import streamlit as st
-import json
-from streamlit_lottie import st_lottie
-import time # time.sleep を使用するためにインポート
 
 # --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
 def load_css():
@@ -259,23 +256,6 @@ st.set_page_config(
 # CSSを適用
 load_css()
 
-# Lottieアニメーションを読み込む関数
-@st.cache_data
-def load_lottiefile(filepath: str):
-    try:
-        with open(filepath, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        # Streamlit Cloudではログに出力されることが多いので、st.errorは控えめに
-        # st.error(f"Error: {filepath} not found.") 
-        return None
-    except json.JSONDecodeError:
-        # st.error(f"Error: Could not decode JSON from {filepath}. Is it a valid Lottie JSON?")
-        return None
-
-# Lottieアニメーションファイル
-lottie_animation = load_lottiefile("animation.json")
-
 # ページ遷移を管理するための関数
 def set_page(page):
     st.session_state.page_to_visit = page
@@ -286,148 +266,120 @@ if "page_to_visit" in st.session_state:
     del st.session_state.page_to_visit
     st.switch_page(page)
 
-# アニメーションを一度だけ表示するためのフラグ
-if "animation_shown" not in st.session_state:
-    st.session_state.animation_shown = False
+st.title("🌟 特別支援教育サポートアプリ")
 
-# --- アニメーション表示ロジック ---
-if not st.session_state.animation_shown and lottie_animation:
-    # プレースホルダーを定義し、アニメーションを表示する
-    animation_placeholder = st.empty()
-    with animation_placeholder:
-        # アニメーションを中央に表示するためにカラムを使用
-        _, col_anim, _ = st.columns([1, 2, 1])
+# メインイメージ
+st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
 
-        with col_anim:
-            st.markdown("<div style='text-align: center;'><h1>読み込み中...</h1></div>", unsafe_allow_html=True) # 読み込みメッセージ
-            st_lottie(
-                lottie_animation,
-                speed=1,
-                loop=False, # 一度だけ再生
-                quality="high",
-                height="500px",
-                width="700px",
-                key="initial_animation"
-            )
-        
-        # アニメーションの再生時間に合わせて待機時間を調整
-        # 例：アニメーションが約3秒なら、time.sleep(3)
-        # ここでは固定で3秒待つことにします。必要に応じて調整してください。
-        time.sleep(3) 
-        
-    # アニメーションが指定時間表示された後、プレースホルダーをクリア
-    animation_placeholder.empty()
-    st.session_state.animation_shown = True
-    st.rerun() # メインコンテンツをロードするために再実行
+st.header("ようこそ！")
+st.write("""
+このアプリは、特別支援教育に関わる先生方をサポートするためのツールです。
+子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
+発達段階を記録・分析したり、AIによる計画作成の補助を受けたりすることができます。
 
-else: # アニメーションが表示済み、またはアニメーションファイルがない場合
-    st.title("🌟 特別支援教育サポートアプリ")
+**サイドバーのメニューから、利用したい機能を選択してください。**
+""")
 
-    # メインイメージ
-    st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
+st.header("各機能の紹介")
 
-    st.header("ようこそ！")
-    st.write("""
-    このアプリは、特別支援教育に関わる先生方をサポートするためのツールです。
-    子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
-    発達段階を記録・分析したり、AIによる計画作成の補助を受けたりすることができます。
+# --- ▼▼▼【ここから全体を修正】▼▼▼ ---
+col1, col2, col3 = st.columns(3)
 
-    **サイドバーのメニューから、利用したい機能を選択してください。**
-    """)
-
-    st.header("各機能の紹介")
-
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        with st.container(border=True):
-            st.markdown("### 📚 指導支援内容")
-            st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
-            b_col1, b_col2 = st.columns(2)
-            b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
-            with b_col2.popover("📖 マニュアル", use_container_width=True):
-                st.markdown(manuals["guidance"])
-
-    # ... (以下のメインコンテンツ部分は変更なし) ...
-
-        with st.container(border=True):
-            st.markdown("### 📈 分析方法")
-            st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
-            b_col1, b_col2 = st.columns(2)
-            b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
-            with b_col2.popover("📖 マニュアル", use_container_width=True):
-                st.markdown(manuals["analysis"])
-        
-        with st.container(border=True):
-            st.markdown("### 🃏 授業カードライブラリー") # 新しい機能
-            st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
-            b_col1, b_col2 = st.columns(2)
-            b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
-            with b_col2.popover("📖 マニュアル", use_container_width=True):
-                st.markdown(manuals["lesson_card_library"])
-
-    with col2:
-        with st.container(border=True):
-            st.markdown("### 📊 発達チャート作成")
-            st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
-            b_col1, b_col2 = st.columns(2)
-            b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
-            with b_col2.popover("📖 マニュアル", use_container_width=True):
-                st.markdown(manuals["chart"])
-        
-        with st.container(border=True):
-            st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
-            st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
-            b_col1, b_col2 = st.columns(2)
-            b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation", use_container_width=True)
-            with b_col2.popover("📖 マニュアル", use_container_width=True):
-                st.markdown(manuals["plan_creation"])
-
-    with col3:
-        with st.container(border=True):
-            st.markdown("### 📜 知的段階（学習指導要領）")
-            st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
-            b_col1, b_col2 = st.columns(2)
-            b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
-            with b_col2.popover("📖 マニュアル", use_container_width=True):
-                st.markdown(manuals["guideline_page"])
-
-        with st.container(border=True):
-            st.markdown("### ▶️ 動画ギャラリー")
-            st.write("特別支援教育に関する動画と解説をまとめています。")
-            st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
-        
-        with st.container(border=True):
-            st.markdown("### 📝 フィードバック")
-            st.write("アプリの改善やご意見をお待ちしています。")
-            st.button("この機能を使う ➡", on_click=set_page, args=("pages/9_フィードバック.py",), key="btn_feedback", use_container_width=True)
-
-    st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
+with col1:
     with st.container(border=True):
-        st.header("関連ツール＆リンク")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("##### 📁 教育・心理分析ツール")
-            st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
-            st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
+        st.markdown("### 📚 指導支援内容")
+        st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["guidance"])
 
-        with c2:
-            st.markdown("##### 📁 統計学分析ツール")
-            st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
-            st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-            st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-            st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-            st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
-            st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+    with st.container(border=True):
+        st.markdown("### 📈 分析方法")
+        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["analysis"])
+    
+    with st.container(border=True):
+        st.markdown("### 🃏 授業カードライブラリー") # 新しい機能
+        st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["lesson_card_library"])
 
-        st.markdown("---")
-        st.markdown("##### 🗨️ ご意見・ご感想")
-        st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
-        st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
+with col2:
+    with st.container(border=True):
+        st.markdown("### 📊 発達チャート作成")
+        st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["chart"])
+    
+    with st.container(border=True):
+        st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
+        st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["plan_creation"])
 
-    st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-    st.warning("""
-    **【利用上の注意】**
-    それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
-    """)
+with col3:
+    with st.container(border=True):
+        st.markdown("### 📜 知的段階（学習指導要領）")
+        st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
+        b_col1, b_col2 = st.columns(2)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
+        with b_col2.popover("📖 マニュアル", use_container_width=True):
+            st.markdown(manuals["guideline_page"])
+
+    with st.container(border=True):
+        st.markdown("### ▶️ 動画ギャラリー")
+        st.write("特別支援教育に関する動画と解説をまとめています。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
+
+    #with st.container(border=True):
+     #   st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
+      #  st.write("支援方法について、AIとチャット形式で自由に相談できます。")
+       # st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
+    
+ 
+
+    with st.container(border=True):
+        st.markdown("### 📝 フィードバック")
+        st.write("アプリの改善やご意見をお待ちしています。")
+        st.button("この機能を使う ➡", on_click=set_page, args=("pages/9_フィードバック.py",), key="btn_feedback", use_container_width=True)
+# --- ▲▲▲ 修正はここまで ▲▲▲ ---
+
+# --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
+with st.container(border=True):
+    st.header("関連ツール＆リンク")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("##### 📁 教育・心理分析ツール")
+        st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
+        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
+
+    with c2:
+        st.markdown("##### 📁 統計学分析ツール")
+        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+        st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+        st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+        st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
+        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+
+    st.markdown("---")
+    st.markdown("##### 🗨️ ご意見・ご感想")
+    st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
+    st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
+
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
+st.warning("""
+**【利用上の注意】**
+それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
+""")
