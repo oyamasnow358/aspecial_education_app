@@ -1,13 +1,37 @@
 import streamlit as st
 
-# --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
+# --- ▼ 共通CSSの読み込み（修正版） ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
     css = """
     <style>
+        /* --- 全体フォント設定 --- */
+        body {
+            font-family: 'Noto Sans JP', sans-serif !important;
+        }
+        /* Streamlitの全てのテキスト要素にフォントを適用 */
+        html, body, [class*="css"] {
+            font-family: 'Noto Sans JP', sans-serif !important;
+        }
+
+        /* --- カラーパレット変数 --- */
+        :root {
+            --primary-color: #6a1b9a; /* 深い紫 */
+            --secondary-color: #ab47bc; /* 少し明るい紫 */
+            --accent-color: #4a90e2; /* 鮮やかな青 */
+            --text-color-dark: #2c3e50;
+            --text-color-light: #34495e;
+            --bg-light: rgba(240, 242, 246, 0.95);
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --border-light: #e0e0e0;
+        }
+
         /* --- 背景画像の設定 --- */
         [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -16,20 +40,24 @@ def load_css():
 
         /* サイドバーの背景を少し透過 */
         [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
+            background-color: var(--bg-light);
         }
-                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+        
+        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ ▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
             position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
+            width: 2.2rem !important; /* 少し大きく */
+            height: 2.2rem !important; /* 少し大きく */
+            top: 10px !important; /* 上から少し離す */
+            left: 10px !important; /* 左から少し離す */
+            border-radius: 50% !important; /* 丸く */
+            background-color: rgba(255,255,255,0.7) !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        /* 元のアイコンを完全に非表示にする */
         [data-testid="stSidebarNavCollapseButton"] * {
             display: none !important;
             visibility: hidden !important;
         }
-        /* カスタムアイコン「«」を疑似要素として追加 */
         [data-testid="stSidebarNavCollapseButton"]::before {
             content: '«' !important;
             display: flex !important;
@@ -40,87 +68,118 @@ def load_css():
             height: 100% !important;
             top: 0 !important;
             left: 0 !important;
-            font-size: 24px !important;
+            font-size: 20px !important; /* フォントサイズ調整 */
             font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
+            color: var(--primary-color) !important;
+            transition: background-color 0.2s, color 0.2s, transform 0.2s !important;
+            border-radius: 50% !important;
         }
         [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            transform: scale(1.1); /* ホバーで少し拡大 */
         }
         /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
 
 
         /* --- 見出しのスタイル --- */
         h1 {
-            color: #2c3e50; /* ダークブルー */
+            color: var(--primary-color);
             text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
+            padding-bottom: 25px; /* 余白を少し増やす */
+            font-weight: 700; /* より太く */
+            font-size: 2.8em; /* サイズを大きく */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
-            margin-top: 40px;
+            color: var(--text-color-dark);
+            border-left: 8px solid var(--primary-color); /* 紫のアクセントを太く */
+            padding-left: 15px; /* 余白を増やす */
+            margin-top: 50px; /* 上部余白を増やす */
+            font-weight: 600;
+            font-size: 1.8em;
         }
         h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
-            padding-bottom: 8px;
-            margin-top: 30px;
+            color: var(--text-color-light);
+            border-bottom: 2px solid var(--secondary-color); /* 紫のアクセント */
+            padding-bottom: 10px;
+            margin-top: 35px;
+            font-weight: 500;
+            font-size: 1.4em;
         }
 
         /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 1.5em 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 { /* Streamlitのカードコンテナセレクタ */
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 18px; /* 角を少し丸く */
+            padding: 1.8em 1.8em; /* 内側の余白を増やす */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* 影を強調 */
             transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
+            margin-bottom: 25px; /* カード間の余白を増やす */
         }
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
-            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(var(--primary-color-rgb, 106, 27, 154), 0.2); /* ホバー時の影をブランドカラーに */
+            transform: translateY(-8px); /* ホバーで少し浮き上がる */
+        }
+        /* カード内の見出し調整 */
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 h3 {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.5em; /* カード内のH3を調整 */
+            font-weight: 600;
+            text-align: center; /* カード内のH3を中央寄せに */
+            margin-bottom: 15px;
+        }
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 p {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: var(--text-color-light);
+            text-align: center; /* カード内のテキストも中央寄せ */
         }
         
         /* --- ボタンのスタイル --- */
         .stButton>button {
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            color: #4a90e2;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px; /* より丸く */
+            color: var(--accent-color);
             background-color: #ffffff;
-            padding: 10px 24px;
+            padding: 12px 28px; /* パディングを増やす */
             font-weight: bold;
+            font-size: 1.05em; /* フォントサイズを少し大きく */
             transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
         .stButton>button:hover {
-            border-color: #8A2BE2;
+            border-color: var(--primary-color); /* ホバーで紫に */
             color: white;
-            background-color: #8A2BE2;
+            background-color: var(--primary-color);
             transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(var(--primary-color-rgb, 106, 27, 154), 0.3);
         }
         /* Primaryボタン */
         .stButton>button[kind="primary"] {
-            background-color: #4a90e2;
+            background-color: var(--accent-color);
             color: white;
             border: none;
+            box-shadow: 0 4px 8px rgba(var(--accent-color-rgb, 74, 144, 226), 0.2);
         }
         .stButton>button[kind="primary"]:hover {
-            background-color: #357ABD;
-            border-color: #357ABD;
+            background-color: var(--primary-color); /* ホバーで紫に */
+            border-color: var(--primary-color);
             transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(var(--primary-color-rgb, 106, 27, 154), 0.3);
         }
 
         /* --- st.infoのカスタムスタイル --- */
         .st-emotion-cache-1wivap1 {
-             background-color: rgba(232, 245, 253, 0.7);
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
+             background-color: rgba(232, 245, 253, 0.8); /* 少し透過度を調整 */
+             border-left: 6px solid var(--accent-color);
+             border-radius: 10px;
+             padding: 1em 1.5em;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
@@ -131,10 +190,46 @@ def load_css():
         /* --- フッターの区切り線 --- */
         .footer-hr {
             border: none;
-            height: 3px;
-            background: linear-gradient(to right, #4a90e2, #8A2BE2);
-            margin-top: 40px;
+            height: 4px; /* 太く */
+            background: linear-gradient(to right, var(--accent-color), var(--primary-color)); /* グラデーション */
+            margin-top: 50px; /* 余白を増やす */
+            margin-bottom: 30px;
+            border-radius: 2px;
+        }
+
+        /* 関連ツール＆リンクのカードデザイン */
+        .related-tools-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 18px;
+            padding: 1.5em;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
             margin-bottom: 20px;
+            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .related-tools-card:hover {
+            box-shadow: 0 10px 20px rgba(var(--accent-color-rgb, 74, 144, 226), 0.2);
+            transform: translateY(-5px);
+        }
+        .related-tools-card h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--border-light);
+            padding-bottom: 10px;
+        }
+        .related-tools-card .st-emotion-cache-ch5fgy { /* st.page_linkのコンテナ */
+            margin-bottom: 8px;
+        }
+        .related-tools-card .st-emotion-cache-ch5fgy a { /* st.page_linkのリンクテキスト */
+            color: var(--text-color-light);
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s;
+        }
+        .related-tools-card .st-emotion-cache-ch5fgy a:hover {
+            color: var(--primary-color);
         }
     </style>
     """
@@ -321,7 +416,7 @@ with col2:
     
     with st.container(border=True):
         st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
-        st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。")
+        st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。", )
         b_col1, b_col2 = st.columns(2)
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
@@ -341,42 +436,37 @@ with col3:
         st.write("特別支援教育に関する動画と解説をまとめています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
 
-    #with st.container(border=True):
-     #   st.markdown("### 💬 AIによる対話（現在は使用を制限しています）")
-      #  st.write("支援方法について、AIとチャット形式で自由に相談できます。")
-       # st.button("この機能を使う ➡", on_click=set_page, args=("pages/5_AIによる対話.py",), key="btn_ai_chat", use_container_width=True)
-    
- 
-
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/9_フィードバック.py",), key="btn_feedback", use_container_width=True)
 # --- ▲▲▲ 修正はここまで ▲▲▲ ---
 
-# --- ▼ 関連ツール＆リンク（変更なし） ▼ ---
+# --- ▼ 関連ツール＆リンク（修正版） ▼ ---
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-with st.container(border=True):
-    st.header("関連ツール＆リンク")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("##### 📁 教育・心理分析ツール")
-        st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
-        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
+st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) # 全体をカードで囲む
+st.header("関連ツール＆リンク")
+c1, c2 = st.columns(2)
+with c1:
+    st.markdown("##### 📁 教育・心理分析ツール")
+    st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
+    st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
 
-    with c2:
-        st.markdown("##### 📁 統計学分析ツール")
-        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
-        st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-        st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-        st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
-        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+with c2:
+    st.markdown("##### 📁 統計学分析ツール")
+    st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+    st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+    st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+    st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+    st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
+    st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
 
-    st.markdown("---")
-    st.markdown("##### 🗨️ ご意見・ご感想")
-    st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
-    st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
+st.markdown("---")
+st.markdown("##### 🗨️ ご意見・ご感想")
+st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
+st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
+st.markdown('</div>', unsafe_allow_html=True) # カードの閉じタグ
+# --- ▲ 関連ツール＆リンク ▲ ---
 
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 st.warning("""
