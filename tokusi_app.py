@@ -443,11 +443,12 @@ with col3:
 # --- ▲▲▲ 修正はここまで ▲▲▲ ---
 
 # --- ▼ 関連ツール＆リンク（修正版） ▼ ---
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 
-st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) # 全体をカードで囲む
 st.header("関連ツール＆リンク")
 c1, c2 = st.columns(2)
 with c1:
+    st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) # 全体をカードで囲む
     st.markdown("##### 📁 教育・心理分析ツール")
     st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
     st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
