@@ -2,7 +2,7 @@ import streamlit as st
 
 # --- ▼ 共通CSSの読み込み（修正版） ▼ ---
 def load_css():
-    """カスタムCSSとJavaScriptを読み込む関数"""
+    """カスタムCSSを読み込む関数"""
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
@@ -231,48 +231,10 @@ def load_css():
         .related-tools-card .st-emotion-cache-ch5fgy a:hover {
             color: var(--primary-color);
         }
-
-        /* --- フェードインアニメーションのCSS --- */
-        .fade-in-section {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .fade-in-section.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-    
-    # JavaScriptを埋め込む
-    st.markdown("""
-    <script>
-        // Intersection Observer APIを使用して、要素がビューポートに入ったときにクラスを追加する
-        const fadeIns = document.querySelectorAll('.fade-in-section');
-
-        const handleIntersection = (entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target); // 一度表示されたら監視を停止
-                }
-            });
-        };
-
-        const observer = new IntersectionObserver(handleIntersection, {
-            root: null, // ビューポートをルートとする
-            rootMargin: '0px',
-            threshold: 0.1 // 要素の10%が見えたら発火
-        });
-
-        fadeIns.forEach(section => {
-            observer.observe(section);
-        });
-    </script>
-    """, unsafe_allow_html=True) # ここでJavaScriptを読み込む
-# --- ▲ 共通CSSとJSの読み込み ▲ ---
+# --- ▲ 共通CSSの読み込み ▲ ---
 
 # --- マニュアルのテキストデータ（変更なし） ---
 manuals = {
@@ -404,8 +366,6 @@ st.title("🌟 特別支援教育サポートアプリ")
 # メインイメージ
 st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
 
-# フェードインを適用したい各セクションを `st.markdown` で囲み、`fade-in-section` クラスを付与する
-st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
 st.header("ようこそ！")
 st.write("""
 このアプリは、特別支援教育に関わる先生方をサポートするためのツールです。
@@ -414,17 +374,13 @@ st.write("""
 
 **サイドバーのメニューから、利用したい機能を選択してください。**
 """)
-st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
 st.header("各機能の紹介")
-st.markdown('</div>', unsafe_allow_html=True)
 
-
+# --- ▼▼▼【ここから全体を修正】▼▼▼ ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 📚 指導支援内容")
         st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
@@ -432,9 +388,7 @@ with col1:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["guidance"])
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 📈 分析方法")
         st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
@@ -442,9 +396,7 @@ with col1:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["analysis"])
-    st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 🃏 授業カードライブラリー") # 新しい機能
         st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
@@ -452,10 +404,8 @@ with col1:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["lesson_card_library"])
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 📊 発達チャート作成")
         st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
@@ -463,9 +413,7 @@ with col2:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["chart"])
-    st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。", )
@@ -473,10 +421,8 @@ with col2:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["plan_creation"])
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col3:
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 📜 知的段階（学習指導要領）")
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
@@ -484,26 +430,20 @@ with col3:
         b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["guideline_page"])
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### ▶️ 動画ギャラリー")
         st.write("特別支援教育に関する動画と解説をまとめています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.write("アプリの改善やご意見をお待ちしています。")
         st.button("この機能を使う ➡", on_click=set_page, args=("pages/9_フィードバック.py",), key="btn_feedback", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
+# --- ▲▲▲ 修正はここまで ▲▲▲ ---
 
 # --- ▼ 関連ツール＆リンク（修正版） ▼ ---
-st.markdown('<div class="fade-in-section">', unsafe_allow_html=True)
-st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
+
 st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) # 全体をカードで囲む
 st.header("関連ツール＆リンク")
 c1, c2 = st.columns(2)
