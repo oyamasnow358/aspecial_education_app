@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+
 # --- ▼ 共通CSSの読み込み ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
@@ -18,7 +19,7 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
         }
-                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
         [data-testid="stSidebarNavCollapseButton"] {
             position: relative !important;
             width: 2rem !important;
@@ -123,12 +124,10 @@ def load_css():
              border-radius: 8px;
         }
         
-        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
         /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
         [data-testid="stExpanderToggleIcon"] {
             display: none;
         }
-        /* --- ▲▲▲ ここまで ▲▲▲ --- */
 
         /* --- フッターの区切り線 --- */
         .footer-hr {
@@ -138,11 +137,50 @@ def load_css():
             margin-top: 40px;
             margin-bottom: 20px;
         }
+
+        /* 分析方法カードのカスタムスタイル */
+        .analysis-card {
+            background-color: rgba(255, 255, 255, 0.98);
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        .analysis-card:hover {
+            box-shadow: 0 8px 16px rgba(74, 144, 226, 0.15);
+            transform: translateY(-3px);
+            background-color: #e6f0fa; /* ホバー時の背景色 */
+        }
+        .analysis-card h4 {
+            color: #34495e;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .analysis-card p {
+            color: #606060;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .analysis-card.selected {
+            border: 2px solid #8A2BE2; /* 選択時の強調 */
+            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.3);
+            background-color: #f3e8ff; /* 選択時の背景色 */
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
 # --- ▲ 共通CSSの読み込み ▲ ---
 st.set_page_config(page_title="分析方法", page_icon="📈", layout="wide")
+
+# CSSを読み込む
+load_css()
 
 st.title("📈 分析方法")
 st.write("ここでは、特別支援教育で使える教育学的、心理学的、統計学的分析方法の解説と、実践で使えるツールを紹介します。")
@@ -161,21 +199,21 @@ img_cbt = "https://i.imgur.com/vnMHFNE.png"
 
 # 療法・分析法とマークダウンファイルの対応
 methods = {
-    "ABA（応用行動分析）": "pages2/aba.md",
-    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）": "pages2/fba_pbs.md",
-    "CBT（認知行動療法）": "pages2/cbt.md",
-    "ソーシャルスキルトレーニング": "pages2/sst.md",
-    "感覚統合療法": "pages2/sensory_integration.md",
-    "PECS（絵カード交換式コミュニケーション）": "pages2/pecs.md",
-    "動作法": "pages2/dousahou.md",
-    "TEACCH": "pages2/teacch.md",
-    "SEL（社会情動的学習）": "pages2/sel.md",
-    "マインドフルネス": "pages2/mindfulness.md",
-    "プレイセラピー": "pages2/play_therapy.md",
-    "アートセラピー": "pages2/art_therapy.md",
-    "ミュージックセラピー": "pages2/music_therapy.md",
-    "セルフモニタリング":"pages2/self_monitar.md",
-    "統計学的分析方法":"pages2/toukei.md",
+    "ABA（応用行動分析）": {"file": "pages2/aba.md", "description": "行動の原理を応用し、望ましい行動を促進します。"},
+    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）": {"file": "pages2/fba_pbs.md", "description": "問題行動の原因を探り、前向きな支援計画を立てます。"},
+    "CBT（認知行動療法）": {"file": "pages2/cbt.md", "description": "思考パターンに焦点を当て、感情や行動の改善を目指します。"},
+    "ソーシャルスキルトレーニング": {"file": "pages2/sst.md", "description": "対人関係で役立つスキルを効果的に学びます。"},
+    "感覚統合療法": {"file": "pages2/sensory_integration.md", "description": "感覚の処理能力を高め、日常生活の適応を助けます。"},
+    "PECS（絵カード交換式コミュニケーション）": {"file": "pages2/pecs.md", "description": "絵カードを使ってコミュニケーション能力を育みます。"},
+    "動作法": {"file": "pages2/dousahou.md", "description": "身体の動きを通じて心身のバランスを整えます。"},
+    "TEACCH": {"file": "pages2/teacch.md", "description": "構造化された環境で自閉症スペクトラムの子どもを支援します。"},
+    "SEL（社会情動的学習）": {"file": "pages2/sel.md", "description": "感情の理解と管理、他者との共感を育む学習です。"},
+    "マインドフルネス": {"file": "pages2/mindfulness.md", "description": "今ここに意識を集中し、心の平静を保つ練習です。"},
+    "プレイセラピー": {"file": "pages2/play_therapy.md", "description": "遊びを通して子どもの感情を表現し、問題を解決します。"},
+    "アートセラピー": {"file": "pages2/art_therapy.md", "description": "芸術表現を通じて自己理解と癒しを深めます。"},
+    "ミュージックセラピー": {"file": "pages2/music_therapy.md", "description": "音楽の力で心身の健康を促進し、感情を豊かにします。"},
+    "セルフモニタリング": {"file": "pages2/self_monitar.md", "description": "自身の行動や感情を記録し、客観的に分析します。"},
+    "統計学的分析方法": {"file": "pages2/toukei.md", "description": "データに基づいて教育実践を客観的に評価します。"},
 }
 
 # 実態と適した療法の対応
@@ -195,31 +233,48 @@ student_conditions = {
 if "selected_method" not in st.session_state:
     st.session_state.selected_method = None
 
-with st.sidebar:
-    st.header("療法・分析法から探す")
-    # ラジオボタンで選択されたらセッションステートを更新
-    selected_in_sidebar = st.radio(
-        "一覧から選択:",
-        list(methods.keys()),
-        index=None,
-        key="sidebar_radio"
-    )
-    if selected_in_sidebar:
-        st.session_state.selected_method = selected_in_sidebar
+# 分析方法一覧の表示（右側）
+st.subheader("分析方法の一覧から探す")
+st.write("気になる分析方法をクリックして詳細をご覧ください。")
+
+# 3列で分析方法カードを表示
+cols_count = 3
+cols = st.columns(cols_count)
+col_idx = 0
+
+for method_name, method_info in methods.items():
+    with cols[col_idx % cols_count]:
+        # カスタムCSSクラスを適用したHTMLボタンを使用
+        # Streamlitのボタンはクリック時に再実行されるため、その挙動を利用
+        is_selected = " selected" if st.session_state.selected_method == method_name else ""
+        
+        # Streamlitのformを使うことで、ボタンが押されるまで再実行を遅らせ、まとめて処理できる
+        # ただし、今回はボタンクリックで即座に詳細を表示したいため、あえてformを使わない
+        if st.button(
+            f"**{method_name}**\n\n_{method_info['description']}_", 
+            key=f"method_btn_{method_name}",
+            use_container_width=True
+        ):
+            st.session_state.selected_method = method_name
+            st.rerun() # 選択されたらすぐに詳細を表示するために再実行
+
+    col_idx += 1
+
+
+st.markdown("---") # 区切り線
 
 st.subheader("児童・生徒の実態から探す")
 condition = st.selectbox("実態を選んでください", list(student_conditions.keys()))
 
 st.write("💡 **この実態に適した療法・分析法:**")
-cols = st.columns(3)
-col_idx = 0
+cols_for_condition = st.columns(3)
+col_idx_condition = 0
 for method in student_conditions[condition]:
     if method in methods:
-        if cols[col_idx % 3].button(method, key=f"btn_{method}"):
+        if cols_for_condition[col_idx_condition % 3].button(method, key=f"btn_condition_{method}"):
             st.session_state.selected_method = method
-            # ボタンが押されたら再実行して表示を更新
             st.rerun()
-    col_idx += 1
+    col_idx_condition += 1
 
 
 # --- 詳細表示 ---
@@ -228,7 +283,7 @@ if st.session_state.selected_method:
     st.header(f"解説：{st.session_state.selected_method}")
     
     with st.container(border=True):
-        file_path = methods.get(st.session_state.selected_method)
+        file_path = methods.get(st.session_state.selected_method)["file"]
         # マークダウンファイルの内容を表示
         if file_path and os.path.exists(file_path):
             with open(file_path, "r", encoding="utf-8") as f:
@@ -266,7 +321,6 @@ if st.session_state.selected_method:
             - **参考文献:** Durand, V. M. (1990). Severe behavior problems: A functional communication training approach. Guilford Press.
             - **Webサイト:** [機能的アセスメント](http://www.kei-ogasawara.com/support/assessment/)
             """)
-            # ダウンロード部分は元のコードと同様に実装（ファイルパスは要確認）
         elif method == "統計学的分析方法":
             st.info("##### 🛠️ 統計学 分析ツール一覧")
             st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
@@ -275,3 +329,6 @@ if st.session_state.selected_method:
             st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
             st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
             st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+
+# フッターの区切り線
+st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
