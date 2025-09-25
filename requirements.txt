@@ -22,4 +22,4 @@ langchain
 langchain-google-genai
 faiss-cpu
 xlsxwriter
-st_lottie
+streamlit-lottie
