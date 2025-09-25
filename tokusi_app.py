@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 from streamlit_lottie import st_lottie
-# import time # time.sleep は不要になります
+import time # time.sleep を使用するためにインポート
 
 # --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
 def load_css():
@@ -266,10 +266,11 @@ def load_lottiefile(filepath: str):
         with open(filepath, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        st.error(f"Error: {filepath} not found.")
+        # Streamlit Cloudではログに出力されることが多いので、st.errorは控えめに
+        # st.error(f"Error: {filepath} not found.") 
         return None
     except json.JSONDecodeError:
-        st.error(f"Error: Could not decode JSON from {filepath}. Is it a valid Lottie JSON?")
+        # st.error(f"Error: Could not decode JSON from {filepath}. Is it a valid Lottie JSON?")
         return None
 
 # Lottieアニメーションファイル
@@ -289,62 +290,35 @@ if "page_to_visit" in st.session_state:
 if "animation_shown" not in st.session_state:
     st.session_state.animation_shown = False
 
-# --- ここからアニメーション表示ロジックを修正 ---
+# --- アニメーション表示ロジック ---
 if not st.session_state.animation_shown and lottie_animation:
-    # アニメーションを中央に表示するためにカラムを使用
-    _, col_anim, _ = st.columns([1, 2, 1]) # 左右に余白を設ける
+    # プレースホルダーを定義し、アニメーションを表示する
+    animation_placeholder = st.empty()
+    with animation_placeholder:
+        # アニメーションを中央に表示するためにカラムを使用
+        _, col_anim, _ = st.columns([1, 2, 1])
 
-    with col_anim:
-        # st_lottieの戻り値を受け取る
-        animation_finished = st_lottie(
-            lottie_animation,
-            speed=1,
-            loop=False, # 一度だけ再生
-            quality="high",
-            height="500px", # 必要に応じて調整
-            width="700px",  # 必要に応じて調整
-            key="initial_animation"
-            # is_completed=True を指定しないことで、アニメーションの完了状態を監視
-        )
-    
-    # アニメーションが表示されたらフラグを立てる（レンダリングの完了を直接は示さないが、次に進むトリガー）
-    # is_completed を使用しない場合は、代わりにユーザーが次のステップに進むためのトリガーを設ける
-    # または、単に初回表示であることだけをフラグとして持つ
-
-    # 重要：streamlit-lottieのis_completedは、アニメーションが完全に終わった後でTrueを返します。
-    # しかし、この値が返されるのは次のStreamlitスクリプトの実行時になるため、
-    # 完全に待機してページ遷移する用途には少し工夫が必要です。
-    # 最もシンプルなのは、アニメーションがある程度の時間表示されたら次へ進むという方法です。
-
-    # 現状のis_completedに相当するものを導入するためには、
-    # st.session_state にアニメーションの表示状態と完了状態を保持し、
-    # アニメーションが表示されている間はメインコンテンツを表示しない、
-    # アニメーションが完了したらメインコンテンツを表示するというロジックが必要になります。
-
-    # 一旦、テストとして簡単な「次へ」ボタンを置いてみる
-    # もしくは、強制的に一定時間待ってから st.rerun する方式に戻すか、
-    # animation_finished の値を見て st.rerun する。
-
-    # animation_finished はアニメーションが完了したかどうかを bool で返すのではなく、
-    # アニメーションコンポーネントの状態（例えばマウスイベントなど）を返します。
-    # アニメーション完了時に自動で遷移するには、以下の `st_lottie` を使用します。
-    # is_completedを実際に使用するには、もう少しロジックが必要になります。
-
-    # --- 暫定的なシンプルな解決策（アニメーションが表示されたらすぐメインコンテンツへ） ---
-    # `is_completed` でアニメーション終了を待つのではなく、
-    # 一度表示されたらすぐにフラグを立ててメインコンテンツを表示する方式に戻します。
-    # ただし、アニメーションが完全に終わる前にコンテンツが表示され始める可能性があります。
-    
-    # st_lottieが描画されたら、アニメーションが表示されたとみなしてフラグをTrueに
+        with col_anim:
+            st.markdown("<div style='text-align: center;'><h1>読み込み中...</h1></div>", unsafe_allow_html=True) # 読み込みメッセージ
+            st_lottie(
+                lottie_animation,
+                speed=1,
+                loop=False, # 一度だけ再生
+                quality="high",
+                height="500px",
+                width="700px",
+                key="initial_animation"
+            )
+        
+        # アニメーションの再生時間に合わせて待機時間を調整
+        # 例：アニメーションが約3秒なら、time.sleep(3)
+        # ここでは固定で3秒待つことにします。必要に応じて調整してください。
+        time.sleep(3) 
+        
+    # アニメーションが指定時間表示された後、プレースホルダーをクリア
+    animation_placeholder.empty()
     st.session_state.animation_shown = True
     st.rerun() # メインコンテンツをロードするために再実行
-    # --- 暫定的なシンプルな解決策ここまで ---
-    
-    # もしアニメーションが完了するのを待ってから遷移したい場合は、
-    # streamlit_lottieのis_completedパラメーターをポーリングするか、
-    # CSS/JavaScriptでオーバーレイを制御する必要があります。
-    # 現時点では、StreamlitのPythonコード内でLottieアニメーションの再生完了を
-    # 完全にブロッキングして待つのは難しいです。
 
 else: # アニメーションが表示済み、またはアニメーションファイルがない場合
     st.title("🌟 特別支援教育サポートアプリ")
@@ -373,6 +347,8 @@ else: # アニメーションが表示済み、またはアニメーションフ
             b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
             with b_col2.popover("📖 マニュアル", use_container_width=True):
                 st.markdown(manuals["guidance"])
+
+    # ... (以下のメインコンテンツ部分は変更なし) ...
 
         with st.container(border=True):
             st.markdown("### 📈 分析方法")
