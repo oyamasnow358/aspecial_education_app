@@ -265,7 +265,11 @@ def load_lottiefile(filepath: str):
         return json.load(f)
 
 # Lottieアニメーションファイル
-lottie_animation = load_lottiefile("animation.json")
+    
+# lottie_animation = load_lottiefile("animation.json") # コメントアウト
+lottie_animation = load_lottiefile("test_animation.json") # ★テスト用ファイルに切り替え
+
+  
 
 # ページ遷移を管理するための関数
 def set_page(page):
