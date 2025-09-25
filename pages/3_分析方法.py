@@ -75,7 +75,8 @@ def load_css():
         }
 
         /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
+        /* st.container(border=True)の内部のdivに直接影響させる */
+        div[data-testid="stVerticalBlock"] > div > div.st-emotion-cache-1r6slb0 { /* Streamlitの内部構造に合わせたセレクタ */
             background-color: rgba(255, 255, 255, 0.95);
             border: 1px solid #e0e0e0;
             border-radius: 15px;
@@ -84,7 +85,7 @@ def load_css():
             transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
             margin-bottom: 20px; /* カード間の余白 */
         }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
+        div[data-testid="stVerticalBlock"] > div > div.st-emotion-cache-1r6slb0:hover {
             box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
             transform: translateY(-5px);
         }
@@ -118,7 +119,7 @@ def load_css():
         }
 
         /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 {
+        .st-emotion-cache-1wivap1 { /* st.infoの内部的なクラス名に依存 */
              background-color: rgba(232, 245, 253, 0.7);
              border-left: 5px solid #4a90e2;
              border-radius: 8px;
@@ -139,7 +140,7 @@ def load_css():
         }
 
         /* 分析方法カードのカスタムスタイル */
-        .analysis-card {
+        .analysis-card-btn { /* st.buttonに適用されるdivのスタイル */
             background-color: rgba(255, 255, 255, 0.98);
             border: 1px solid #e0e0e0;
             border-radius: 12px;
@@ -150,28 +151,29 @@ def load_css():
             cursor: pointer;
             text-align: center;
         }
-        .analysis-card:hover {
+        .analysis-card-btn:hover {
             box-shadow: 0 8px 16px rgba(74, 144, 226, 0.15);
             transform: translateY(-3px);
             background-color: #e6f0fa; /* ホバー時の背景色 */
         }
-        .analysis-card h4 {
+        .analysis-card-btn h4 {
             color: #34495e;
             margin-top: 0;
             margin-bottom: 10px;
             font-size: 1.1em;
             font-weight: bold;
         }
-        .analysis-card p {
+        .analysis-card-btn p {
             color: #606060;
             font-size: 0.9em;
             line-height: 1.4;
         }
-        .analysis-card.selected {
-            border: 2px solid #8A2BE2; /* 選択時の強調 */
-            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.3);
-            background-color: #f3e8ff; /* 選択時の背景色 */
-        }
+        /* 選択時のスタイルは、st.buttonのデフォルトスタイルを調整するか、
+           st.markdown + JavaScriptでbuttonを自作する必要があります。
+           今回はst.buttonのデフォルトを活かしています。 */
+        /* .analysis-card.selected はst.buttonでは直接適用が難しいため、
+           st.buttonのデフォルトのPrimaryスタイルなどで代替を検討 */
+
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -196,6 +198,8 @@ img_dousa = [
 img_mindfulness = "https://i.imgur.com/zheqhdv.png"
 img_pecs = "https://i.imgur.com/Hw4PIKo.jpeg"
 img_cbt = "https://i.imgur.com/vnMHFNE.png"
+# 統計学ツールのイメージ画像（仮）
+img_stats_tools = "https://i.imgur.com/y1Jg8j0.png" # グラフやデータ分析をイメージさせる画像URLに差し替えてください
 
 # 療法・分析法とマークダウンファイルの対応
 methods = {
@@ -244,16 +248,21 @@ col_idx = 0
 
 for method_name, method_info in methods.items():
     with cols[col_idx % cols_count]:
-        # カスタムCSSクラスを適用したHTMLボタンを使用
         # Streamlitのボタンはクリック時に再実行されるため、その挙動を利用
-        is_selected = " selected" if st.session_state.selected_method == method_name else ""
-        
-        # Streamlitのformを使うことで、ボタンが押されるまで再実行を遅らせ、まとめて処理できる
-        # ただし、今回はボタンクリックで即座に詳細を表示したいため、あえてformを使わない
+        # カスタムCSSクラス 'analysis-card-btn' を適用するためにHTMLを直接記述
+        button_html = f"""
+        <div class="analysis-card-btn">
+            <h4>{method_name}</h4>
+            <p>{method_info['description']}</p>
+        </div>
+        """
+        # st.buttonでクリックを検知し、見た目はHTMLでカスタマイズ
+        # ただし、st.buttonのカスタマイズは限定的。今回はuse_container_widthで対応
         if st.button(
             f"**{method_name}**\n\n_{method_info['description']}_", 
             key=f"method_btn_{method_name}",
-            use_container_width=True
+            use_container_width=True,
+            type="primary" if st.session_state.selected_method == method_name else "secondary" # 選択状態をprimaryボタンで強調
         ):
             st.session_state.selected_method = method_name
             st.rerun() # 選択されたらすぐに詳細を表示するために再実行
@@ -271,7 +280,11 @@ cols_for_condition = st.columns(3)
 col_idx_condition = 0
 for method in student_conditions[condition]:
     if method in methods:
-        if cols_for_condition[col_idx_condition % 3].button(method, key=f"btn_condition_{method}"):
+        if cols_for_condition[col_idx_condition % 3].button(
+            method, 
+            key=f"btn_condition_{method}",
+            type="primary" if st.session_state.selected_method == method else "secondary" # 選択状態をprimaryボタンで強調
+        ):
             st.session_state.selected_method = method
             st.rerun()
     col_idx_condition += 1
@@ -282,81 +295,108 @@ if st.session_state.selected_method:
     st.markdown("---")
     st.header(f"解説：{st.session_state.selected_method}")
     
-    with st.container(border=True):
-        file_path = methods.get(st.session_state.selected_method)["file"]
-        # マークダウンファイルの内容を表示
-        if file_path and os.path.exists(file_path):
-            with open(file_path, "r", encoding="utf-8") as f:
-                st.markdown(f.read(), unsafe_allow_html=True)
-        else:
-            st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
+    # 選択されたメソッド名からIDを生成（日本語対応のため文字を置換）
+    safe_method_id = st.session_state.selected_method.replace(" ", "-").replace("（", "").replace("）", "").replace("/", "-").replace("・", "-")
 
-        # 選択された療法に応じたコンテンツを表示
-        method = st.session_state.selected_method
+    # JavaScriptでスクロール処理を挿入
+    st.markdown(
+        f"""
+        <script>
+            // Streamlitの再実行後にDOMが更新されるため、少し遅延させてからスクロールを実行
+            setTimeout(function() {{
+                var selectedElement = document.getElementById('section-{safe_method_id}');
+                if (selectedElement) {{
+                    selectedElement.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                }}
+            }}, 100); // 100ミリ秒の遅延
+        </script>
+        """, 
+        unsafe_allow_html=True
+    )
 
-        if method == "CBT（認知行動療法）":
-            st.image(img_cbt, caption="認知の歪みの例", use_container_width=True)
+    # st.containerの代わりに、borderスタイルを適用したdivを直接生成し、idを付与
+    st.markdown(f'<div id="section-{safe_method_id}" class="st-emotion-cache-1r6slb0">', unsafe_allow_html=True) # ここでIDを付与
+
+    file_path = methods.get(st.session_state.selected_method)["file"]
+    # マークダウンファイルの内容を表示
+    if file_path and os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            st.markdown(f.read(), unsafe_allow_html=True)
+    else:
+        st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
+
+    # 選択された療法に応じたコンテンツを表示
+    method = st.session_state.selected_method
+
+    if method == "CBT（認知行動療法）":
+        st.image(img_cbt, caption="認知の歪みの例", use_container_width=True)
+    
+    elif method == "PECS（絵カード交換式コミュニケーション）":
+        st.image(img_pecs, caption="PECSの例", use_container_width=True)
+    
+    elif method == "マインドフルネス":
+        st.image(img_mindfulness, caption="マインドフルネスの活動例", use_container_width=True)
+
+    elif method == "動作法":
+        st.write("**【指導例画像】**")
+        img_cols = st.columns(2)
+        for i, img_url in enumerate(img_dousa):
+            img_cols[i % 2].image(img_url, caption=f"生徒{i+1}", use_container_width=True)
+
+    elif method == "ABA（応用行動分析）":
+        st.info("##### 🛠️ 簡単分析ツール")
+        st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析ツール", icon="🔗")
+
+    elif method == "FBA/PBS（機能的アセスメント/ポジティブ行動支援）":
+        st.info("##### 🛠️ 分析ツールと参考資料")
+        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析ツール", icon="🔗")
+        st.markdown("""
+        **【出典情報】**
+        - **参考文献:** Durand, V. M. (1990). Severe behavior problems: A functional communication training approach. Guilford Press.
+        - **Webサイト:** [機能的アセスメント](http://www.kei-ogasawara.com/support/assessment/)
+        """)
+    elif method == "統計学的分析方法":
+        st.info("##### 🛠️ 統計学 分析ツール一覧")
+        st.markdown("初めての方へ：**統計分析に役立つ強力なツールが揃っています！**")
         
-        elif method == "PECS（絵カード交換式コミュニケーション）":
-            st.image(img_pecs, caption="PECSの例", use_container_width=True)
+        # 統計ツールをイメージする画像を追加
+        st.image(img_stats_tools, caption="データ分析をサポートするツール群", use_container_width=True)
         
-        elif method == "マインドフルネス":
-            st.image(img_mindfulness, caption="マインドフルネスの活動例", use_container_width=True)
-
-        elif method == "動作法":
-            st.write("**【指導例画像】**")
-            img_cols = st.columns(2)
-            for i, img_url in enumerate(img_dousa):
-                img_cols[i % 2].image(img_url, caption=f"生徒{i+1}", use_container_width=True)
-
-        elif method == "ABA（応用行動分析）":
-            st.info("##### 🛠️ 簡単分析ツール")
-            st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析ツール", icon="🔗")
-
-        elif method == "FBA/PBS（機能的アセスメント/ポジティブ行動支援）":
-            st.info("##### 🛠️ 分析ツールと参考資料")
-            st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析ツール", icon="🔗")
-            st.markdown("""
-            **【出典情報】**
-            - **参考文献:** Durand, V. M. (1990). Severe behavior problems: A functional communication training approach. Guilford Press.
-            - **Webサイト:** [機能的アセスメント](http://www.kei-ogasawara.com/support/assessment/)
-            """)
-        elif method == "統計学的分析方法":
-            st.info("##### 🛠️ 統計学 分析ツール一覧")
-            st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
-            st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-            st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-            st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
-            st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
-            st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+        st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+        st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
+        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
+        st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+    
+    st.markdown('</div>', unsafe_allow_html=True) # IDを付与したdivの閉じタグ
 
 # フッターの区切り線
 st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 
-st.header("関連ツール＆リンク")
-c1, c2 = st.columns(2)
-with c1:
-    #st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) # 全体をカードで囲みたいがこれを付けてもできない。
-    st.markdown("##### 📁 教育・心理分析ツール")
-    st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
-    st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
+# 関連ツール＆リンクをst.expanderで囲む
+with st.expander("🔗 全ての関連ツール＆リンクを表示", expanded=False): # デフォルトで閉じる
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("##### 📁 教育・心理分析ツール")
+        st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
+        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
 
-with c2:
-    st.markdown("##### 📁 統計学分析ツール")
-    st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
-    st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-    st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-    st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-    st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
-    st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+    with c2:
+        st.markdown("##### 📁 統計学分析ツール")
+        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+        st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+        st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+        st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
+        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
 
 st.markdown("---")
 st.markdown("##### 🗨️ ご意見・ご感想")
 st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
 st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
-st.markdown('</div>', unsafe_allow_html=True) # カードの閉じタグ
-# --- ▲ 関連ツール＆リンク ▲ ---
+# st.markdown('</div>', unsafe_allow_html=True) # この閉じタグは不要なので削除
 
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 st.warning("""
