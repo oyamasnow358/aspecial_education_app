@@ -236,6 +236,8 @@ student_conditions = {
 # セッションステートで選択を管理
 if "selected_method" not in st.session_state:
     st.session_state.selected_method = None
+if "show_toukei_description" not in st.session_state:
+    st.session_state.show_toukei_description = False
 
 # 分析方法一覧の表示（右側）
 st.subheader("分析方法の一覧から探す")
@@ -265,6 +267,10 @@ for method_name, method_info in methods.items():
             type="primary" if st.session_state.selected_method == method_name else "secondary" # 選択状態をprimaryボタンで強調
         ):
             st.session_state.selected_method = method_name
+            if method_name == "統計学的分析方法":
+                st.session_state.show_toukei_description = True # 統計学的分析方法が選択されたら表示
+            else:
+                st.session_state.show_toukei_description = False # それ以外は非表示に
             st.rerun() # 選択されたらすぐに詳細を表示するために再実行
 
     col_idx += 1
@@ -286,6 +292,10 @@ for method in student_conditions[condition]:
             type="primary" if st.session_state.selected_method == method else "secondary" # 選択状態をprimaryボタンで強調
         ):
             st.session_state.selected_method = method
+            if method == "統計学的分析方法":
+                st.session_state.show_toukei_description = True # 統計学的分析方法が選択されたら表示
+            else:
+                st.session_state.show_toukei_description = False # それ以外は非表示に
             st.rerun()
     col_idx_condition += 1
 
@@ -317,13 +327,25 @@ if st.session_state.selected_method:
     # st.containerの代わりに、borderスタイルを適用したdivを直接生成し、idを付与
     st.markdown(f'<div id="section-{safe_method_id}" class="st-emotion-cache-1r6slb0">', unsafe_allow_html=True) # ここでIDを付与
 
-    file_path = methods.get(st.session_state.selected_method)["file"]
-    # マークダウンファイルの内容を表示
-    if file_path and os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            st.markdown(f.read(), unsafe_allow_html=True)
-    else:
-        st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
+    # 統計学的分析方法の表示制御
+    if st.session_state.selected_method == "統計学的分析方法":
+        if st.button("「統計学的分析方法」の説明を表示/非表示", key="toggle_toukei_description"):
+            st.session_state.show_toukei_description = not st.session_state.show_toukei_description
+            
+        if st.session_state.show_toukei_description:
+            file_path = methods.get(st.session_state.selected_method)["file"]
+            if file_path and os.path.exists(file_path):
+                with open(file_path, "r", encoding="utf-8") as f:
+                    st.markdown(f.read(), unsafe_allow_html=True)
+            else:
+                st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
+    else: # 統計学的分析方法以外の場合は常に表示
+        file_path = methods.get(st.session_state.selected_method)["file"]
+        if file_path and os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                st.markdown(f.read(), unsafe_allow_html=True)
+        else:
+            st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
 
     # 選択された療法に応じたコンテンツを表示
     method = st.session_state.selected_method
@@ -362,7 +384,12 @@ if st.session_state.selected_method:
         # 統計ツールをイメージする画像を追加
         st.image(img_stats_tools, caption="データ分析をサポートするツール群", use_container_width=True)
         
-        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+        # アンケート分析ツールを強調
+        st.markdown("#### ✨ 特にオススメ！アンケート分析ツール ✨")
+        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
+        st.markdown("多くの方に有効なアンケートデータの総合分析ツールです！ぜひご活用ください。")
+
+        st.markdown("#### その他の統計分析ツール")
         st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
         st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
         st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
