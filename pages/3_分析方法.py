@@ -332,3 +332,34 @@ if st.session_state.selected_method:
 
 # フッターの区切り線
 st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
+
+st.header("関連ツール＆リンク")
+c1, c2 = st.columns(2)
+with c1:
+    #st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) # 全体をカードで囲みたいがこれを付けてもできない。
+    st.markdown("##### 📁 教育・心理分析ツール")
+    st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
+    st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
+
+with c2:
+    st.markdown("##### 📁 統計学分析ツール")
+    st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+    st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+    st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+    st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
+    st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
+    st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+
+st.markdown("---")
+st.markdown("##### 🗨️ ご意見・ご感想")
+st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
+st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
+st.markdown('</div>', unsafe_allow_html=True) # カードの閉じタグ
+# --- ▲ 関連ツール＆リンク ▲ ---
+
+st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
+st.warning("""
+**【利用上の注意】**
+それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
+""")
