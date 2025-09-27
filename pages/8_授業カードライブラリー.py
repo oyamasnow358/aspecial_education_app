@@ -402,8 +402,7 @@ try:
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
         lesson_data_df['unit_order'] = 9999
-    if 'unit_lesson_title' not in lesson_data_df.columns:
-        lesson_data_df['unit_lesson_title'] = lesson_data_df['title'] # デフォルトでtitleを使用
+    
     # ... (ict_use, subject, group_type の既存処理は省略) ...
 
     # unit_name のデフォルト値設定ロジックは CSV コンバーターに移管されたため、重複する以下の行は削除または調整
