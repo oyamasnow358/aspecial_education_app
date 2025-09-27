@@ -404,15 +404,23 @@ try:
             'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '' # ここは空文字列で読み込む
         }
     )
+
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
         lesson_data_df['unit_order'] = 9999
 
     # === ここが重要な修正点です ===
-    if 'unit_lesson_title' not in lesson_data_df.columns or lesson_data_df['unit_lesson_title'].isnull().all():
-        # 'unit_lesson_title' が存在しない、または全てNaN/空の場合、'unit_name' から値を設定
+    # 'unit_lesson_title' が存在しない、または全てNaN/空の場合、'unit_name' から値を設定
+    if 'unit_lesson_title' not in lesson_data_df.columns:
         lesson_data_df['unit_lesson_title'] = lesson_data_df['unit_name'].fillna('単元内授業')
+    else:
+        # 既存だが空欄のunit_lesson_titleをunit_nameで補完
+        lesson_data_df['unit_lesson_title'] = lesson_data_df.apply(
+            lambda row: row['unit_name'] if pd.isna(row['unit_lesson_title']) or str(row['unit_lesson_title']).strip() == '' else row['unit_lesson_title'],
+            axis=1
+        )
     # ============================
+
     # ICT活用有無のTRUE/FALSEをbool型に変換
     if 'ict_use' in lesson_data_df.columns:
         lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
@@ -422,13 +430,12 @@ try:
     # 'subject', 'unit_name', 'group_type' カラムが存在しない場合、デフォルト値で作成
     if 'subject' not in lesson_data_df.columns:
         lesson_data_df['subject'] = 'その他'
-    if 'unit_name' not in lesson_data_df.columns: # ここを修正
-        lesson_data_df['unit_name'] = '単元なし' # カラムがない場合はデフォルト値
+    if 'unit_name' not in lesson_data_df.columns:
+        lesson_data_df['unit_name'] = '単元なし'
     # !!! 既存のデータが空文字列の場合に '単元なし' に変換する処理を追加 !!!
     lesson_data_df['unit_name'] = lesson_data_df['unit_name'].apply(lambda x: '単元なし' if str(x).strip() == '' or str(x).lower() == 'nan' else str(x).strip())
 
-
-    if 'group_type' not in lesson_data_df.columns: # 新規追加
+    if 'group_type' not in lesson_data_df.columns:
         lesson_data_df['group_type'] = '全体' # 例: 全体, 小グループ, 個別 など
 
     lesson_data_raw = lesson_data_df.to_dict(orient='records')
@@ -475,13 +482,13 @@ def toggle_all_flow_display():
 
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
-    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type", # 'title' を削除し、'unit_name' をここに移動
+    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type", 
     "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
     "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use", "subject",
-    "group_type", "unit_order", "unit_lesson_title" # unit_name は上に移動したためここから削除
+    "group_type", "unit_order", "unit_lesson_title" 
 ]
 
-# Excelテンプレートダウンロード関数 (変更箇所のみ)
+# Excelテンプレートダウンロード関数
 def get_excel_template():
     template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
     output = BytesIO()
@@ -490,7 +497,7 @@ def get_excel_template():
         workbook  = writer.book
         worksheet = writer.sheets['授業カードテンプレート']
         # ヘッダーにコメントを追加（入力ガイド）
-        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') # unit_name のコメントを修正 (変更なし)
+        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') 
         worksheet.write_comment('C1', '例: 生活スキルを楽しく学ぶ実践的な買い物学習！')
         worksheet.write_comment('D1', '例: お店での買い物の手順を理解し、お金の計算ができるようになる。')
         worksheet.write_comment('E1', '例: 小学部3年')
@@ -510,11 +517,11 @@ def get_excel_template():
         worksheet.write_comment('S1', 'TRUEまたはFALSE')
         worksheet.write_comment('T1', '例: 生活単元学習,国語,算数など')
         worksheet.write_comment('U1', '例: 全体,個別,小グループ  (学習集団の単位)')
-        worksheet.write_comment('V1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') # コメントを調整
+        worksheet.write_comment('V1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') 
     processed_data = output.getvalue()
     return processed_data
 
-# CSVテンプレートダウンロード関数内の修正
+# CSVテンプレートダウンロード関数
 def get_csv_template():
     template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
     output = BytesIO()
@@ -590,7 +597,7 @@ with st.sidebar:
                 st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
                 st.stop()
 
-            required_cols = ["unit_name", "goal"] # unit_name
+            required_cols = ["unit_name", "goal"] 
             if not all(col in new_data_df.columns for col in required_cols):
                 st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
                 # どのカラムが不足しているか具体的に示す
@@ -670,7 +677,7 @@ with st.sidebar:
                     
                     lesson_dict = {
                         'id': row_id,
-                        'unit_name': row.get('unit_name', '単元なし'), # title から unit_name に変更
+                        'unit_name': row.get('unit_name', '単元なし'),
                         'catch_copy': row.get('catch_copy', ''),
                         'goal': row.get('goal', ''),
                         'target_grade': row.get('target_grade', '不明'),
@@ -691,7 +698,8 @@ with st.sidebar:
                         'subject': row.get('subject', 'その他'),
                         'group_type': row.get('group_type', '全体'),
                         'unit_order': row.get('unit_order', 9999),
-                        'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業')) # デフォルトでunit_nameを使用
+                        # ここを修正：'unit_lesson_title' がない場合、'unit_name' をフォールバックとして使用
+                        'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業'))
                     }
                     new_entries.append(lesson_dict)
                     existing_ids.add(row_id) # 新しく生成されたIDも既存IDに加える
@@ -1042,7 +1050,6 @@ else:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # --- この単元の他の授業カード --- (新規追加)
         # --- 単元の授業の流れ (新規追加または既存セクションを拡張) ---
         if selected_lesson.get('unit_name') and selected_lesson.get('unit_name') != '単元なし':
             unit_name_to_search = selected_lesson['unit_name']
@@ -1055,7 +1062,6 @@ else:
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
 
             if sorted_lessons_in_unit:
-        
                 st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
                 
@@ -1067,12 +1073,14 @@ else:
                     if is_current_lesson:
                         st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
                     else:
+                        # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
+                        # HTMLのAタグとStreamlitのボタンを組み合わせることで、表示を自然にしつつ機能を持たせる
+                        # 実際の遷移を処理する非表示のボタン
                         st.markdown(f"""
                             <li>
-                               <a href="#" onclick="document.getElementById('unit_flow_link_{lesson_in_unit['id']}').click(); return false;" style="text-decoration: none; color: inherit;">
+                                <a href="javascript:void(0);" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_hidden_btn_{lesson_in_unit['id']}\"]').click();" style="text-decoration: none; color: inherit;">
                                     {display_title}
                                 </a>
-                                <button id="unit_flow_link_{lesson_in_unit['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_unit_flow_link_hidden_btn_{lesson_in_unit['id']}\"]').click()"></button>
                             </li>
                         """, unsafe_allow_html=True)
                         st.button(
@@ -1082,9 +1090,13 @@ else:
                             args=(lesson_in_unit['id'],),
                             type="secondary",
                             help="この授業の詳細を表示します",
+                            # ここでボタンを非表示にするが、CSSで完全に消すわけではない
+                            # display:none; をHTMLのbuttonタグ自体に適用するCSSは困難なため、
+                            # Streamlitのボタンが生成するHTML要素のdata-testidを活用
                         )
                 
                 st.markdown("</ol>", unsafe_allow_html=True)
+                # このセクションの終わり
                 st.markdown("</div>", unsafe_allow_html=True)
 
                 for lesson_in_unit in sorted_lessons_in_unit:
@@ -1227,13 +1239,17 @@ st.markdown("""
         transform: translateY(-2px);
     }
     /* Secondary buttons (e.g., related lessons) */
-    button[aria-label="クリックで詳細を表示"] {
+    /* unit_flow_link_hidden_btn_ の data-testid をターゲットに */
+    button[data-testid^="stButton_unit_flow_link_hidden_btn_"] {
         background: none !important;
         border: none !important;
         padding: 0 !important;
         margin: 0 !important;
         box-shadow: none !important;
         display: none !important; /* 見えないように */
+        height: 0 !important; /* 高さを0にする */
+        width: 0 !important; /* 幅を0にする */
+        overflow: hidden !important; /* 内容を隠す */
     }
 
     /* Sidebar specific styles */
