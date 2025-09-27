@@ -819,31 +819,39 @@ if st.session_state.current_lesson_id is None:
 
   
     filtered_lessons = []
+    # search_lower をループの前に初期化するか、
+    # 検索クエリがない場合は、検索ロジックを完全にスキップするように変更します。
+    # ここでは、よりシンプルにするために、検索クエリがある場合のみ処理するようにします。
+
     for lesson in st.session_state.lesson_data:
         match_search = True
         match_tags = True
         match_subject = True
         match_unit = True # 単元フィルターを追加
 
-        # Keyword search
-        if st.session_state.search_query:
+        # Keyword search のロジックを修正
+        if st.session_state.search_query: # 検索クエリがある場合のみ検索を実行
             search_lower = st.session_state.search_query.lower()
-        if not (
-        (search_lower in str(lesson.get('unit_name', '')).lower()) or # str() でラップして確実に文字列として扱う
-        (search_lower in str(lesson.get('subject', '')).lower()) or
-        (search_lower in str(lesson.get('catch_copy', '')).lower()) or
-        (search_lower in str(lesson.get('goal', '')).lower()) or
-        (search_lower in str(lesson.get('target_grade', '')).lower()) or
-        (search_lower in str(lesson.get('disability_type', '')).lower()) or
-        (search_lower in str(lesson.get('materials', '')).lower()) or 
-        any(search_lower in str(step).lower() for step in lesson.get('introduction_flow', [])) or # リスト要素もstr()でラップ
-        any(search_lower in str(step).lower() for step in lesson.get('activity_flow', [])) or     
-        any(search_lower in str(step).lower() for step in lesson.get('reflection_flow', [])) or   
-        any(search_lower in str(point).lower() for point in lesson.get('points', [])) or 
-        any(search_lower in str(t).lower() for t in lesson.get('hashtags', [])) or
-        (search_lower in str(lesson.get('unit_lesson_title', '')).lower()) # str() でラップして確実に文字列として扱う
-        ):
-         match_search = False
+            if not (
+                (search_lower in str(lesson.get('unit_name', '')).lower()) or
+                (search_lower in str(lesson.get('subject', '')).lower()) or
+                (search_lower in str(lesson.get('catch_copy', '')).lower()) or
+                (search_lower in str(lesson.get('goal', '')).lower()) or
+                (search_lower in str(lesson.get('target_grade', '')).lower()) or
+                (search_lower in str(lesson.get('disability_type', '')).lower()) or
+                (search_lower in str(lesson.get('duration', '')).lower()) or # duration も追加しました
+                (search_lower in str(lesson.get('materials', '')).lower()) or 
+                any(search_lower in str(step).lower() for step in lesson.get('introduction_flow', [])) or
+                any(search_lower in str(step).lower() for step in lesson.get('activity_flow', [])) or     
+                any(search_lower in str(step).lower() for step in lesson.get('reflection_flow', [])) or   
+                any(search_lower in str(point).lower() for point in lesson.get('points', [])) or 
+                any(search_lower in str(t).lower() for t in lesson.get('hashtags', [])) or
+                (search_lower in str(lesson.get('unit_lesson_title', '')).lower())
+            ):
+                match_search = False
+        # else:
+        #     st.session_state.search_query が空の場合、match_search はデフォルトの True のまま
+        #     なので、ここでは何もする必要がありません。
 
         # Hashtag filter
         if st.session_state.selected_hashtags:
@@ -860,7 +868,7 @@ if st.session_state.current_lesson_id is None:
             if lesson.get('unit_name') != st.session_state.selected_unit:
                 match_unit = False
 
-        if match_search and match_tags and match_subject and match_unit: # フィルター条件に追加
+        if match_search and match_tags and match_subject and match_unit:
             filtered_lessons.append(lesson)
     
             
