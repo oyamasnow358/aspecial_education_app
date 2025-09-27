@@ -393,35 +393,26 @@ try:
     lesson_data_df = pd.read_csv(
         "lesson_cards.csv",
         converters={
-            # ... (既存の項目は省略) ...
-            'unit_name': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '単元なし',
-             'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999, # 数値に変換、ない場合は大きい値
-             'unit_lesson_title': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '' # 新規追加
+            'introduction_flow': lambda x: x.split(';') if pd.notna(x) else [],
+            'activity_flow': lambda x: x.split(';') if pd.notna(x) else [],
+            'reflection_flow': lambda x: x.split(';') if pd.notna(x) else [],
+            'points': lambda x: x.split(';') if pd.notna(x) else [],
+            'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
+            'material_photos': lambda x: x.split(';') if pd.notna(x) else [],
+            'unit_name': lambda x: str(x) if pd.notna(x) else '',
+            'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999,
+            'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '' # ここは空文字列で読み込む
         }
     )
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
         lesson_data_df['unit_order'] = 9999
-        # 修正前:
-    # if 'unit_lesson_title' not in lesson_data_df.columns:
-    #     lesson_data_df['unit_lesson_title'] = lesson_data_df['title'] # デフォルトでtitleを使用
 
-    # 修正後:
-    if 'unit_lesson_title' not in lesson_data_df.columns:
-        # 'title' カラムは存在しない可能性が高いため、代わりに 'unit_name' を参照するか、
-        # あるいは汎用的なデフォルト値（例: '単元内授業'）を設定します。
-        # 前回の指示の意図から、'unit_name' が適切と考えられます。
-        lesson_data_df['unit_lesson_title'] = lesson_data_df.get('unit_name', pd.Series(['単元内授業'] * len(lesson_data_df)))
-    # ... (ict_use, subject, group_type の既存処理は省略) ...
-
-    # unit_name のデフォルト値設定ロジックは CSV コンバーターに移管されたため、重複する以下の行は削除または調整
-    # if 'unit_name' not in lesson_data_df.columns:
-    #     lesson_data_df['unit_name'] = '単元なし'
-    # lesson_data_df['unit_name'] = lesson_data_df['unit_name'].apply(lambda x: '単元なし' if str(x).strip() == '' or str(x).lower() == 'nan' else str(x).strip())
-    # ⬆️これらの行は、コンバータでの処理が優先されるため、削除するか、コンバータ処理がなかった場合の最終的なフォールバックとしてのみ残すべきです。
-    # 現在の差分ではこれらの行が削除されているので問題ありません。
-
-# ... (エラー処理は省略) ...
+    # === ここが重要な修正点です ===
+    if 'unit_lesson_title' not in lesson_data_df.columns or lesson_data_df['unit_lesson_title'].isnull().all():
+        # 'unit_lesson_title' が存在しない、または全てNaN/空の場合、'unit_name' から値を設定
+        lesson_data_df['unit_lesson_title'] = lesson_data_df['unit_name'].fillna('単元内授業')
+    # ============================
     # ICT活用有無のTRUE/FALSEをbool型に変換
     if 'ict_use' in lesson_data_df.columns:
         lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
@@ -490,7 +481,7 @@ LESSON_CARD_COLUMNS = [
     "group_type", "unit_order", "unit_lesson_title" # unit_name は上に移動したためここから削除
 ]
 
-# Excelテンプレートダウンロード関数
+# Excelテンプレートダウンロード関数 (変更箇所のみ)
 def get_excel_template():
     template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
     output = BytesIO()
@@ -499,7 +490,7 @@ def get_excel_template():
         workbook  = writer.book
         worksheet = writer.sheets['授業カードテンプレート']
         # ヘッダーにコメントを追加（入力ガイド）
-        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') # unit_name のコメントを修正
+        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') # unit_name のコメントを修正 (変更なし)
         worksheet.write_comment('C1', '例: 生活スキルを楽しく学ぶ実践的な買い物学習！')
         worksheet.write_comment('D1', '例: お店での買い物の手順を理解し、お金の計算ができるようになる。')
         worksheet.write_comment('E1', '例: 小学部3年')
@@ -518,8 +509,8 @@ def get_excel_template():
         worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('S1', 'TRUEまたはFALSE')
         worksheet.write_comment('T1', '例: 生活単元学習,国語,算数など')
-        worksheet.write_comment('U1', '例: 全体,個別,小グループ  (学習集団の単位)') # unit_name コメントは上に移動
-        worksheet.write_comment('V1', '例: 「〜しよう」など、単元内での各授業のタイトル (タイトルが不要な場合は空欄でOK)') # unit_lesson_title のコメントを追加
+        worksheet.write_comment('U1', '例: 全体,個別,小グループ  (学習集団の単位)')
+        worksheet.write_comment('V1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') # コメントを調整
     processed_data = output.getvalue()
     return processed_data
 
@@ -599,7 +590,7 @@ with st.sidebar:
                 st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
                 st.stop()
 
-            required_cols = ["title", "goal"]
+            required_cols = ["unit_name", "goal"] # unit_name
             if not all(col in new_data_df.columns for col in required_cols):
                 st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
                 # どのカラムが不足しているか具体的に示す
@@ -618,16 +609,18 @@ with st.sidebar:
                         return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
                     return [default_value] * len(df)
 
-                # 新規追加：unit_order, unit_lesson_title の処理
+                # 新規追加：unit_order, unit_lesson_title の処理 (変更箇所のみ)
                 if 'unit_order' in new_data_df.columns:
                     new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
                 else:
                     new_data_df['unit_order'] = 9999 # カラムがない場合はデフォルト値
              
                 if 'unit_lesson_title' in new_data_df.columns:
+                    # NaNや空文字列を適切に処理
                     new_data_df['unit_lesson_title'] = new_data_df['unit_lesson_title'].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '')
                 else:
-                   new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内の授業') # デフォルトでunit_nameを使用
+                    # 'unit_lesson_title' カラムがない場合、'unit_name' から設定
+                    new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内授業') # デフォルトでunit_nameを使用
                 # ... 既存の lesson_dict の構築部分で新しいカラムを追加 ...
                 lesson_dict = {
                     # ... 既存の項目 ...
@@ -827,21 +820,22 @@ if st.session_state.current_lesson_id is None:
         # Keyword search
         if st.session_state.search_query:
             search_lower = st.session_state.search_query.lower()
-        if not (search_lower in lesson['unit_name'].lower() or # title の代わりに unit_name を検索対象に
-           search_lower in lesson['subject'].lower() or
-           search_lower in lesson['catch_copy'].lower() or
-           search_lower in lesson['goal'].lower() or
-           search_lower in lesson['target_grade'].lower() or
-           search_lower in lesson['disability_type'].lower() or
-           (lesson['materials'] and search_lower in lesson['materials'].lower()) or 
-           any(search_lower in step.lower() for step in lesson['introduction_flow']) or 
-           any(search_lower in step.lower() for step in lesson['activity_flow']) or     
-           any(search_lower in step.lower() for step in lesson['reflection_flow']) or   
-           any(search_lower in point.lower() for point in lesson['points']) or 
-           any(search_lower in t.lower() for t in lesson['hashtags']) or
-           (lesson.get('unit_lesson_title') and search_lower in lesson['unit_lesson_title'].lower()) # 単元内授業タイトルも検索対象に追加
-           ):
-         match_search = False
+        if not (
+            (lesson.get('unit_name') and search_lower in lesson['unit_name'].lower()) or # Noneチェックを追加
+            (lesson.get('subject') and search_lower in lesson['subject'].lower()) or
+            (lesson.get('catch_copy') and search_lower in lesson['catch_copy'].lower()) or
+            (lesson.get('goal') and search_lower in lesson['goal'].lower()) or
+            (lesson.get('target_grade') and search_lower in lesson['target_grade'].lower()) or
+            (lesson.get('disability_type') and search_lower in lesson['disability_type'].lower()) or
+            (lesson.get('materials') and search_lower in lesson['materials'].lower()) or 
+            any(search_lower in step.lower() for step in lesson.get('introduction_flow', [])) or # Noneチェックを強化
+            any(search_lower in step.lower() for step in lesson.get('activity_flow', [])) or     
+            any(search_lower in step.lower() for step in lesson.get('reflection_flow', [])) or   
+            any(search_lower in point.lower() for point in lesson.get('points', [])) or 
+            any(search_lower in t.lower() for t in lesson.get('hashtags', [])) or
+            (lesson.get('unit_lesson_title') and search_lower in lesson['unit_lesson_title'].lower()) # 単元内授業タイトルも検索対象に追加
+            ):
+           match_search = False
 
         # Hashtag filter
         if st.session_state.selected_hashtags:
@@ -1059,12 +1053,12 @@ else:
 
             # 単元内での順番 (unit_order) でソート
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
-    
+
             if sorted_lessons_in_unit:
-                
+        
                 st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
-        
+                
                 for lesson_in_unit in sorted_lessons_in_unit:
                     # unit_lesson_title があればそれを表示、なければ unit_name を表示
                     display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name'] 
@@ -1073,10 +1067,6 @@ else:
                     if is_current_lesson:
                         st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
                     else:
-                        # リンクをボタンとして表示し、クリックで詳細ページに遷移
-                        # ここで `st.button` を直接使うとレイアウトが崩れる可能性があるため、
-                        # HTMLの<a>タグと隠しボタンの組み合わせはそのまま維持しつつ、
-                        # `st.button` のラベルは適切に設定する。
                         st.markdown(f"""
                             <li>
                                <a href="#" onclick="document.getElementById('unit_flow_link_{lesson_in_unit['id']}').click(); return false;" style="text-decoration: none; color: inherit;">
@@ -1085,8 +1075,6 @@ else:
                                 <button id="unit_flow_link_{lesson_in_unit['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_unit_flow_link_hidden_btn_{lesson_in_unit['id']}\"]').click()"></button>
                             </li>
                         """, unsafe_allow_html=True)
-                        # ユーザーからは見えないが、クリックイベントを処理するための非表示のStreamlitボタン
-                        # keyはユニークである必要があるので、f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}" を使用
                         st.button(
                             "詳細へ", # このラベルは通常表示されないが、HTML構造上必要
                             key=f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}",
@@ -1094,12 +1082,8 @@ else:
                             args=(lesson_in_unit['id'],),
                             type="secondary",
                             help="この授業の詳細を表示します",
-                            # CSSで完全に非表示にする
-                            # ここでstyle属性を直接追加するとStreamlitの描画と競合する可能性があるので、
-                            # CSSで data-testid を指定して非表示にするのが望ましい。
-                            # 例: [data-testid^="stButton_unit_flow_link_hidden_btn_"] { display: none !important; }
                         )
-        
+                
                 st.markdown("</ol>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
 
