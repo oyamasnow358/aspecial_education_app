@@ -821,21 +821,21 @@ if st.session_state.current_lesson_id is None:
         if st.session_state.search_query:
             search_lower = st.session_state.search_query.lower()
         if not (
-            (lesson.get('unit_name') and search_lower in lesson['unit_name'].lower()) or # Noneチェックを追加
-            (lesson.get('subject') and search_lower in lesson['subject'].lower()) or
-            (lesson.get('catch_copy') and search_lower in lesson['catch_copy'].lower()) or
-            (lesson.get('goal') and search_lower in lesson['goal'].lower()) or
-            (lesson.get('target_grade') and search_lower in lesson['target_grade'].lower()) or
-            (lesson.get('disability_type') and search_lower in lesson['disability_type'].lower()) or
-            (lesson.get('materials') and search_lower in lesson['materials'].lower()) or 
-            any(search_lower in step.lower() for step in lesson.get('introduction_flow', [])) or # Noneチェックを強化
-            any(search_lower in step.lower() for step in lesson.get('activity_flow', [])) or     
-            any(search_lower in step.lower() for step in lesson.get('reflection_flow', [])) or   
-            any(search_lower in point.lower() for point in lesson.get('points', [])) or 
-            any(search_lower in t.lower() for t in lesson.get('hashtags', [])) or
-            (lesson.get('unit_lesson_title') and search_lower in lesson['unit_lesson_title'].lower()) # 単元内授業タイトルも検索対象に追加
-            ):
-           match_search = False
+            search_lower in (lesson.get('unit_name') or "").lower()
+            or search_lower in (lesson.get('subject') or "").lower()
+            or search_lower in (lesson.get('catch_copy') or "").lower()
+            or search_lower in (lesson.get('goal') or "").lower()
+            or search_lower in (lesson.get('target_grade') or "").lower()
+            or search_lower in (lesson.get('disability_type') or "").lower()
+            or search_lower in (lesson.get('materials') or "").lower()
+            or any(search_lower in (step or "").lower() for step in lesson.get('introduction_flow') or [])
+            or any(search_lower in (step or "").lower() for step in lesson.get('activity_flow') or [])
+            or any(search_lower in (step or "").lower() for step in lesson.get('reflection_flow') or [])
+            or any(search_lower in (point or "").lower() for point in lesson.get('points') or [])
+            or any(search_lower in (t or "").lower() for t in lesson.get('hashtags') or [])
+            or search_lower in (lesson.get('unit_lesson_title') or "").lower()
+        ):
+            match_search = False
 
         # Hashtag filter
         if st.session_state.selected_hashtags:
