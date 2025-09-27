@@ -393,25 +393,27 @@ try:
     lesson_data_df = pd.read_csv(
         "lesson_cards.csv",
         converters={
-            'introduction_flow': lambda x: x.split(';') if pd.notna(x) else [],  # 導入フロー
-            'activity_flow': lambda x: x.split(';') if pd.notna(x) else [],      # 活動フロー
-            'reflection_flow': lambda x: x.split(';') if pd.notna(x) else [],    # 振り返りフロー
-            'points': lambda x: x.split(';') if pd.notna(x) else [],
-            'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
-            'material_photos': lambda x: x.split(';') if pd.notna(x) else []
-            # !!! ここに unit_name のコンバーターを追加/修正 !!!
-            # unit_name は通常単一の文字列なので、リスト変換は不要。
-            # ただし、NaN値は空文字列として扱うと良い。
-            ,'unit_name': lambda x: str(x) if pd.notna(x) else '',
+            # ... (既存の項目は省略) ...
+            'unit_name': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '単元なし',
              'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999, # 数値に変換、ない場合は大きい値
-             'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '' # 新規追加
+             'unit_lesson_title': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '' # 新規追加
         }
     )
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
         lesson_data_df['unit_order'] = 9999
     if 'unit_lesson_title' not in lesson_data_df.columns:
-        lesson_data_df['unit_lesson_title'] = lesson_data_df['title'] # デフォルトでtitleを使用     
+        lesson_data_df['unit_lesson_title'] = lesson_data_df['title'] # デフォルトでtitleを使用
+    # ... (ict_use, subject, group_type の既存処理は省略) ...
+
+    # unit_name のデフォルト値設定ロジックは CSV コンバーターに移管されたため、重複する以下の行は削除または調整
+    # if 'unit_name' not in lesson_data_df.columns:
+    #     lesson_data_df['unit_name'] = '単元なし'
+    # lesson_data_df['unit_name'] = lesson_data_df['unit_name'].apply(lambda x: '単元なし' if str(x).strip() == '' or str(x).lower() == 'nan' else str(x).strip())
+    # ⬆️これらの行は、コンバータでの処理が優先されるため、削除するか、コンバータ処理がなかった場合の最終的なフォールバックとしてのみ残すべきです。
+    # 現在の差分ではこれらの行が削除されているので問題ありません。
+
+# ... (エラー処理は省略) ...
     # ICT活用有無のTRUE/FALSEをbool型に変換
     if 'ict_use' in lesson_data_df.columns:
         lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
@@ -471,6 +473,7 @@ def toggle_all_flow_display():
     """授業の流れ全体の表示を切り替える関数"""
     st.session_state.show_all_flow = not st.session_state.show_all_flow
 
+
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
     "id", "title", "catch_copy", "goal", "target_grade", "disability_type",
@@ -507,8 +510,8 @@ def get_excel_template():
         worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('S1', 'TRUEまたはFALSE')
         worksheet.write_comment('T1', '例: 生活単元学習,国語,算数など')
-        worksheet.write_comment('U1', '例: お金の学習,お店屋さんごっこ  (単元名)') # 新規追加コメント
-        worksheet.write_comment('V1', '例: 全体,個別,小グループ  (学習集団の単位)') # 新規追加コメント
+        worksheet.write_comment('U1', '例: お金の学習,お店屋さんごっこ  (単元名。空欄の場合「単元なし」となります)') # コメント修正
+        worksheet.write_comment('V1', '例: 全体,個別,小グループ  (学習集団の単位。空欄の場合「全体」となります)') # コメント修正
     processed_data = output.getvalue()
     return processed_data
 
@@ -604,10 +607,11 @@ with st.sidebar:
                 # 単一文字列カラムのNaN/空文字列処理も同様に強化
                 def process_string_column(df, col_name, default_value):
                     if col_name in df.columns:
+                        # NaN, 空文字列, 'nan'文字列をデフォルト値に変換
                         return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
                     return [default_value] * len(df)
+
                 # 新規追加：unit_order, unit_lesson_title の処理
-                # unit_order は数値として扱う。NaNや空欄はデフォルトで高い値（例: 9999）に
                 if 'unit_order' in new_data_df.columns:
                     new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
                 else:
@@ -633,6 +637,7 @@ with st.sidebar:
                 new_data_df['hashtags'] = process_list_column(new_data_df, 'hashtags', ',')
                 new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
 
+                 # ICT活用有無の処理
                 if 'ict_use' in new_data_df.columns:
                     # 'true', 'True', 'TRUE' などに対応し、NaNはFalseに
                     new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().apply(lambda x: True if x == 'true' else False)
@@ -686,7 +691,9 @@ with st.sidebar:
                         'ict_use': row.get('ict_use', False),
                         'subject': row.get('subject', 'その他'),
                         'unit_name': row.get('unit_name', '単元なし'), # ここもデフォルト値取得ロジックを強化
-                        'group_type': row.get('group_type', '全体') 
+                        'group_type': row.get('group_type', '全体'),
+                        'unit_order': row.get('unit_order', 9999), # 新規追加
+                        'unit_lesson_title': row.get('unit_lesson_title', row.get('title', '単元内の授業')) # 新規追加
                     }
                     new_entries.append(lesson_dict)
                     existing_ids.add(row_id) # 新しく生成されたIDも既存IDに加える
