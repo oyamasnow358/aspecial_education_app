@@ -476,10 +476,10 @@ def toggle_all_flow_display():
 
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
-    "id", "title", "catch_copy", "goal", "target_grade", "disability_type",
+    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type", # 'title' を削除し、'unit_name' をここに移動
     "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
     "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use", "subject",
-    "unit_name", "group_type", "unit_order", "unit_lesson_title" # 新規追加
+    "group_type", "unit_order", "unit_lesson_title" # unit_name は上に移動したためここから削除
 ]
 
 # Excelテンプレートダウンロード関数
@@ -491,7 +491,7 @@ def get_excel_template():
         workbook  = writer.book
         worksheet = writer.sheets['授業カードテンプレート']
         # ヘッダーにコメントを追加（入力ガイド）
-        worksheet.write_comment('B1', '例: 「買い物名人になろう！」')
+        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') # unit_name のコメントを修正
         worksheet.write_comment('C1', '例: 生活スキルを楽しく学ぶ実践的な買い物学習！')
         worksheet.write_comment('D1', '例: お店での買い物の手順を理解し、お金の計算ができるようになる。')
         worksheet.write_comment('E1', '例: 小学部3年')
@@ -510,19 +510,18 @@ def get_excel_template():
         worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('S1', 'TRUEまたはFALSE')
         worksheet.write_comment('T1', '例: 生活単元学習,国語,算数など')
-        worksheet.write_comment('U1', '例: お金の学習,お店屋さんごっこ  (単元名。空欄の場合「単元なし」となります)') # コメント修正
-        worksheet.write_comment('V1', '例: 全体,個別,小グループ  (学習集団の単位。空欄の場合「全体」となります)') # コメント修正
+        worksheet.write_comment('U1', '例: 全体,個別,小グループ  (学習集団の単位)') # unit_name コメントは上に移動
+        worksheet.write_comment('V1', '例: 「〜しよう」など、単元内での各授業のタイトル (タイトルが不要な場合は空欄でOK)') # unit_lesson_title のコメントを追加
     processed_data = output.getvalue()
     return processed_data
 
-# CSVテンプレートダウンロード関数
+# CSVテンプレートダウンロード関数内の修正
 def get_csv_template():
     template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
     output = BytesIO()
     template_df.to_csv(output, index=False, encoding='utf-8-sig')
     processed_data = output.getvalue()
     return processed_data
-
 # --- Sidebar for Data Entry and Filters ---
 
 with st.sidebar:
@@ -620,8 +619,7 @@ with st.sidebar:
                 if 'unit_lesson_title' in new_data_df.columns:
                     new_data_df['unit_lesson_title'] = new_data_df['unit_lesson_title'].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '')
                 else:
-                   new_data_df['unit_lesson_title'] = new_data_df.get('title', '単元内の授業') # カラムがない場合はデフォルトでtitleを使用
-               
+                   new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内の授業') # デフォルトでunit_nameを使用
                 # ... 既存の lesson_dict の構築部分で新しいカラムを追加 ...
                 lesson_dict = {
                     # ... 既存の項目 ...
@@ -671,7 +669,7 @@ with st.sidebar:
                     
                     lesson_dict = {
                         'id': row_id,
-                        'title': row.get('title', '無題の授業カード'),
+                        'unit_name': row.get('unit_name', '単元なし'), # title から unit_name に変更
                         'catch_copy': row.get('catch_copy', ''),
                         'goal': row.get('goal', ''),
                         'target_grade': row.get('target_grade', '不明'),
@@ -690,10 +688,9 @@ with st.sidebar:
                         'detail_pdf_url': row.get('detail_pdf_url', ''),
                         'ict_use': row.get('ict_use', False),
                         'subject': row.get('subject', 'その他'),
-                        'unit_name': row.get('unit_name', '単元なし'), # ここもデフォルト値取得ロジックを強化
                         'group_type': row.get('group_type', '全体'),
-                        'unit_order': row.get('unit_order', 9999), # 新規追加
-                        'unit_lesson_title': row.get('unit_lesson_title', row.get('title', '単元内の授業')) # 新規追加
+                        'unit_order': row.get('unit_order', 9999),
+                        'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業')) # デフォルトでunit_nameを使用
                     }
                     new_entries.append(lesson_dict)
                     existing_ids.add(row_id) # 新しく生成されたIDも既存IDに加える
@@ -822,21 +819,21 @@ if st.session_state.current_lesson_id is None:
         # Keyword search
         if st.session_state.search_query:
             search_lower = st.session_state.search_query.lower()
-            if not (search_lower in lesson['title'].lower() or
-                    search_lower in lesson['subject'].lower() or
-                    search_lower in lesson['catch_copy'].lower() or
-                    search_lower in lesson['goal'].lower() or
-                    search_lower in lesson['target_grade'].lower() or
-                    search_lower in lesson['disability_type'].lower() or
-                    (lesson['materials'] and search_lower in lesson['materials'].lower()) or 
-                    any(search_lower in step.lower() for step in lesson['introduction_flow']) or 
-                    any(search_lower in step.lower() for step in lesson['activity_flow']) or     
-                    any(search_lower in step.lower() for step in lesson['reflection_flow']) or   
-                    any(search_lower in point.lower() for point in lesson['points']) or 
-                    any(search_lower in t.lower() for t in lesson['hashtags']) or
-                    (lesson.get('unit_name') and search_lower in lesson['unit_name'].lower()) # 単元名も検索対象
-                    ):
-                match_search = False
+        if not (search_lower in lesson['unit_name'].lower() or # title の代わりに unit_name を検索対象に
+           search_lower in lesson['subject'].lower() or
+           search_lower in lesson['catch_copy'].lower() or
+           search_lower in lesson['goal'].lower() or
+           search_lower in lesson['target_grade'].lower() or
+           search_lower in lesson['disability_type'].lower() or
+           (lesson['materials'] and search_lower in lesson['materials'].lower()) or 
+           any(search_lower in step.lower() for step in lesson['introduction_flow']) or 
+           any(search_lower in step.lower() for step in lesson['activity_flow']) or     
+           any(search_lower in step.lower() for step in lesson['reflection_flow']) or   
+           any(search_lower in point.lower() for point in lesson['points']) or 
+           any(search_lower in t.lower() for t in lesson['hashtags']) or
+           (lesson.get('unit_lesson_title') and search_lower in lesson['unit_lesson_title'].lower()) # 単元内授業タイトルも検索対象に追加
+           ):
+         match_search = False
 
         # Hashtag filter
         if st.session_state.selected_hashtags:
@@ -874,26 +871,26 @@ if st.session_state.current_lesson_id is None:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
             st.markdown(f"""
             <div class="lesson-card">
-                <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['title']}">
-                <div class="lesson-card-content">
-                    <div>
-                        {subject_unit_display}
-                        <div class="lesson-card-title">{lesson['title']}</div>
-                        <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
-                        <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
-                        <div class="lesson-card-meta">
-                            <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
-                            <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
-                            <span><span class="icon">⏱</span>{lesson['duration']}</span>
-                        </div>
-                    </div>
-                    <div class="lesson-card-tags">
-                        {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
-                    </div>
-                    {st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
-                </div>
+             <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['unit_name']}">
+             <div class="lesson-card-content">
+                 <div>
+                     {subject_unit_display}
+                     <div class="lesson-card-title">{lesson['unit_name']}</div> # カードのメインタイトルを単元名に変更
+                     <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
+                     <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
+                     <div class="lesson-card-meta">
+                <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
+                <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
+                         <span><span class="icon">⏱</span>{lesson['duration']}</span>
+                     </div>
+                 </div>
+                 <div class="lesson-card-tags">
+                     {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+                 </div>
+                 {st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
+             </div>
             </div>
-            """, unsafe_allow_html=True)
+             """, unsafe_allow_html=True)
 
 else:
     # --- Lesson Card Detail View ---
@@ -903,13 +900,13 @@ else:
     if selected_lesson:
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_top")
 
-        st.markdown(f"<h1 class='detail-header'>{selected_lesson['title']}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 class='detail-header'>{selected_lesson['unit_name']}</h1>", unsafe_allow_html=True) # メインタイトルを単元名に変更
         if selected_lesson['catch_copy']:
             st.markdown(f"<h3 class='detail-header'>{selected_lesson['catch_copy']}</h3>", unsafe_allow_html=True)
         else:
             st.markdown("<br>", unsafe_allow_html=True)
 
-        st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['title'], use_container_width=True)
+        st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['unit_name'], use_container_width=True) # 画像キャプションも単元名に
 
         st.markdown("""
             <style>
@@ -1051,15 +1048,52 @@ else:
                 lesson for lesson in st.session_state.lesson_data
                 if lesson.get('unit_name') == unit_name_to_search
             ]
-        
+
             # 単元内での順番 (unit_order) でソート
-            # unit_order が存在しないか不正な場合は最後に表示されるように大きい値にする
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
-        
+    
             if sorted_lessons_in_unit:
                 
                 st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
                 st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
+        
+                for lesson_in_unit in sorted_lessons_in_unit:
+                    # unit_lesson_title があればそれを表示、なければ unit_name を表示
+                    display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name'] 
+                    is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
+                    
+                    if is_current_lesson:
+                        st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
+                    else:
+                        # リンクをボタンとして表示し、クリックで詳細ページに遷移
+                        # ここで `st.button` を直接使うとレイアウトが崩れる可能性があるため、
+                        # HTMLの<a>タグと隠しボタンの組み合わせはそのまま維持しつつ、
+                        # `st.button` のラベルは適切に設定する。
+                        st.markdown(f"""
+                            <li>
+                               <a href="#" onclick="document.getElementById('unit_flow_link_{lesson_in_unit['id']}').click(); return false;" style="text-decoration: none; color: inherit;">
+                                    {display_title}
+                                </a>
+                                <button id="unit_flow_link_{lesson_in_unit['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_unit_flow_link_hidden_btn_{lesson_in_unit['id']}\"]').click()"></button>
+                            </li>
+                        """, unsafe_allow_html=True)
+                        # ユーザーからは見えないが、クリックイベントを処理するための非表示のStreamlitボタン
+                        # keyはユニークである必要があるので、f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}" を使用
+                        st.button(
+                            "詳細へ", # このラベルは通常表示されないが、HTML構造上必要
+                            key=f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}",
+                            on_click=set_detail_page,
+                            args=(lesson_in_unit['id'],),
+                            type="secondary",
+                            help="この授業の詳細を表示します",
+                            # CSSで完全に非表示にする
+                            # ここでstyle属性を直接追加するとStreamlitの描画と競合する可能性があるので、
+                            # CSSで data-testid を指定して非表示にするのが望ましい。
+                            # 例: [data-testid^="stButton_unit_flow_link_hidden_btn_"] { display: none !important; }
+                        )
+        
+                st.markdown("</ol>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
                 for lesson_in_unit in sorted_lessons_in_unit:
                     display_title = lesson_in_unit.get('unit_lesson_title') or lesson_in_unit['title']
