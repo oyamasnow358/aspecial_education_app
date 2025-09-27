@@ -402,7 +402,16 @@ try:
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
         lesson_data_df['unit_order'] = 9999
-    
+        # 修正前:
+    # if 'unit_lesson_title' not in lesson_data_df.columns:
+    #     lesson_data_df['unit_lesson_title'] = lesson_data_df['title'] # デフォルトでtitleを使用
+
+    # 修正後:
+    if 'unit_lesson_title' not in lesson_data_df.columns:
+        # 'title' カラムは存在しない可能性が高いため、代わりに 'unit_name' を参照するか、
+        # あるいは汎用的なデフォルト値（例: '単元内授業'）を設定します。
+        # 前回の指示の意図から、'unit_name' が適切と考えられます。
+        lesson_data_df['unit_lesson_title'] = lesson_data_df.get('unit_name', pd.Series(['単元内授業'] * len(lesson_data_df)))
     # ... (ict_use, subject, group_type の既存処理は省略) ...
 
     # unit_name のデフォルト値設定ロジックは CSV コンバーターに移管されたため、重複する以下の行は削除または調整
