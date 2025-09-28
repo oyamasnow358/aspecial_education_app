@@ -1218,20 +1218,21 @@ st.markdown("""
         font-size: 1.05em;
     }
     .stButton > button {
-        background-color: #8A2BE2; /* ボタンの背景色 */
-        color: white;
-        border-radius: 20px;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1em;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        /* ここは詳細ページや一覧ページで使われるボタン全般に適用されます */
+        background-color: #4A90E2 !important; /* 明るい青 */
+        color: white !important;
+        border-radius: 20px !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        font-size: 1em !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        transition: background-color 0.3s ease, transform 0.2s ease !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
     }
     .stButton > button:hover {
-        background-color: #6A1EB2; /* ホバー時の色 */
-        transform: translateY(-2px);
+        background-color: #357ABD !important; /* ホバー時の暗めの青 */
+        transform: translateY(-2px) !important;
     }
     /* Secondary buttons (e.g., related lessons) */
     /* unit_flow_link_hidden_btn_ の data-testid をターゲットに */
