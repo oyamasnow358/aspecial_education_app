@@ -592,6 +592,22 @@ with st.sidebar:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
     )
+    # Excelマクロありのサンプルファイルダウンロード (ここから変更箇所)
+    try:
+        with open("授業カード.xlsm", "rb") as f:
+            excel_macro_sample_data = f.read()
+        st.download_button(
+            label="⬇️ 授業カード (マクロあり) サンプル",
+            data=excel_macro_sample_data,
+            file_name="授業カード.xlsm",
+            mime="application/vnd.ms-excel.sheet.macroEnabled.12",
+            help="マクロが組み込まれた授業カードのサンプルファイルをダウンロードします。"
+        )
+    except FileNotFoundError:
+        st.warning("⚠️ '授業カード.xlsm' ファイルが見つかりませんでした。同じ階層に配置してください。")
+    except Exception as e:
+        st.error(f"Excelマクロファイルの読み込み中にエラーが発生しました: {e}")
+
     # CSVテンプレートのダウンロード
     csv_data_for_download = get_csv_template()
     st.download_button(
