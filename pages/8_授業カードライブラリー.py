@@ -1212,11 +1212,7 @@ st.markdown("""
         margin-bottom: 20px;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
     }
-    .detail-header {
-        text-align: center;
-        color: #8A2BE2;
-        margin-bottom: 15px;
-    }
+    
     p {
         line-height: 1.6;
         font-size: 1.05em;
