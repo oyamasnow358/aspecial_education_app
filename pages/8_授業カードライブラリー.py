@@ -230,10 +230,32 @@ def load_css():
             box-shadow: 0 8px 15px rgba(138,43,226,0.2);
         }
         
+            
         /* Detail page specific styles */
         .detail-header {
-            text-align: left;
-            margin-bottom: 25px;
+            text-align: left; /* これはそのまま */
+            margin-bottom: 25px; /* これはそのまま */
+        }
+        /* このセレクタはst.imageが直接生成するimg要素をターゲットにします */
+        /* st.image()ウィジェットが生成するHTMLは div > img の構造を持つことが多いです */
+        /* use_container_width=True と合わせて親要素の幅を尊重しつつ高さを設定 */
+        [data-testid="stImage"] > img { /* Streamlitの画像ウィジェットの内部imgタグをターゲット */
+            width: 100% !important; /* 親要素の幅いっぱいに広げる */
+            height: 400px !important; /* 例: 高さを固定値で大きく設定（必要に応じて調整） */
+            object-fit: cover !important; /* 画像をトリミングして枠いっぱいに表示 */
+            border-radius: 15px !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+            margin-bottom: 30px !important;
+            display: block !important; /* imgがインライン要素であることによる余計な隙間をなくす */
+        }
+        /* 古い .detail-main-image の定義は削除するか、空のままにしてください。 */
+        /* .detail-main-image {
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        } */
+
+  
         
         .detail-section h3 {
             border-bottom: 2px solid #e0e0e0;
@@ -265,16 +287,7 @@ def load_css():
             margin-top: 25px;
             margin-bottom: 35px;
         }
-        /* 詳細ページのメイン画像のスタイル調整 */
-        .detail-main-image, .stImage > img { /* .stImage > img は Streamlit が生成する img タグを直接ターゲットにします */
-            width: 100%; /* 親要素の幅いっぱいに */
-            height: 400px; /* 例: 高さを固定値で大きく設定 (必要に応じて調整してください) */
-            object-fit: cover; /* 画像をトリミングして枠いっぱいに表示 */
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            display: block; /* imgがインライン要素であることによる余計な隙間をなくす */
-        }
+        
         .detail-image-gallery img {
             max-width: 100%;
             height: 220px; /* 固定の高さ */
