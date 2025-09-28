@@ -583,15 +583,7 @@ with st.sidebar:
     st.info("""
     ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
     """)
-    # Excelテンプレートのダウンロード
-    excel_data_for_download = get_excel_template()
-    st.download_button(
-        label="⬇️ Excelテンプレートをダウンロード",
-        data=excel_data_for_download,
-        file_name="授業カードテンプレート.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
-    )
+
     # Excelマクロありのサンプルファイルダウンロード (ここから変更箇所)
     try:
         with open("授業カード.xlsm", "rb") as f:
@@ -601,7 +593,7 @@ with st.sidebar:
             data=excel_macro_sample_data,
             file_name="授業カード.xlsm",
             mime="application/vnd.ms-excel.sheet.macroEnabled.12",
-            help="マクロが組み込まれた授業カードのサンプルファイルをダウンロードします。"
+            help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
         )
     except FileNotFoundError:
         st.warning("⚠️ '授業カード.xlsm' ファイルが見つかりませんでした。同じ階層に配置してください。")
