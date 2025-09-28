@@ -893,7 +893,7 @@ if st.session_state.current_lesson_id is None:
              <div class="lesson-card-content">
                  <div>
                      {subject_unit_display}
-                     <div class="lesson-card-title">{lesson['unit_name']}</div> # カードのメインタイトルを単元名に変更
+                     <div class="lesson-card-title">{lesson['unit_name']}</div> 
                      <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
                      <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
                      <div class="lesson-card-meta">
@@ -918,7 +918,7 @@ else:
     if selected_lesson:
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_top")
 
-        st.markdown(f"<h1 class='detail-header'>{selected_lesson['unit_name']}</h1>", unsafe_allow_html=True) # メインタイトルを単元名に変更
+        st.markdown(f"<h1 class='detail-header'>{selected_lesson['unit_name']}</h1>", unsafe_allow_html=True) # メインタイトルをに変更
         if selected_lesson['catch_copy']:
             st.markdown(f"<h3 class='detail-header'>{selected_lesson['catch_copy']}</h3>", unsafe_allow_html=True)
         else:
