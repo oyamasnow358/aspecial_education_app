@@ -265,6 +265,16 @@ def load_css():
             margin-top: 25px;
             margin-bottom: 35px;
         }
+        /* 詳細ページのメイン画像のスタイル調整 */
+        .detail-main-image, .stImage > img { /* .stImage > img は Streamlit が生成する img タグを直接ターゲットにします */
+            width: 100%; /* 親要素の幅いっぱいに */
+            height: 400px; /* 例: 高さを固定値で大きく設定 (必要に応じて調整してください) */
+            object-fit: cover; /* 画像をトリミングして枠いっぱいに表示 */
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: block; /* imgがインライン要素であることによる余計な隙間をなくす */
+        }
         .detail-image-gallery img {
             max-width: 100%;
             height: 220px; /* 固定の高さ */
@@ -357,25 +367,26 @@ def load_css():
                 .flow-content-wrapper {
             margin-top: 20px; /* ボタンとコンテンツの間に余白を持たせる */
         }
-                /* Detail Button Styling (上書きまたは追加) */
+         
+        /* Detail Button Styling (上書きまたは追加) - 既存のものをより具体的に上書き */
         .lesson-card .stButton > button { /* .lesson-card 内のボタンにスタイルを適用 */
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            color: #4a90e2;
-            background-color: #ffffff;
-            padding: 10px 24px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin-top: 20px; /* ボタンとコンテンツの間の余白 */
-            width: 100%; /* カード幅いっぱいに */
-            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+            border: 2px solid #4a90e2 !important; /* !important で強制的に適用 */
+            border-radius: 25px !important;
+            color: #4a90e2 !important;
+            background-color: #ffffff !important;
+            padding: 10px 24px !important;
+            font-weight: bold !important;
+            transition: all 0.3s ease !important;
+            margin-top: 20px !important;
+            width: 100% !important;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1) !important;
         }
         .lesson-card .stButton > button:hover {
-        border-color: #357ABD; /* 暗めの青 */
-        color: white;
-        background-color: #357ABD; /* 暗めの青 */
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(74,144,226,0.2); /* 青系の影 */
+            border-color: #357ABD !important; /* ホバー時の色も !important */
+            color: white !important;
+            background-color: #357ABD !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 8px 15px rgba(74,144,226,0.2) !important;
         }
     </style>
     """, unsafe_allow_html=True)
