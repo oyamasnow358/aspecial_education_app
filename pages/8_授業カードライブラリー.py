@@ -234,12 +234,7 @@ def load_css():
         .detail-header {
             text-align: left;
             margin-bottom: 25px;
-        }
-        .detail-main-image {
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
+        
         .detail-section h3 {
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 8px;
@@ -376,11 +371,11 @@ def load_css():
             box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
         }
         .lesson-card .stButton > button:hover {
-            border-color: #8A2BE2;
-            color: white;
-            background-color: #8A2BE2;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(138,43,226,0.2);
+        border-color: #357ABD; /* 暗めの青 */
+        color: white;
+        background-color: #357ABD; /* 暗めの青 */
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(74,144,226,0.2); /* 青系の影 */
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1070,64 +1065,36 @@ else:
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
 
             if sorted_lessons_in_unit:
-                st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
-                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
+             st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
+             st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
+            
+             for lesson_in_unit in sorted_lessons_in_unit:
+                 # unit_lesson_title が存在すればそれを使用、なければ unit_name を使用
+                 display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name'] 
+                 is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
                 
-                for lesson_in_unit in sorted_lessons_in_unit:
-                    # unit_lesson_title があればそれを表示、なければ unit_name を表示
-                    display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name'] 
-                    is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
-                    
-                    if is_current_lesson:
-                        st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
-                    else:
-                        # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
-                        # HTMLのAタグとStreamlitのボタンを組み合わせることで、表示を自然にしつつ機能を持たせる
-                        # 実際の遷移を処理する非表示のボタン
-                        st.markdown(f"""
-                            <li>
-                                <a href="javascript:void(0);" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_hidden_btn_{lesson_in_unit['id']}\"]').click();" style="text-decoration: none; color: inherit;">
-                                    {display_title}
-                                </a>
-                            </li>
-                        """, unsafe_allow_html=True)
-                        st.button(
-                            "詳細へ", # このラベルは通常表示されないが、HTML構造上必要
-                            key=f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}",
-                            on_click=set_detail_page,
-                            args=(lesson_in_unit['id'],),
-                            type="secondary",
-                            help="この授業の詳細を表示します",
-                            # ここでボタンを非表示にするが、CSSで完全に消すわけではない
-                            # display:none; をHTMLのbuttonタグ自体に適用するCSSは困難なため、
-                            # Streamlitのボタンが生成するHTML要素のdata-testidを活用
-                        )
-                
-                st.markdown("</ol>", unsafe_allow_html=True)
-                # このセクションの終わり
-                st.markdown("</div>", unsafe_allow_html=True)
-
-                for lesson_in_unit in sorted_lessons_in_unit:
-                    display_title = lesson_in_unit.get('unit_lesson_title') or lesson_in_unit['title']
-                    is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
-        
-                    if is_current_lesson:
-                        st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
-                    else:
-                        # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
-                        st.markdown(f"""
-                            <li>
-                                <a href="#" onclick="document.getElementById('unit_flow_link_{lesson_in_unit['id']}').click(); return false;" style="text-decoration: none; color: inherit;">
-                                    {display_title}
-                                </a>
-                                <button id="unit_flow_link_{lesson_in_unit['id']}" style="display:none;" onclick="document.querySelector('[data-testid=\"stButton_{lesson_in_unit['id']}\"]').click()"></button>
-                            </li>
-                        """, unsafe_allow_html=True)
-                        # 実際の遷移を処理する非表示のボタン
-                        st.button("", key=f"unit_flow_link_hidden_btn_{lesson_in_unit['id']}", on_click=set_detail_page, args=(lesson_in_unit['id'],), type="secondary")
-        
-                st.markdown("</ol>", unsafe_allow_html=True)
-                st.markdown("</div>", unsafe_allow_html=True)
+                 if is_current_lesson:
+                     st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
+                 else:
+                    # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
+                    # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
+                     st.markdown(f"""
+                         <li>
+                             <a href="#" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_direct_{lesson_in_unit['id']}\"]').click(); return false;" style="text-decoration: none; color: inherit;">
+                                 {display_title}
+                             </a>
+                         </li>
+                     """, unsafe_allow_html=True)
+                     # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
+                     st.button(
+                         "隠しボタン", # ボタンのテキストは表示されないので何でもOK
+                         key=f"unit_flow_link_direct_{lesson_in_unit['id']}",
+                         on_click=set_detail_page,
+                         args=(lesson_in_unit['id'],),
+                         help="この授業の詳細を表示します",
+                     )
+            
+            st.markdown("</ol>", unsafe_allow_html=True)
 
         st.markdown("---") # 区切り線
         # 既存の「準備物」以下のセクションはそのまま残す
@@ -1405,6 +1372,9 @@ st.markdown("""
     .stImage > img {
         border-radius: 12px;
         margin-bottom: 20px;
+        /* height: auto;  高さを自動調整し、幅いっぱいに表示されるように */
+        /* object-fit: contain; /* 必要に応じて、画像全体が見えるように調整 */
+        max-height: 500px; /* 例えば、最大高さを設定して大きくなりすぎないように制御 */
     }
 
     /* Streamlit specific adjustments */
