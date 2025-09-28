@@ -589,7 +589,7 @@ with st.sidebar:
         with open("授業カード.xlsm", "rb") as f:
             excel_macro_sample_data = f.read()
         st.download_button(
-            label="⬇️ 授業カード (マクロあり) サンプル",
+            label="⬇️ 授業カード 入力用（見本付き）",
             data=excel_macro_sample_data,
             file_name="授業カード.xlsm",
             mime="application/vnd.ms-excel.sheet.macroEnabled.12",
