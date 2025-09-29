@@ -383,19 +383,14 @@ def show_top_button():
     # 現在のページパスを取得
     current_page = st.runtime.get_instance().script_run_ctx.page_script_hash
     # トップページ（tokusi.py）のハッシュ値と一致しない場合のみボタンを表示
-    # Streamlitのページハッシュは実行環境によって変わる可能性があるため、ページ名で厳密に比較する場合は注意が必要です。
-    # ここでは、簡略的にトップページ以外と判定しています。
-    # 正確には、トップページを`st.set_page_config(page_title="トップページ", ...)`のように設定し、
-    # `st.runtime.get_instance().script_run_ctx.page_script_name`と比較するのがより確実です。
-    # ただし、デフォルトでこのファイルが'tokusi.py'として認識されると仮定します。
     
-    # このファイルがトップページと仮定し、もしこのファイル自体がtokusi.pyであればボタンは表示しない
     if "tokusi.py" not in st.runtime.get_instance().script_run_ctx.page_script_path:
         st.markdown('<a href="." target="_self" class="top-button">🏠 TOPに戻る</a>', unsafe_allow_html=True)
 
 
 # サイドバーのページ名を変更
-st.sidebar.page_link("tokusi.py", label="トップページ", icon="🏠")
+# st.sidebar.page_link("tokusi.py", label="トップページ", icon="🏠") # この行を削除
+st.sidebar.markdown('<div style="padding-top: 10px; padding-bottom: 10px; font-weight: bold; font-size: 1.2em; color: var(--primary-color);">🏠 トップページ</div>', unsafe_allow_html=True) # トップページへのリンクは直接指定せず、テキストとして表示するか、`st.sidebar.button`などで代替
 st.sidebar.page_link("pages/1_指導支援内容.py", label="📚 指導支援内容", icon="💡")
 st.sidebar.page_link("pages/2_発達チャート.py", label="📊 発達チャート作成", icon="📈")
 st.sidebar.page_link("pages/3_分析方法.py", label="📈 分析方法", icon="🔎")
