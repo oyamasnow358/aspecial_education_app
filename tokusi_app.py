@@ -231,6 +231,29 @@ def load_css():
         .related-tools-card .st-emotion-cache-ch5fgy a:hover {
             color: var(--primary-color);
         }
+
+        /* TOPに戻るボタンのスタイル */
+        .top-button {
+            position: fixed;
+            top: 15px;
+            left: 20px;
+            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            color: var(--primary-color);
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .top-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -355,11 +378,42 @@ load_css()
 def set_page(page):
     st.session_state.page_to_visit = page
 
+# 全てのページでTOPに戻るボタンを表示する関数
+def show_top_button():
+    # 現在のページパスを取得
+    current_page = st.runtime.get_instance().script_run_ctx.page_script_hash
+    # トップページ（tokusi.py）のハッシュ値と一致しない場合のみボタンを表示
+    # Streamlitのページハッシュは実行環境によって変わる可能性があるため、ページ名で厳密に比較する場合は注意が必要です。
+    # ここでは、簡略的にトップページ以外と判定しています。
+    # 正確には、トップページを`st.set_page_config(page_title="トップページ", ...)`のように設定し、
+    # `st.runtime.get_instance().script_run_ctx.page_script_name`と比較するのがより確実です。
+    # ただし、デフォルトでこのファイルが'tokusi.py'として認識されると仮定します。
+    
+    # このファイルがトップページと仮定し、もしこのファイル自体がtokusi.pyであればボタンは表示しない
+    if "tokusi.py" not in st.runtime.get_instance().script_run_ctx.page_script_path:
+        st.markdown('<a href="." target="_self" class="top-button">🏠 TOPに戻る</a>', unsafe_allow_html=True)
+
+
+# サイドバーのページ名を変更
+st.sidebar.page_link("tokusi.py", label="トップページ", icon="🏠")
+st.sidebar.page_link("pages/1_指導支援内容.py", label="📚 指導支援内容", icon="💡")
+st.sidebar.page_link("pages/2_発達チャート.py", label="📊 発達チャート作成", icon="📈")
+st.sidebar.page_link("pages/3_分析方法.py", label="📈 分析方法", icon="🔎")
+st.sidebar.page_link("pages/4_個別の支援計画・指導計画作成支援.py", label="🤖 計画作成サポート", icon="📝")
+st.sidebar.page_link("pages/6_知的段階_学習指導要領.py", label="📜 知的段階（学習指導要領）", icon="🎓")
+st.sidebar.page_link("pages/7_動画ギャラリー.py", label="▶️ 動画ギャラリー", icon="🎥")
+st.sidebar.page_link("pages/8_授業カードライブラリー.py", label="🃏 授業カードライブラリー", icon="🧑‍🏫")
+st.sidebar.page_link("pages/9_フィードバック.py", label="📝 フィードバック", icon="💬")
+
+
 # st.session_stateをチェックしてページ遷移を実行
 if "page_to_visit" in st.session_state:
     page = st.session_state.page_to_visit
     del st.session_state.page_to_visit
     st.switch_page(page)
+
+# TOPに戻るボタンを表示（トップページ以外）
+show_top_button()
 
 st.title("🌟 特別支援教育サポートアプリ")
 
@@ -461,13 +515,6 @@ with c2:
     st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
     st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
     st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
-
-st.markdown("---")
-st.markdown("##### 🗨️ ご意見・ご感想")
-st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
-st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
-st.markdown('</div>', unsafe_allow_html=True) # カードの閉じタグ
-# --- ▲ 関連ツール＆リンク ▲ ---
 
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 st.warning("""
