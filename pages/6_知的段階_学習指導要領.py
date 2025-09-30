@@ -16,7 +16,12 @@ def load_css():
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
-
+        /* --- 戻るボタンのスタイル (位置調整) --- */
+        .back-button-container {
+            position: relative; /* relativeにして通常のフローで配置 */
+            padding-bottom: 20px; /* 下に余白 */
+            margin-bottom: -50px; /* 上の要素との重なりを調整 */
+        }
         /* サイドバーの背景を少し透過 */
         [data-testid="stSidebar"] {
             background-color: rgba(240, 242, 246, 0.9);
@@ -145,6 +150,16 @@ def load_css():
     """
     st.markdown(css, unsafe_allow_html=True)
 
+# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
+# st.columnsを使って、左端に配置する
+col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
+with col_back:
+    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
+    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
+# --- ▲ 戻るボタンの配置 ▲ ---
+
+
+
 def format_guideline_text(text):
     if not isinstance(text, str): return ""
     processed_text = text.replace("　", "&nbsp;&nbsp;")
@@ -162,6 +177,8 @@ st.set_page_config(page_title="知的段階（学習指導要領）", page_icon=
 load_css()
 st.title("📜 知的段階（学習指導要領）")
 st.info("学部、段階（障害種別）、教科を選択すると、関連する学習指導要領の内容が表示されます。")
+
+
 
 # --- 選択肢 ---
 col1, col2, col3 = st.columns(3)
