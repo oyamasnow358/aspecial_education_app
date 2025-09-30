@@ -503,8 +503,9 @@ def toggle_all_flow_display():
 LESSON_CARD_COLUMNS = [
     "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type", 
     "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
-    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", "ict_use", "subject",
-    "group_type", "unit_order", "unit_lesson_title" 
+    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", 
+    "detail_ppt_url", "detail_excel_url", # ★追加: PowerPointとExcelのURLカラム
+    "ict_use", "subject", "group_type", "unit_order", "unit_lesson_title" 
 ]
 
 # Excelテンプレートダウンロード関数
@@ -533,10 +534,12 @@ def get_excel_template():
         worksheet.write_comment('P1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
         worksheet.write_comment('Q1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('S1', 'TRUEまたはFALSE')
-        worksheet.write_comment('T1', '例: 生活単元学習,国語,算数など')
-        worksheet.write_comment('U1', '例: 全体,個別,小グループ  (学習集団の単位)')
-        worksheet.write_comment('V1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') 
+        worksheet.write_comment('S1', '指導案PowerPointファイルのダウンロードURL (無い場合は空欄でOK)') # ★追加
+        worksheet.write_comment('T1', '指導案ExcelファイルのダウンロードURL (無い場合は空欄でOK)')     # ★追加
+        worksheet.write_comment('U1', 'TRUEまたはFALSE') # インデックスがずれるため注意
+        worksheet.write_comment('V1', '例: 生活単元学習,国語,算数など')
+        worksheet.write_comment('W1', '例: 全体,個別,小グループ  (学習集団の単位)')
+        worksheet.write_comment('X1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') 
     processed_data = output.getvalue()
     return processed_data
 
@@ -721,6 +724,8 @@ with st.sidebar:
                         'video_link': row.get('video_link', ''),
                         'detail_word_url': row.get('detail_word_url', ''),
                         'detail_pdf_url': row.get('detail_pdf_url', ''),
+                        'detail_ppt_url': row.get('detail_ppt_url', ''),   # ★追加
+                        'detail_excel_url': row.get('detail_excel_url', ''), # ★追加
                         'ict_use': row.get('ict_use', False),
                         'subject': row.get('subject', 'その他'),
                         'group_type': row.get('group_type', '全体'),
@@ -1179,13 +1184,17 @@ else:
             st.markdown("</div>", unsafe_allow_html=True)
 
         # 詳細資料ダウンロード
-        if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url']:
-            
+        # 既存のif文の条件を変更
+        if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url'] or selected_lesson['detail_ppt_url'] or selected_lesson['detail_excel_url']: # ★変更
             st.markdown("<h3><span class='header-icon'>📄</span>詳細資料ダウンロード</h3>", unsafe_allow_html=True)
             if selected_lesson['detail_word_url']:
                 st.markdown(f'<a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>', unsafe_allow_html=True)
             if selected_lesson['detail_pdf_url']:
-                st.markdown(f'<a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em;">📚 指導案 (PDF)</button></a>', unsafe_allow_html=True)
+                st.markdown(f'<a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📚 指導案 (PDF)</button></a>', unsafe_allow_html=True)
+            if selected_lesson['detail_ppt_url']: # ★追加
+                st.markdown(f'<a href="{selected_lesson["detail_ppt_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #D24726; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📊 授業資料 (PowerPoint)</button></a>', unsafe_allow_html=True)
+            if selected_lesson['detail_excel_url']: # ★追加
+                st.markdown(f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>', unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("---")
