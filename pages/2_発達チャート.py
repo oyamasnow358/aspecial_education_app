@@ -168,6 +168,13 @@ st.set_page_config(
 load_css()
 
 # --- ★★★ここからが大きな変更点★★★ ---
+# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
+# st.columnsを使って、左端に配置する
+col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
+with col_back:
+    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
+    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
+# --- ▲ 戻るボタンの配置 ▲ ---
 
 # データをキャッシュする関数
 @st.cache_data(ttl=600) # 10分間データをキャッシュしてAPIの負荷を減らす

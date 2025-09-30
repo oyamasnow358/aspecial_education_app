@@ -80,7 +80,12 @@ def load_css():
             line-height: 1.7;
             color: #333;
         }
-
+        /* --- 戻るボタンのスタイル (位置調整) --- */
+        .back-button-container {
+            position: relative; /* relativeにして通常のフローで配置 */
+            padding-bottom: 20px; /* 下に余白 */
+            margin-bottom: -50px; /* 上の要素との重なりを調整 */
+        }
         /* Streamlit widget styling */
         .stTextInput>div>div>input, .stMultiSelect>div>div>div, .stSelectbox>div>div {
             border-radius: 12px; /* 少し角丸を小さく */
@@ -406,6 +411,13 @@ def load_css():
 
 load_css()
 
+# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
+# st.columnsを使って、左端に配置する
+col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
+with col_back:
+    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
+    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
+# --- ▲ 戻るボタンの配置 ▲ ---
 
 # 'pages'フォルダと同じ階層に lesson_cards.csv を置いてください。
 try:
