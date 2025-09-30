@@ -342,7 +342,7 @@ manuals = {
 }
 
 st.set_page_config(
-    page_title="特別支援教育サポートアプリ",
+    page_title="TOPページ", # ここを修正
     page_icon="🌟",
     layout="wide",
     initial_sidebar_state="expanded"
