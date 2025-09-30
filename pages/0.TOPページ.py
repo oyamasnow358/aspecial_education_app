@@ -1,5 +1,10 @@
 import streamlit as st
-
+st.set_page_config(
+    page_title="TOPページ",
+    page_icon="🌟",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 # --- ▼ 共通CSSの読み込み（修正版） ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
