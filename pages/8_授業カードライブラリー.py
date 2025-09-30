@@ -420,7 +420,13 @@ try:
             'material_photos': lambda x: x.split(';') if pd.notna(x) else [],
             'unit_name': lambda x: str(x) if pd.notna(x) else '',
             'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999,
-            'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '' # ここは空文字列で読み込む
+            'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '',
+            # ★追加・変更：動画リンク、資料ダウンロードURLも空欄を''として読み込む
+            'video_link': lambda x: str(x) if pd.notna(x) else '',
+            'detail_word_url': lambda x: str(x) if pd.notna(x) else '',
+            'detail_pdf_url': lambda x: str(x) if pd.notna(x) else '',
+            'detail_ppt_url': lambda x: str(x) if pd.notna(x) else '',
+            'detail_excel_url': lambda x: str(x) if pd.notna(x) else '',
         }
     )
 
@@ -675,10 +681,10 @@ with st.sidebar:
 
                  # ICT活用有無の処理
                 if 'ict_use' in new_data_df.columns:
-                    # 'true', 'True', 'TRUE' などに対応し、NaNはFalseに
-                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().apply(lambda x: True if x == 'true' else False)
+        # 'true', 'True', 'TRUE' などに対応し、NaNはFalseに
+                 new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().apply(lambda x: True if x == 'true' else False)
                 else:
-                    new_data_df['ict_use'] = False
+                 new_data_df['ict_use'] = False
 
                 # !!! 新規追加：subject, unit_name, group_type も同様に処理 !!!
                 new_data_df['subject'] = process_string_column(new_data_df, 'subject', 'その他')
@@ -1079,11 +1085,13 @@ else:
         with col3:
             st.markdown(f"**時間:** {selected_lesson['duration']}")
         with col4:
-            st.markdown(f"**ICT活用:** {'あり' if selected_lesson['ict_use'] else 'なし'}")
+            # ★変更: ICT活用有無を日本語で表示
+            ict_display_text = "あり" if selected_lesson['ict_use'] else "なし"
+            st.markdown(f"**ICT活用:** {ict_display_text}")
         with col5:
             st.markdown(f"**教科:** {selected_lesson.get('subject', 'その他')}")
         with col6: # 新規追加
-            st.markdown(f"**学習集団:** {selected_lesson.get('group_type', '全体')}")
+            st.markdown(f"**学習集団:** {selected_lesson.get('group_type', '全体')}")    
         
         # 単元名は別途表示（関連カードセクションと連動させるため）
         st.markdown(f"<p style='font-size:1.1em; font-weight:bold; margin-top:10px;'>単元名: <span style='color:#8A2BE2;'>{selected_lesson.get('unit_name', '単元なし')}</span></p>", unsafe_allow_html=True)
@@ -1175,13 +1183,16 @@ else:
 
          # 動画リンク
         if selected_lesson['video_link']: # video_linkが空文字列でないことを確認
-            
-            st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
-            try:
-                st.video(selected_lesson['video_link'])
-            except Exception as e:
-                st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
-            st.markdown("</div>", unsafe_allow_html=True)
+          st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
+          try:
+              # st.video に渡す前に、念のため再度空文字列チェック（convertersで処理済みのはずだが保険）
+              if selected_lesson['video_link'].strip() != '':
+                  st.video(selected_lesson['video_link'])
+              else:
+                 st.info("参考動画は登録されていません。")
+          except Exception as e:
+              st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
+          st.markdown("</div>", unsafe_allow_html=True)
 
         # 詳細資料ダウンロード
         # 既存のif文の条件を変更
