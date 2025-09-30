@@ -11,17 +11,3 @@ font="sans serif"
 [server]
 # コードを保存したときに自動で再実行
 runOnSave = true
-# アプリ名を指定 (サイドバーの最上部に表示される名前)streamlit.errors.StreamlitAPIException: This app has encountered an error. The original error message is redacted to prevent data leaks. Full error details have been recorded in the logs (if you're on Streamlit Cloud, click on 'Manage app' in the lower right of your app).
-Traceback:
-
-File "/mount/src/aspecial_education_app/tokusi_app.py", line 15, in <module>
-    pg1 = st.Page("main_page.py", title="TOPページ", icon="🌟") # TOPページをここで登録し、表示名を「TOPページ」に設定
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "/home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
-    result = non_optional_func(*args, **kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File "/home/adminuser/venv/lib/python3.12/site-packages/streamlit/navigation/page.py", line 123, in Page
-    return StreamlitPage(
-           ^^^^^^^^^^^^^^
-File "/home/adminuser/venv/lib/python3.12/site-packages/streamlit/navigation/page.py", line 186, in __init__
-    raise StreamlitAPIException(
