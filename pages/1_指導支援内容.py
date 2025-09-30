@@ -195,12 +195,11 @@ def load_css():
             margin-top: 40px;
             margin-bottom: 20px;
         }
-        /* --- 戻るボタンのスタイル --- */
+        /* --- 戻るボタンのスタイル (位置調整) --- */
         .back-button-container {
-            position: absolute;
-            top: 20px; /* 上からの位置 */
-            left: 20px; /* 左からの位置 */
-            z-index: 1000; /* 他の要素の上に表示 */
+            position: relative; /* relativeにして通常のフローで配置 */
+            padding-bottom: 20px; /* 下に余白 */
+            margin-bottom: -50px; /* 上の要素との重なりを調整 */
         }
         .back-button-container .stButton > button {
             background-color: rgba(255, 255, 255, 0.8);
@@ -223,9 +222,12 @@ def load_css():
     st.markdown(css, unsafe_allow_html=True)
 # --- ▲ 共通CSSの読み込み ▲ ---
 
-# --- ページ遷移を管理するための関数 (Home.pyからコピー) ---
+# --- Home.py の set_page 関数をそのまま使用 ---
+# (Home.pyで st.session_state.page_to_visit を設定し、
+# Home.pyで st.switch_page を実行するロジックを想定)
 def set_page(page):
     st.session_state.page_to_visit = page
+
 
 # --- アプリケーション本体 ---
 st.set_page_config(page_title="指導支援内容", page_icon="📚", layout="wide")
@@ -236,10 +238,12 @@ load_css()
 # データを読み込む
 guidance_data = load_guidance_data()
 
-# --- ▼ 戻るボタンの配置 ▼ ---
-with st.sidebar: # または st.container() などで任意の場所に配置
-    if st.button("« TOPページに戻る", key="back_to_home"):
-        set_page("Home.py")
+# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
+# st.columnsを使って、左端に配置する
+col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
+with col_back:
+    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
+    st.page_link("Home.py", label="« TOPページに戻る", icon="🏠")
 # --- ▲ 戻るボタンの配置 ▲ ---
 
 
