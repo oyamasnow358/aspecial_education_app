@@ -420,10 +420,10 @@ with col2:
             st.markdown(manuals["chart"])
     
     with st.container(border=True):
-        st.markdown("### 🤖 計画作成サポート", unsafe_allow_html=True)
+        st.markdown("### 🤖 AIによる支援,指導計画作成", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。", )
         b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_個別の支援計画・指導計画作成支援.py",), key="btn_plan_creation", use_container_width=True)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["plan_creation"])
 
