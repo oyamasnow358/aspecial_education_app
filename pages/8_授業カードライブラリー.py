@@ -1089,9 +1089,7 @@ else:
         with col3:
             st.markdown(f"**時間:** {selected_lesson['duration']}")
         with col4:
-            # ★変更: ICT活用有無を日本語で表示
-            ict_display_text = "あり" if selected_lesson['ict_use'] else "なし"
-            st.markdown(f"**ICT活用:** {ict_display_text}")
+            st.markdown(f"**ICT活用:** {selected_lesson['ict_use']}")
         with col5:
             st.markdown(f"**教科:** {selected_lesson.get('subject', 'その他')}")
         with col6: # 新規追加
