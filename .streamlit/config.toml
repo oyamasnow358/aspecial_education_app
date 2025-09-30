@@ -11,3 +11,5 @@ font="sans serif"
 [server]
 # コードを保存したときに自動で再実行
 runOnSave = true
+# アプリ名を指定 (サイドバーの最上部に表示される名前)
+appName = "TOPページ"
