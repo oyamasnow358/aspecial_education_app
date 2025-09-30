@@ -1,6 +1,12 @@
 # page_title: TOPページ
 import streamlit as st
 
+st.set_page_config(
+    page_title="TOPページ",
+    page_icon="🌟",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 # --- ▼ 共通CSSの読み込み（修正版） ▼ ---
 def load_css():
     """カスタムCSSを読み込む関数"""
@@ -342,12 +348,7 @@ manuals = {
     """
 }
 
-st.set_page_config(
-    page_title="特別支援教育サポートアプリ",
-    page_icon="🌟",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+
 
 # CSSを適用
 load_css()
