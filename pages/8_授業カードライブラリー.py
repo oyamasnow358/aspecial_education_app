@@ -417,18 +417,21 @@ try:
             'reflection_flow': lambda x: x.split(';') if pd.notna(x) else [],
             'points': lambda x: x.split(';') if pd.notna(x) else [],
             'hashtags': lambda x: x.split(',') if pd.notna(x) else [],
-            'material_photos': lambda x: x.split(';') if pd.notna(x) else [],
+            # ★変更: material_photosの処理を強化。空文字列を除外する。
+            'material_photos': lambda x: [url.strip() for url in x.split(';') if url.strip()] if pd.notna(x) else [],
             'unit_name': lambda x: str(x) if pd.notna(x) else '',
             'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999,
             'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '',
-            # ★追加・変更：動画リンク、資料ダウンロードURLも空欄を''として読み込む
             'video_link': lambda x: str(x) if pd.notna(x) else '',
+            # ★追加・変更：image, 資料ダウンロードURLも空欄を''として読み込む
+            'image': lambda x: str(x) if pd.notna(x) else '', # メイン画像も空文字列処理を追加
             'detail_word_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_pdf_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_ppt_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_excel_url': lambda x: str(x) if pd.notna(x) else '',
         }
     )
+
 
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
@@ -642,7 +645,8 @@ with st.sidebar:
             else:
                 def process_list_column(df, col_name, separator):
                     if col_name in df.columns:
-                        return df[col_name].apply(lambda x: x.split(separator) if pd.notna(x) and str(x).strip() != '' else [])
+                        # ★変更: リストカラムの処理を強化。空文字列を除外する。
+                        return df[col_name].apply(lambda x: [item.strip() for item in str(x).split(separator) if item.strip()] if pd.notna(x) and str(x).strip() != '' else [])
                     return [[]] * len(df)
                 
                 # 単一文字列カラムのNaN/空文字列処理も同様に強化
@@ -677,6 +681,7 @@ with st.sidebar:
                 new_data_df['reflection_flow'] = process_list_column(new_data_df, 'reflection_flow', ';')
                 new_data_df['points'] = process_list_column(new_data_df, 'points', ';')
                 new_data_df['hashtags'] = process_list_column(new_data_df, 'hashtags', ',')
+                # ★変更: material_photosも上記で定義したprocess_list_columnを使用する
                 new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
 
                  # ICT活用有無の処理
@@ -725,18 +730,17 @@ with st.sidebar:
                         'reflection_flow': row.get('reflection_flow', []),   
                         'points': row.get('points', []),
                         'hashtags': row.get('hashtags', []),
-                        'image': row.get('image', ''),
+                        'image': process_string_column(new_data_df.iloc[[_]], 'image', '').iloc[0], # ★変更: imageカラムもprocess_string_columnで処理
                         'material_photos': row.get('material_photos', []),
-                        'video_link': row.get('video_link', ''),
-                        'detail_word_url': row.get('detail_word_url', ''),
-                        'detail_pdf_url': row.get('detail_pdf_url', ''),
-                        'detail_ppt_url': row.get('detail_ppt_url', ''),   # ★追加
-                        'detail_excel_url': row.get('detail_excel_url', ''), # ★追加
+                        'video_link': process_string_column(new_data_df.iloc[[_]], 'video_link', '').iloc[0], # ★変更: video_linkもprocess_string_columnで処理
+                        'detail_word_url': process_string_column(new_data_df.iloc[[_]], 'detail_word_url', '').iloc[0], # ★変更
+                        'detail_pdf_url': process_string_column(new_data_df.iloc[[_]], 'detail_pdf_url', '').iloc[0],   # ★変更
+                        'detail_ppt_url': process_string_column(new_data_df.iloc[[_]], 'detail_ppt_url', '').iloc[0],   # ★変更
+                        'detail_excel_url': process_string_column(new_data_df.iloc[[_]], 'detail_excel_url', '').iloc[0], # ★変更
                         'ict_use': row.get('ict_use', False),
                         'subject': row.get('subject', 'その他'),
                         'group_type': row.get('group_type', '全体'),
                         'unit_order': row.get('unit_order', 9999),
-                        # ここを修正：'unit_lesson_title' がない場合、'unit_name' をフォールバックとして使用
                         'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業'))
                     }
                     new_entries.append(lesson_dict)
@@ -1172,27 +1176,36 @@ else:
             st.markdown("</div>", unsafe_allow_html=True)
 
         # 教材写真
-        if selected_lesson['material_photos']:
+        if selected_lesson['material_photos']: # リストが空でない場合のみ表示
             
             st.markdown("<h3><span class='header-icon'>📸</span>授業・教材写真</h3>", unsafe_allow_html=True)
             cols = st.columns(3)
+            # material_photosリスト内の各URLをst.imageで表示。
+            # リストが空でないことは既にif文でチェック済みなので、ここではエラーは出ないはず。
             for i, photo_url in enumerate(selected_lesson['material_photos']):
                 with cols[i % 3]:
-                    st.image(photo_url, use_container_width=True)
+                    # ここで個別のURLが空文字列でないことを再度チェックするとより安全
+                    if photo_url.strip(): 
+                        st.image(photo_url, use_container_width=True)
+                    else:
+                        st.warning("一部の教材写真URLが無効なため表示できませんでした。") # 必要に応じてメッセージ
             st.markdown("</div>", unsafe_allow_html=True)
 
-         # 動画リンク
-        if selected_lesson['video_link']: # video_linkが空文字列でないことを確認
-          st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
-          try:
-              # st.video に渡す前に、念のため再度空文字列チェック（convertersで処理済みのはずだが保険）
-              if selected_lesson['video_link'].strip() != '':
-                  st.video(selected_lesson['video_link'])
-              else:
-                 st.info("参考動画は登録されていません。")
-          except Exception as e:
-              st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
-          st.markdown("</div>", unsafe_allow_html=True)
+        # 動画リンク
+        if selected_lesson['video_link'].strip(): # video_linkが空文字列でないことを確認 (strip()で空白も考慮)
+            
+            st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
+            try:
+                st.video(selected_lesson['video_link'])
+            except Exception as e:
+                st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            # 動画リンクが空の場合にメッセージを表示
+            st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
+            st.info("参考動画は登録されていません。")
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
         # 詳細資料ダウンロード
         # 既存のif文の条件を変更
