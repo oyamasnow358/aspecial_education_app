@@ -243,7 +243,7 @@ guidance_data = load_guidance_data()
 col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
 with col_back:
     # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
-    st.page_link("Home.py", label="« TOPページに戻る", icon="🏠")
+    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
 # --- ▲ 戻るボタンの配置 ▲ ---
 
 
