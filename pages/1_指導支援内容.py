@@ -1,7 +1,6 @@
-      
 import streamlit as st
 import json
-from pathlib import Path # ★★★ 新しく追加 ★★★
+from pathlib import Path
 
 # (load_css 関数はそのまま)
 
@@ -196,21 +195,37 @@ def load_css():
             margin-top: 40px;
             margin-bottom: 20px;
         }
+        /* --- 戻るボタンのスタイル --- */
+        .back-button-container {
+            position: absolute;
+            top: 20px; /* 上からの位置 */
+            left: 20px; /* 左からの位置 */
+            z-index: 1000; /* 他の要素の上に表示 */
+        }
+        .back-button-container .stButton > button {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #6a1b9a;
+            border: 1px solid #6a1b9a;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .back-button-container .stButton > button:hover {
+            background-color: #6a1b9a;
+            color: white;
+            border-color: #6a1b9a;
+            transform: scale(1.05);
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 # --- ▲ 共通CSSの読み込み ▲ ---
 
-
-# --- ▼ 外部JSONデータを読み込む関数 (新規追加) ▼ ---
-@st.cache_data
-def load_guidance_data(filepath="guidance_data.json"):
-    """指導データをJSONファイルから読み込む"""
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-# --- ▲ 外部JSONデータを読み込む関数 ▲ ---
-
+# --- ページ遷移を管理するための関数 (Home.pyからコピー) ---
+def set_page(page):
+    st.session_state.page_to_visit = page
 
 # --- アプリケーション本体 ---
 st.set_page_config(page_title="指導支援内容", page_icon="📚", layout="wide")
@@ -220,6 +235,13 @@ load_css()
 
 # データを読み込む
 guidance_data = load_guidance_data()
+
+# --- ▼ 戻るボタンの配置 ▼ ---
+with st.sidebar: # または st.container() などで任意の場所に配置
+    if st.button("« TOPページに戻る", key="back_to_home"):
+        set_page("Home.py")
+# --- ▲ 戻るボタンの配置 ▲ ---
+
 
 st.title("📚 指導支援内容の参照")
 st.write("ここでは、日常生活における実態や障害の状況から適した指導支援の方法を探すことができます。")
@@ -293,5 +315,3 @@ if st.button("💡 適した指導・支援を表示", type="primary", use_conta
     else:
         st.warning("表示するデータがありません。選択内容を確認してください。")
 # --- ▲ 表示ボタンと結果表示 ▲ ---
-
-    
