@@ -463,9 +463,10 @@ try:
 
     # ICT活用有無のTRUE/FALSEをbool型に変換
     if 'ict_use' in lesson_data_df.columns:
-        lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(bool)
+        # ICT使用の値をそのまま文字列として保持
+        lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(str)
     else:
-        lesson_data_df['ict_use'] = False # カラムがない場合はデフォルトでFalse
+        lesson_data_df['ict_use'] = 'なし' # カラムがない場合はデフォルトで「なし」
 
     # 'subject', 'unit_name', 'group_type' カラムが存在しない場合、デフォルト値で作成
     if 'subject' not in lesson_data_df.columns:
@@ -698,10 +699,10 @@ with st.sidebar:
 
                  # ICT活用有無の処理
                 if 'ict_use' in new_data_df.columns:
-        # 'true', 'True', 'TRUE' などに対応し、NaNはFalseに
-                 new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).str.lower().apply(lambda x: True if x == 'true' else False)
+                    # ICT使用の値をそのまま文字列として保持し、NaNや空文字列は「なし」に
+                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).apply(lambda x: x.strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'なし')
                 else:
-                 new_data_df['ict_use'] = False
+                    new_data_df['ict_use'] = 'なし'
 
                 # !!! 新規追加：subject, unit_name, group_type も同様に処理 !!!
                 new_data_df['subject'] = process_string_column(new_data_df, 'subject', 'その他')
