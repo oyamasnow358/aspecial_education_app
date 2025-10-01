@@ -1101,7 +1101,8 @@ else:
         with col3:
             st.markdown(f"**時間:** {selected_lesson['duration']}")
         with col4:
-            st.markdown(f"**ICT活用:** {selected_lesson['ict_use']}")
+            # ICT活用有無の表示を修正: True/Falseではなく、CSVの値（「ある」「なし」など）を直接表示
+            st.markdown(f"**ICT活用:** {selected_lesson.get('ict_use', 'なし')}")
         with col5:
             st.markdown(f"**教科:** {selected_lesson.get('subject', 'その他')}")
         with col6: # 新規追加

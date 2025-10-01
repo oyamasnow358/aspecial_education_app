@@ -152,6 +152,12 @@ def load_css():
             margin-top: 40px;
             margin-bottom: 20px;
         }
+        /* --- 戻るボタンのスタイル (位置調整) --- */
+        .back-button-container {
+            position: relative; /* relativeにして通常のフローで配置 */
+            padding-bottom: 20px; /* 下に余白 */
+            margin-bottom: -50px; /* 上の要素との重なりを調整 */
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
