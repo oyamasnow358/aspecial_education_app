@@ -576,6 +576,8 @@ def get_csv_template():
     return processed_data
 # --- Sidebar for Data Entry and Filters ---
 
+
+
 # ★ここから新しい関数 `create_and_fill_excel` の追加箇所 (上記で提示した関数の全文をここに移動)
 def create_and_fill_excel(
     unit_name, lesson_title, catch_copy, goal, target_grade, disability_type, 
@@ -584,49 +586,218 @@ def create_and_fill_excel(
     detail_word_url, detail_pdf_url, detail_ppt_url, detail_excel_url
 ):
     try:
-        # テンプレートExcelファイルをバイナリモードで読み込む
-        # このファイルはアプリと同じ階層にあると仮定
         with open("授業カード.xlsm", "rb") as f:
             excel_template_data = io.BytesIO(f.read())
         
-        # openpyxlでワークブックをロード
         workbook = openpyxl.load_workbook(excel_template_data, keep_vba=True)
-        sheet = workbook.active # アクティブなシートを選択
+        sheet = workbook.active
 
-        # セルにデータを書き込む (セル番地はテンプレートに合わせて調整してください)
-        # 例:
-        sheet['B3'] = unit_name # 単元名
-        sheet['B4'] = lesson_title # 授業タイトル (ここは単元名と結合セルになっている可能性あり。調整が必要)
-        sheet['C5'] = catch_copy # キャッチコピー
-        sheet['B8'] = goal # ねらい
-        sheet['A5'] = target_grade # 対象学部学年
-        sheet['B5'] = disability_type # 障害種別
-        sheet['E5'] = duration # 授業時間
-        sheet['E3'] = group_type # 学習形態
-        sheet['C3'] = subject # 教科 (ここも結合セルになっている可能性あり。調整が必要)
+        # !!! ここを修正します !!!
+        # 結合セルのエラーを回避するため、結合範囲の左上隅に書き込むか、
+        # 結合を解除してから書き込み、再度結合する方法を取ります。
+        # 今回は、テンプレートの構造を保ちつつ、結合セルでなければ直接書き込み、
+        # 結合セルであれば結合範囲の左上隅に書き込むように調整します。
+        # 以下は、具体的なセル結合の状況に合わせて調整が必要です。
 
-        # リスト形式のデータを改行区切りで書き込む
-        sheet['B10'] = "\n".join([f"- {s}" for s in introduction_flow.split('\n') if s.strip()])
-        sheet['B11'] = "\n".join([f"- {s}" for s in activity_flow.split('\n') if s.strip()])
-        sheet['B12'] = "\n".join([f"- {s}" for s in reflection_flow.split('\n') if s.strip()])
-        sheet['B9'] = "\n".join([f"- {s}" for s in points.split('\n') if s.strip()])
-        sheet['B14'] = "\n".join([f"- {s}" for s in materials.split('\n') if s.strip()])
-        sheet['B22'] = ", ".join([f"#{t.strip()}" for t in hashtags.split(',') if t.strip()])
-        sheet['B20'] = ict_use
+        # B3とB4が結合されている場合、B3に単元名と授業タイトルを結合して書き込む
+        # または、結合を解除してB3, B4にそれぞれ書き込み、再結合
+        # ここでは、B3を単元名、B4を授業タイトルと想定して書き込みます。
+        # もしB3とB4が完全に結合されていて、そこにタイトルを入れたい場合は、B3にまとめて書き込むことになります。
+        
+        # まず、結合範囲があるかチェックし、もしあればその範囲を解除する
+        # この処理は慎重に行う必要があり、テンプレートの意図を壊さないように注意
+        
+        # 例: B3とB4が結合されている場合
+        # merged_cells = list(sheet.merged_cells)
+        # for merged_range in merged_cells:
+        #     if 'B3' in merged_range or 'B4' in merged_range:
+        #         sheet.unmerge_cells(str(merged_range))
+        
+        # テンプレートの「セルB3〜B4」が結合されて「単元名」を表示している場合、
+        # B3にまとめて書き込むか、テンプレート側で調整が必要です。
+        # ここでは、B3に「単元名」を、B4に「授業タイトル」を書き込むと仮定します。
+        # もしB3とB4が結合されていて、そこにメインタイトルを入れる場合は、B3にまとめて書き込む。
+        # 例: sheet['B3'] = f"{unit_name}\n{lesson_title}"
+        
+        # 現在のエラーメッセージから、sheet['B3']がMergedCellになっているため、
+        # テンプレートの構造を確認し、書き込むべき適切な（非結合または結合範囲の左上隅）セルを探す必要があります。
+        # 一旦、B3が「単元名」の代表セル、B4が「授業タイトル」の代表セルと仮定して修正します。
+        # もし「授業タイトル」が別のセル (例: B7) にある場合は、そちらに書き込みます。
+        
+        # テンプレートに合わせたセル番地への書き込み例:
+        # ご自身のExcelテンプレートに合わせて、セル番地を正確に指定してください。
+        
+        # 単元名 (例: B3が単元名の代表セル)
+        if 'B3' in sheet.merged_cells: # もしB3が結合セル範囲の一部なら
+            for merged_range in sheet.merged_cells:
+                if 'B3' in str(merged_range): # 結合範囲がB3を含む場合
+                    # 結合範囲の左上隅に書き込む (例: B3)
+                    # 結合を一時解除する方が確実だが、シンプルに左上隅に書き込む
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = unit_name 
+                    break
+            else: # B3が単独セルなら
+                sheet['B3'] = unit_name
+        else: # B3が単独セルなら
+            sheet['B3'] = unit_name
+
+        # 授業タイトル (例: B7が授業タイトル)
+        # もしB4がMergedCellでなければB4に書き込むか、テンプレートの指定セルに書き込む
+        # エラーログを見るとB3が問題なので、B4は直接書き込めると仮定
+        if 'B4' in sheet.merged_cells: # もしB4が結合セル範囲の一部なら
+            for merged_range in sheet.merged_cells:
+                if 'B4' in str(merged_range): # 結合範囲がB4を含む場合
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = lesson_title 
+                    break
+            else:
+                sheet['B4'] = lesson_title
+        else:
+            sheet['B4'] = lesson_title
+        
+        # キャッチコピー (例: C5が代表セル)
+        if 'C5' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'C5' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = catch_copy
+                    break
+            else:
+                sheet['C5'] = catch_copy
+        else:
+            sheet['C5'] = catch_copy
+        
+        # ねらい (例: B8が代表セル)
+        if 'B8' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B8' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = goal
+                    break
+            else:
+                sheet['B8'] = goal
+        else:
+            sheet['B8'] = goal
+
+        # 学部学年 (例: A5)
+        sheet['A5'] = target_grade
+        # 障害種別 (例: B5)
+        sheet['B5'] = disability_type
+        # 授業時間 (例: E5)
+        sheet['E5'] = duration
+        # 学習形態 (例: E3)
+        sheet['E3'] = group_type
+        # 教科 (例: C3が代表セル)
+        if 'C3' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'C3' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = subject
+                    break
+            else:
+                sheet['C3'] = subject
+        else:
+            sheet['C3'] = subject
+
+
+        # リスト形式のデータを改行区切りで書き込む (セル番地はテンプレートに合わせて調整)
+        # 例: B10が導入の流れの代表セルで結合されている場合
+        if 'B10' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B10' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = "\n".join([f"- {s}" for s in introduction_flow.split('\n') if s.strip()])
+                    break
+            else:
+                sheet['B10'] = "\n".join([f"- {s}" for s in introduction_flow.split('\n') if s.strip()])
+        else:
+            sheet['B10'] = "\n".join([f"- {s}" for s in introduction_flow.split('\n') if s.strip()])
+
+
+        if 'B11' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B11' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = "\n".join([f"- {s}" for s in activity_flow.split('\n') if s.strip()])
+                    break
+            else:
+                sheet['B11'] = "\n".join([f"- {s}" for s in activity_flow.split('\n') if s.strip()])
+        else:
+            sheet['B11'] = "\n".join([f"- {s}" for s in activity_flow.split('\n') if s.strip()])
+
+
+        if 'B12' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B12' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = "\n".join([f"- {s}" for s in reflection_flow.split('\n') if s.strip()])
+                    break
+            else:
+                sheet['B12'] = "\n".join([f"- {s}" for s in reflection_flow.split('\n') if s.strip()])
+        else:
+            sheet['B12'] = "\n".join([f"- {s}" for s in reflection_flow.split('\n') if s.strip()])
+
+
+        if 'B9' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B9' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = "\n".join([f"- {s}" for s in points.split('\n') if s.strip()])
+                    break
+            else:
+                sheet['B9'] = "\n".join([f"- {s}" for s in points.split('\n') if s.strip()])
+        else:
+            sheet['B9'] = "\n".join([f"- {s}" for s in points.split('\n') if s.strip()])
+
+
+        if 'B14' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B14' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = "\n".join([f"- {s}" for s in materials.split('\n') if s.strip()])
+                    break
+            else:
+                sheet['B14'] = "\n".join([f"- {s}" for s in materials.split('\n') if s.strip()])
+        else:
+            sheet['B14'] = "\n".join([f"- {s}" for s in materials.split('\n') if s.strip()])
+
+
+        if 'B22' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B22' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = ", ".join([f"#{t.strip()}" for t in hashtags.split(',') if t.strip()])
+                    break
+            else:
+                sheet['B22'] = ", ".join([f"#{t.strip()}" for t in hashtags.split(',') if t.strip()])
+        else:
+            sheet['B22'] = ", ".join([f"#{t.strip()}" for t in hashtags.split(',') if t.strip()])
+
+
+        if 'B20' in sheet.merged_cells:
+            for merged_range in sheet.merged_cells:
+                if 'B20' in str(merged_range):
+                    top_left_cell_ref = str(merged_range).split(':')[0]
+                    sheet[top_left_cell_ref] = ict_use
+                    break
+            else:
+                sheet['B20'] = ict_use
+        else:
+            sheet['B20'] = ict_use
+
 
         # URL
-        sheet['B15'] = image # メイン画像URL (Excelシートの適切なセルに割り当ててください)
-        sheet['B16'] = video_link # 参考動画URL (Excelシートの適切なセルに割り当ててください)
+        # これらは単独セルであることが多いため、直接書き込みを試みますが、
+        # もし結合セルであれば同様の処理が必要になります。
+        sheet['B15'] = image # メイン画像URL
+        sheet['B16'] = video_link # 参考動画URL
         sheet['B17'] = detail_word_url # 指導案Word
         sheet['B18'] = detail_pdf_url # 指導案PDF
         sheet['B19'] = detail_ppt_url # 授業資料PowerPoint
         sheet['B21'] = detail_excel_url # 評価シートExcel
+        
+        # ... (セルの結合と中央揃えのコメントはそのまま) ...
 
-        # セルの結合と中央揃え (もしテンプレートで結合されているセルがあれば、openpyxlで再度設定する必要がある場合があります)
-        # 例: sheet.merge_cells('C5:D5')
-        #     sheet['C5'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-
-        # 変更を保存するためのBytesIOオブジェクト
         output = io.BytesIO()
         workbook.save(output)
         processed_data = output.getvalue()
@@ -636,11 +807,11 @@ def create_and_fill_excel(
         return None
     except Exception as e:
         st.error(f"Excelファイルの書き込み中にエラーが発生しました: {e}")
-        st.exception(e) # デバッグのために例外の詳細を表示
+        st.exception(e)
         return None
 # ★ここまでが新しい関数 `create_and_fill_excel` の追加箇所
 
-# st.session_stateの初期化 (既存の初期化に追記)
+# st.session_stateの初期化 (この部分は変更なし)
 if 'current_lesson_id' not in st.session_state:
     st.session_state.current_lesson_id = None
 if 'search_query' not in st.session_state:
@@ -655,76 +826,389 @@ if 'lesson_data' not in st.session_state:
     st.session_state.lesson_data = lesson_data_raw # アプリ内でデータを更新できるようにセッションステートに保持
 if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
     st.session_state.show_all_flow = False
-# ★★★ ここに `show_create_form` の初期化を追加 ★★★
-if 'show_create_form' not in st.session_state:
-    st.session_state.show_create_form = False # デフォルトではフォームを非表示にする
+if 'show_create_form' not in st.session_state: # ★追加: 新規作成フォーム表示フラグを初期化
+    st.session_state.show_create_form = False
 
 # --- Helper Functions ---
-# ... (既存のヘルパー関数はそのまま) ...
 
+def set_detail_page(lesson_id):
+    """詳細ページへの遷移をトリガーする関数"""
+    st.session_state.current_lesson_id = lesson_id
+    st.session_state.show_all_flow = False # 詳細ページに遷移したらフロー表示をリセット
+
+def back_to_list():
+    """一覧ページに戻る関数"""
+    st.session_state.current_lesson_id = None
+    st.session_state.show_all_flow = False # 一覧に戻ったらフロー表示をリセット
+    st.session_state.show_create_form = False # 一覧に戻ったらフォームも閉じる
+
+def toggle_all_flow_display():
+    """授業の流れ全体の表示を切り替える関数"""
+    st.session_state.show_all_flow = not st.session_state.show_all_flow
+
+# ★新しい授業カード作成フォームの表示/非表示を切り替える関数
 def toggle_create_form_display():
-    """授業カード作成フォームの表示を切り替える関数"""
-    # この関数は `st.session_state.show_create_form` を直接操作します。
     st.session_state.show_create_form = not st.session_state.show_create_form
+
+# 授業カードのヘッダーカラム定義
+LESSON_CARD_COLUMNS = [
+    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type", 
+    "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
+    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", 
+    "detail_ppt_url", "detail_excel_url",
+    "ict_use", "subject", "group_type", "unit_order", "unit_lesson_title" 
+]
+
+# Excelテンプレートダウンロード関数
+def get_excel_template():
+    template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        template_df.to_excel(writer, index=False, sheet_name='授業カードテンプレート')
+        workbook  = writer.book
+        worksheet = writer.sheets['授業カードテンプレート']
+        # ヘッダーにコメントを追加（入力ガイド）
+        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') 
+        worksheet.write_comment('C1', '例: 生活スキルを楽しく学ぶ実践的な買い物学習！')
+        worksheet.write_comment('D1', '例: お店での買い物の手順を理解し、お金の計算ができるようになる。')
+        worksheet.write_comment('E1', '例: 小学部3年')
+        worksheet.write_comment('F1', '例: 知的障害')
+        worksheet.write_comment('G1', '例: 45分×3コマ')
+        worksheet.write_comment('H1', '例: 財布;お金;買い物リスト  (セミコロン区切り)')
+        worksheet.write_comment('I1', '例: 課題の提示;本時の目標共有 (セミコロン区切りで複数行)')
+        worksheet.write_comment('J1', '例: 商品選び;お金の支払い練習 (セミコロン区切りで複数行)')
+        worksheet.write_comment('K1', '例: できたことの共有;次回の課題 (セミコロン区切りで複数行)')
+        worksheet.write_comment('L1', '例: スモールステップで指導;具体物を用意 (セミコロン区切り)')
+        worksheet.write_comment('M1', '例: 生活単元,自立活動 (カンマ区切り)')
+        worksheet.write_comment('N1', 'メインとなる画像URL (無い場合は空欄でOK)')
+        worksheet.write_comment('O1', '教材写真などのURL (セミコロン区切り、無い場合は空欄でOK)')
+        worksheet.write_comment('P1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
+        worksheet.write_comment('Q1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('S1', '指導案PowerPointファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('T1', '指導案ExcelファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('U1', 'TRUEまたはFALSE') # ICT活用
+        worksheet.write_comment('V1', '例: 生活単元学習,国語,算数など') # subject
+        worksheet.write_comment('W1', '例: 全体,個別,小グループ  (学習集団の単位)') # group_type
+        worksheet.write_comment('X1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') # unit_lesson_title
+    processed_data = output.getvalue()
+    return processed_data
+
+# CSVテンプレートダウンロード関数
+def get_csv_template():
+    template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
+    output = BytesIO()
+    template_df.to_csv(output, index=False, encoding='utf-8-sig')
+    processed_data = output.getvalue()
+    return processed_data
+
+# ★ここから新しい関数 `create_and_fill_excel` の追加箇所
+# この関数は、ファイルアップロードやフォーム処理の前に定義される必要があります。
+def create_and_fill_excel(
+    unit_name, lesson_title, catch_copy, goal, target_grade, disability_type, 
+    duration, group_type, subject, introduction_flow, activity_flow, 
+    reflection_flow, points, materials, hashtags, ict_use, image, video_link,
+    detail_word_url, detail_pdf_url, detail_ppt_url, detail_excel_url
+):
+    try:
+        # Excelファイルを読み込む
+        workbook = openpyxl.load_workbook("授業カード.xlsm")
+        sheet = workbook.active
+
+        # セルに値を書き込む (結合セルを考慮し、結合範囲の左上隅に書き込む)
+        # 結合セルに直接書き込むとエラーになるため、結合範囲をチェックして左上隅に書く
+        def write_to_cell(sheet, cell_coord, value):
+            for merged_cell_range in sheet.merged_cells:
+                if cell_coord in merged_cell_range:
+                    # 結合セルの左上隅のセルに書き込む
+                    min_col, min_row, max_col, max_row = openpyxl.utils.cell.range_boundaries(str(merged_cell_range))
+                    top_left_cell_coord = openpyxl.utils.cell.get_column_letter(min_col) + str(min_row)
+                    sheet[top_left_cell_coord].value = value
+                    return
+            # 結合セルでなければ直接書き込む
+            sheet[cell_coord].value = value
+
+        write_to_cell(sheet, 'B3', unit_name) # 単元名 (A3-B4 が結合されている場合、A3に書く) -> Excelテンプレートに合わせて B3
+        write_to_cell(sheet, 'B7', lesson_title) # 授業タイトル
+        write_to_cell(sheet, 'C5', catch_copy) # キャッチコピー (C5-D5 が結合されている場合、C5に書く)
+        write_to_cell(sheet, 'B8', goal)       # ねらい (B8-E8 が結合されている場合、B8に書く)
+        write_to_cell(sheet, 'A5', target_grade) # 対象学部学年
+        write_to_cell(sheet, 'B5', disability_type) # 障害種別
+        write_to_cell(sheet, 'E5', duration)   # 授業時間
+        write_to_cell(sheet, 'E3', group_type) # 学習形態
+        write_to_cell(sheet, 'C3', subject)    # 教科 (C3-D4 が結合されている場合、C3に書く)
+
+        # 流れとポイントは改行区切りで入力されるので、セミコロンに変換して書き込む
+        write_to_cell(sheet, 'B10', ";".join([s.strip() for s in introduction_flow.split('\n') if s.strip()]))
+        write_to_cell(sheet, 'B11', ";".join([s.strip() for s in activity_flow.split('\n') if s.strip()]))
+        write_to_cell(sheet, 'B12', ";".join([s.strip() for s in reflection_flow.split('\n') if s.strip()]))
+        write_to_cell(sheet, 'B9', ";".join([s.strip() for s in points.split('\n') if s.strip()]))
+        write_to_cell(sheet, 'B14', ";".join([s.strip() for s in materials.split('\n') if s.strip()]))
+        
+        # ハッシュタグはカンマ区切り
+        write_to_cell(sheet, 'B22', hashtags)
+        
+        # ICT活用
+        write_to_cell(sheet, 'B20', ict_use) # ICT活用内容
+
+        # URL
+        write_to_cell(sheet, 'B16', image)
+        write_to_cell(sheet, 'B17', video_link)
+        write_to_cell(sheet, 'B18', detail_word_url)
+        write_to_cell(sheet, 'B19', detail_pdf_url)
+        write_to_cell(sheet, 'B21', detail_ppt_url) # Excelテンプレートの正しいセルを仮定
+        write_to_cell(sheet, 'B23', detail_excel_url) # Excelテンプレートの正しいセルを仮定
+
+
+        output = BytesIO()
+        workbook.save(output)
+        processed_data = output.getvalue()
+        return processed_data
+    except FileNotFoundError:
+        st.error("エラー: '授業カード.xlsm' テンプレートファイルが見つかりません。")
+        return None
+    except Exception as e:
+        st.error(f"Excelファイルの書き込み中にエラーが発生しました: {e}")
+        st.exception(e)
+        return None
+# ★ここまでが新しい関数 `create_and_fill_excel` の追加箇所
+
+
+# --- Sidebar for Data Entry and Filters ---
+# !!! サイドバーのコンテンツはここにあり、このブロック全体は変更しません !!!
+with st.sidebar:
+    st.header("📚 データ登録・管理")
+    st.markdown("---")
+
+    st.subheader("① Googleフォーム方式")
+    st.info("""
+    Googleフォームで入力されたデータは、自動的にGoogleスプレッドシートに蓄積され、このアプリに反映されます。
+    以下のボタンからフォームを開き、新しい授業カードを登録してください。
+    """)
+    google_form_link = "https://forms.gle/YOUR_GOOGLE_FORM_LINK" # ここを実際のGoogleフォームのリンクに置き換えてください
+    st.markdown(
+        f"""
+        <a href="{google_form_link}" target="_blank">
+        <button style="
+        background-color: #4CAF50; color: white; border: none; padding: 10px 20px;
+        border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
+        transition: background-color 0.3s, transform 0.2s;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;
+        ">
+        📝 Googleフォームを開く
+        </button>
+        </a>
+        """, unsafe_allow_html=True
+    )
+    if google_form_link == "https://forms.gle/YOUR_GOOGLE_FORM_LINK":
+        st.warning("⚠️ Googleフォームのリンクを実際のURLに更新してください。")
+
+    st.markdown("---")
+
+    st.subheader("② ファイルテンプレート方式")
+    st.info("""
+    ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
+    """)
+
+    try:
+        with open("授業カード.xlsm", "rb") as f:
+            excel_macro_sample_data = f.read()
+        st.download_button(
+            label="⬇️ 授業カード 入力用（見本付き）",
+            data=excel_macro_sample_data,
+            file_name="授業カード.xlsm",
+            mime="application/vnd.ms-excel.sheet.macroEnabled.12",
+            help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
+        )
+    except FileNotFoundError:
+        st.warning("⚠️ '授業カード.xlsm' ファイルが見つかりませんでした。同じ階層に配置してください。")
+    except Exception as e:
+        st.error(f"Excelマクロファイルの読み込み中にエラーが発生しました: {e}")
+
+    csv_data_for_download = get_csv_template()
+    st.download_button(
+        label="⬇️ CSVテンプレートをダウンロード",
+        data=csv_data_for_download,
+        file_name="授業カードテンプレート.csv",
+        mime="text/csv",
+        help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
+    )
+
+    uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。")
+
+    if uploaded_file is not None:
+        try:
+            # ... (ファイルアップロードのロジックは変更なし。ただし、Excel読み込み時にはopenpyxlを使うことを推奨) ...
+            if uploaded_file.name.endswith('.xlsx'):
+                # openpyxlで読み込み、データフレームに変換
+                workbook = openpyxl.load_workbook(uploaded_file)
+                sheet = workbook.active
+                data = sheet.values
+                cols = next(data)[0:] # ヘッダー行をスキップ
+                new_data_df = pd.DataFrame(data, columns=cols)
+            elif uploaded_file.name.endswith('.csv'):
+                new_data_df = pd.read_csv(uploaded_file)
+            else:
+                st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
+                st.stop()
+
+            required_cols = ["unit_name", "goal"] 
+            if not all(col in new_data_df.columns for col in required_cols):
+                st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
+                missing_cols = [col for col in required_cols if col not in new_data_df.columns]
+                st.info(f"不足しているカラム: {', '.join(missing_cols)}")
+            else:
+                def process_list_column(df, col_name, separator):
+                    if col_name in df.columns:
+                        return df[col_name].apply(lambda x: [item.strip() for item in str(x).split(separator) if item.strip()] if pd.notna(x) and str(x).strip() != '' else [])
+                    return [[]] * len(df)
+                
+                def process_string_column(df, col_name, default_value):
+                    if col_name in df.columns:
+                        return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
+                    return [default_value] * len(df)
+
+                if 'unit_order' in new_data_df.columns:
+                    new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
+                else:
+                    new_data_df['unit_order'] = 9999
+             
+                if 'unit_lesson_title' in new_data_df.columns:
+                    new_data_df['unit_lesson_title'] = new_data_df['unit_lesson_title'].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '')
+                else:
+                    new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内授業')
+                
+                new_data_df['introduction_flow'] = process_list_column(new_data_df, 'introduction_flow', ';')
+                new_data_df['activity_flow'] = process_list_column(new_data_df, 'activity_flow', ';')
+                new_data_df['reflection_flow'] = process_list_column(new_data_df, 'reflection_flow', ';')
+                new_data_df['points'] = process_list_column(new_data_df, 'points', ';')
+                new_data_df['hashtags'] = process_list_column(new_data_df, 'hashtags', ',')
+                new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
+
+                if 'ict_use' in new_data_df.columns:
+                    new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).apply(lambda x: x.strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'なし')
+                else:
+                    new_data_df['ict_use'] = 'なし'
+
+                new_data_df['subject'] = process_string_column(new_data_df, 'subject', 'その他')
+                new_data_df['unit_name'] = process_string_column(new_data_df, 'unit_name', '単元なし')
+                new_data_df['group_type'] = process_string_column(new_data_df, 'group_type', '全体')
+
+                existing_ids = {d['id'] for d in st.session_state.lesson_data}
+                max_id = max(existing_ids) if existing_ids else 0
+
+                new_entries = []
+                for _, row in new_data_df.iterrows():
+                    current_id = row.get('id')
+                    if pd.isna(current_id) or current_id in existing_ids:
+                        max_id += 1
+                        row_id = max_id
+                    else:
+                        try:
+                            row_id = int(current_id)
+                            if row_id in existing_ids:
+                                max_id += 1
+                                row_id = max_id
+                        except ValueError:
+                            max_id += 1
+                            row_id = max_id
+                    
+                    lesson_dict = {
+                        'id': row_id,
+                        'unit_name': row.get('unit_name', '単元なし'),
+                        'catch_copy': row.get('catch_copy', ''),
+                        'goal': row.get('goal', ''),
+                        'target_grade': row.get('target_grade', '不明'),
+                        'disability_type': row.get('disability_type', '不明'),
+                        'duration': row.get('duration', '不明'),
+                        'materials': row.get('materials', ''),
+                        'introduction_flow': row.get('introduction_flow', []), 
+                        'activity_flow': row.get('activity_flow', []),     
+                        'reflection_flow': row.get('reflection_flow', []),   
+                        'points': row.get('points', []),
+                        'hashtags': row.get('hashtags', []),
+                        'image': process_string_column(new_data_df.iloc[[_]], 'image', '').iloc[0],
+                        'material_photos': row.get('material_photos', []),
+                        'video_link': process_string_column(new_data_df.iloc[[_]], 'video_link', '').iloc[0],
+                        'detail_word_url': process_string_column(new_data_df.iloc[[_]], 'detail_word_url', '').iloc[0],
+                        'detail_pdf_url': process_string_column(new_data_df.iloc[[_]], 'detail_pdf_url', '').iloc[0],   
+                        'detail_ppt_url': process_string_column(new_data_df.iloc[[_]], 'detail_ppt_url', '').iloc[0],   
+                        'detail_excel_url': process_string_column(new_data_df.iloc[[_]], 'detail_excel_url', '').iloc[0],
+                        'ict_use': row.get('ict_use', False),
+                        'subject': row.get('subject', 'その他'),
+                        'group_type': row.get('group_type', '全体'),
+                        'unit_order': row.get('unit_order', 9999),
+                        'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業'))
+                    }
+                    new_entries.append(lesson_dict)
+                    existing_ids.add(row_id)
+
+                st.session_state.lesson_data.extend(new_entries)
+                st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
+                st.experimental_rerun()
+        except Exception as e:
+            st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
+            st.exception(e)
+
+    st.markdown("---") # サイドバーのコンテンツがここで終わる
+
 
 # --- Main Page Logic ---
 
-# 授業カード一覧または詳細ページを表示
 if st.session_state.current_lesson_id is None:
     # --- Lesson Card List View ---
 
     st.markdown("<h1>🃏 授業カードライブラリー</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 1.1em; color: #555;'>先生方の実践授業アイデアを検索し、日々の指導に役立てましょう！</p>", unsafe_allow_html=True)
 
-    # ★★★ ここに「新しい授業カードの作成」セクションを移動 ★★★
-    st.markdown("---") 
+    # ★★★ ここに「新しい授業カードの作成」セクションを配置 ★★★
+    st.markdown("---")
     st.subheader("新しい授業カードの作成")
-    # ここにボタンを配置し、メインページでのみ表示されるようにする
-    if st.button("📝 授業カード作成フォームを開く / 閉じる", on_click=toggle_create_form_display, key="toggle_create_form_main_page"):
-        pass # ボタンが押されたら状態が切り替わる
+    # ここに配置されたボタンが、メインページでのみフォームの表示/非表示を切り替えます。
+    if st.button("📝 授業カード作成フォームを開く / 閉じる", on_click=toggle_create_form_display, key="toggle_create_form_main_page_button"): 
+        pass
 
-    # ★フォーム表示フラグがTrueの場合のみフォームを表示
     if st.session_state.show_create_form:
         st.info("以下のフォームに授業カードの情報を入力し、「授業カードExcelをダウンロード」ボタンをクリックすると、入力済みのExcelファイルが生成されます。")
 
-        # 入力フォームの定義
-        with st.form("new_lesson_card_form"):
+        with st.form("new_lesson_card_form_main_page"): # フォームキーもメインページ用にする
             st.subheader("授業カード入力フォーム")
 
             # 入力項目を定義 (前の回答で提示したフォームの内容をそのままここに記述)
-            unit_name_input = st.text_input("単元名", help="例: 買い物学習、話し言葉の学習", key="form_unit_name")
-            lesson_title_input = st.text_input("授業タイトル", help="例: 「買い物学習」〜お店で買ってみよう〜", key="form_lesson_title")
-            catch_copy_input = st.text_area("キャッチコピー", help="この授業の魅力が伝わる一文を！", key="form_catch_copy")
-            goal_input = st.text_area("ねらい", help="授業で子どもたちに身につけてほしい力を具体的に記述します。", key="form_goal")
+            # 全てのkeyをユニークなものに変更 (例: _main)
+            unit_name_input = st.text_input("単元名", help="例: 買い物学習、話し言葉の学習", key="form_unit_name_main")
+            lesson_title_input = st.text_input("授業タイトル", help="例: 「買い物学習」〜お店で買ってみよう〜", key="form_lesson_title_main")
+            catch_copy_input = st.text_area("キャッチコピー", help="この授業の魅力が伝わる一文を！", key="form_catch_copy_main")
+            goal_input = st.text_area("ねらい", help="授業で子どもたちに身につけてほしい力を具体的に記述します。", key="form_goal_main")
             
             col_meta1, col_meta2, col_meta3 = st.columns(3)
             with col_meta1:
-                target_grade_input = st.text_input("対象学部学年", help="例: 小学部3年、中学部", key="form_target_grade")
+                target_grade_input = st.text_input("対象学部学年", help="例: 小学部3年、中学部", key="form_target_grade_main")
             with col_meta2:
-                disability_type_input = st.text_input("障害種別", help="例: 知的障害、肢体不自由", key="form_disability_type")
+                disability_type_input = st.text_input("障害種別", help="例: 知的障害、肢体不自由", key="form_disability_type_main")
             with col_meta3:
-                duration_input = st.text_input("授業時間", help="例: 45分×3コマ、90分", key="form_duration")
+                duration_input = st.text_input("授業時間", help="例: 45分×3コマ、90分", key="form_duration_main")
             
             col_meta4, col_meta5 = st.columns(2)
             with col_meta4:
-                group_type_input = st.selectbox("学習形態", ["全体", "個別", "小グループ", "その他"], help="授業における学習集団の形態", key="form_group_type")
+                group_type_input = st.selectbox("学習形態", ["全体", "個別", "小グループ", "その他"], help="授業における学習集団の形態", key="form_group_type_main")
             with col_meta5:
-                subject_input = st.text_input("教科", help="例: 生活単元学習、国語、算数", key="form_subject")
+                subject_input = st.text_input("教科", help="例: 生活単元学習、国語、算数", key="form_subject_main")
 
-            introduction_flow_input = st.text_area("導入の流れ", help="各ステップを改行で区切ってください。", key="form_intro_flow")
-            activity_flow_input = st.text_area("活動の流れ", help="各ステップを改行で区切ってください。", key="form_activity_flow")
-            reflection_flow_input = st.text_area("振り返り", help="各ステップを改行で区切ってください。", key="form_reflect_flow")
-            points_input = st.text_area("授業のポイント", help="指導上の工夫や留意点など。各ポイントを改行で区切ってください。", key="form_points")
-            materials_input = st.text_area("準備物", help="必要な物を改行またはカンマで区切ってください。", key="form_materials")
-            hashtags_input = st.text_input("ハッシュタグ (カンマ区切り)", help="例: 生活単元,自立活動,SST", key="form_hashtags")
-            ict_use_input = st.text_area("ICT活用内容", help="使用するICT機器や具体的な活用方法を記述してください。", key="form_ict_use")
+            introduction_flow_input = st.text_area("導入の流れ", help="各ステップを改行で区切ってください。", key="form_intro_flow_main")
+            activity_flow_input = st.text_area("活動の流れ", help="各ステップを改行で区切ってください。", key="form_activity_flow_main")
+            reflection_flow_input = st.text_area("振り返り", help="各ステップを改行で区切ってください。", key="form_reflect_flow_main")
+            points_input = st.text_area("授業のポイント", help="指導上の工夫や留意点など。各ポイントを改行で区切ってください。", key="form_points_main")
+            materials_input = st.text_area("準備物", help="必要な物を改行またはカンマで区切ってください。", key="form_materials_main")
+            hashtags_input = st.text_input("ハッシュタグ (カンマ区切り)", help="例: 生活単元,自立活動,SST", key="form_hashtags_main")
+            ict_use_input = st.text_area("ICT活用内容", help="使用するICT機器や具体的な活用方法を記述してください。", key="form_ict_use_main")
 
-            image_url_input = st.text_input("メイン画像URL", help="授業のイメージが伝わる画像のURL", key="form_image_url")
-            video_link_input = st.text_input("参考動画URL", help="YouTubeなどの動画リンク", key="form_video_link")
-            detail_word_url_input = st.text_input("指導案WordファイルURL", help="詳細な指導案のWordファイルへのリンク", key="form_word_url")
-            detail_pdf_url_input = st.text_input("指導案PDFファイルURL", help="詳細な指導案のPDFファイルへのリンク", key="form_pdf_url")
-            detail_ppt_url_input = st.text_input("授業資料PowerPointファイルURL", help="授業で使うPowerPointファイルへのリンク", key="form_ppt_url")
-            detail_excel_url_input = st.text_input("評価シートExcelファイルURL", help="評価シートなどのExcelファイルへのリンク", key="form_excel_url")
+            image_url_input = st.text_input("メイン画像URL", help="授業のイメージが伝わる画像のURL", key="form_image_url_main")
+            video_link_input = st.text_input("参考動画URL", help="YouTubeなどの動画リンク", key="form_video_link_main")
+            detail_word_url_input = st.text_input("指導案WordファイルURL", help="詳細な指導案のWordファイルへのリンク", key="form_word_url_main")
+            detail_pdf_url_input = st.text_input("指導案PDFファイルURL", help="詳細な指導案のPDFファイルへのリンク", key="form_pdf_url_main")
+            detail_ppt_url_input = st.text_input("授業資料PowerPointファイルURL", help="授業で使うPowerPointファイルへのリンク", key="form_ppt_url_main")
+            detail_excel_url_input = st.text_input("評価シートExcelファイルURL", help="評価シートなどのExcelファイルへのリンク", key="form_excel_url_main")
 
             submitted = st.form_submit_button("授業カードExcelをダウンロード")
 
@@ -756,18 +1240,18 @@ if st.session_state.current_lesson_id is None:
                 )
                 if excel_output:
                     st.download_button(
-                        label="⬇️ 授業カード_入力済.xlsm をダウンロード",
+                        label="⬇️ 授業カード_入力済.xlsm をダウンロード", # labelを修正
                         data=excel_output,
                         file_name="授業カード_入力済.xlsm",
                         mime="application/vnd.ms-excel.sheet.macroEnabled.12",
-                        key="download_filled_excel",
+                        key="download_filled_excel_main", # keyをユニークに
                         help="入力した情報が反映されたExcelファイルをダウンロードします。"
                     )
                     st.success("Excelファイルの準備ができました！ダウンロードボタンをクリックしてください。")
                 else:
                     st.error("Excelファイルの作成に失敗しました。テンプレートファイルがあるか確認してください。")
                 
-        st.markdown("---")
+        st.markdown("---") # フォームの後に区切り線
     
 
     
