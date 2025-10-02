@@ -5,6 +5,8 @@ import re # ハッシュタグ抽出用
 import io # Word/Excelファイルダウンロード・アップロード用
 from io import BytesIO # Excelアップロード用
 import xlsxwriter # エラー解決のためにインポートを追加
+import openpyxl # ★追加: Excelファイル操作用
+from openpyxl.styles import Alignment # ★追加: セルの結合と中央揃え用
 
 st.set_page_config(
     page_title="授業カードライブラリー",
@@ -1082,8 +1084,110 @@ else:
         
         st.markdown("</div>", unsafe_allow_html=True) # flow-content-wrapper の閉じタグ
         
-        st.markdown("---")
+        st.markdown("---") # ここに区切り線を追加して、新機能との区切りを明確にする
+    
+    # ★ここから新しい機能の追加箇所
+        st.markdown("<h2>✨ 新しい授業カードの作成とExcelダウンロード</h2>", unsafe_allow_html=True)
+        st.info("以下のフォームに授業カードの情報を入力し、「授業カードExcelをダウンロード」ボタンをクリックすると、入力済みのExcelファイルが生成されます。")
+     
+         # 入力フォームの定義
+        with st.form("new_lesson_card_form"):
+             st.subheader("授業カード入力フォーム")
 
+        # 入力項目を定義
+        # 【A3～B4 … 単元名】
+             unit_name_input = st.text_input("単元名", help="例: 買い物学習、話し言葉の学習")
+        # 【B7 … 授業タイトル】
+             lesson_title_input = st.text_input("授業タイトル", help="例: 「買い物学習」〜お店で買ってみよう〜")
+        # 【C5 ～D5（統合せる）… キャッチコピー】
+             catch_copy_input = st.text_area("キャッチコピー", help="この授業の魅力が伝わる一文を！")
+        # 【B8～E８（統合せる） … ねらい】
+             goal_input = st.text_area("ねらい", help="授業で子どもたちに身につけてほしい力を具体的に記述します。")
+        
+             col_meta1, col_meta2, col_meta3 = st.columns(3)
+             with col_meta1:
+            # 【A5 … 学部学年】
+                 target_grade_input = st.text_input("対象学部学年", help="例: 小学部3年、中学部")
+             with col_meta2:
+            # 【B5 … 障害種別】
+                 disability_type_input = st.text_input("障害種別", help="例: 知的障害、肢体不自由")
+             with col_meta3:
+            # 【E5 … 授業時間】
+                 duration_input = st.text_input("授業時間", help="例: 45分×3コマ、90分")
+        
+             col_meta4, col_meta5 = st.columns(2)
+             with col_meta4:
+            # 【E3 … 学習形態】 (これは以前のコードには直接対応する項目がありませんでしたが、今回の要望で追加)
+                 group_type_input = st.selectbox("学習形態", ["全体", "個別", "小グループ", "その他"], help="授業における学習集団の形態")
+             with col_meta5:
+            # 【C3 ～ D4（統合せる） … 教科】
+                 subject_input = st.text_input("教科", help="例: 生活単元学習、国語、算数")
+
+
+        # 【B10～E10（統合せる） … 導入の流れ】
+             introduction_flow_input = st.text_area("導入の流れ", help="各ステップを改行で区切ってください。")
+        # 【B11~E11 （統合せる）… 活動の流れ】
+             activity_flow_input = st.text_area("活動の流れ", help="各ステップを改行で区切ってください。")
+        # 【B12~E12（統合せる） … 振り返り】
+             reflection_flow_input = st.text_area("振り返り", help="各ステップを改行で区切ってください。")
+        # 【B9~E9 （統合せる）… 授業のポイント】
+             points_input = st.text_area("授業のポイント", help="指導上の工夫や留意点など。各ポイントを改行で区切ってください。")
+        # 【B14～E14（統合せる） … 準備物】
+             materials_input = st.text_area("準備物", help="必要な物を改行またはカンマで区切ってください。")
+        # 【B22~E22 （統合せる）… ハッシュタグ】
+             hashtags_input = st.text_input("ハッシュタグ (カンマ区切り)", help="例: 生活単元,自立活動,SST")
+        # 【B20~E20 （統合せる）… ICT活用】
+             ict_use_input = st.text_area("ICT活用内容", help="使用するICT機器や具体的な活用方法を記述してください。")
+
+        # ★画像・動画・資料URL (既存の項目だが、入力フォームとして追加)
+             image_url_input = st.text_input("メイン画像URL", help="授業のイメージが伝わる画像のURL")
+             video_link_input = st.text_input("参考動画URL", help="YouTubeなどの動画リンク")
+             detail_word_url_input = st.text_input("指導案WordファイルURL", help="詳細な指導案のWordファイルへのリンク")
+             detail_pdf_url_input = st.text_input("指導案PDFファイルURL", help="詳細な指導案のPDFファイルへのリンク")
+             detail_ppt_url_input = st.text_input("授業資料PowerPointファイルURL", help="授業で使うPowerPointファイルへのリンク")
+             detail_excel_url_input = st.text_input("評価シートExcelファイルURL", help="評価シートなどのExcelファイルへのリンク")
+
+             submitted = st.form_submit_button("授業カードExcelをダウンロード")
+
+             if submitted:
+            # openpyxlを使ってExcelファイルを操作する関数を呼び出す
+                 excel_output = create_and_fill_excel(
+                     unit_name=unit_name_input,
+                     lesson_title=lesson_title_input,
+                     catch_copy=catch_copy_input,
+                         target_grade=target_grade_input,
+                     disability_type=disability_type_input,
+                     duration=duration_input,
+                     group_type=group_type_input,
+                     subject=subject_input,
+                     introduction_flow=introduction_flow_input,
+                     activity_flow=activity_flow_input,
+                     reflection_flow=reflection_flow_input,
+                     points=points_input,
+                          hashtags=hashtags_input,
+                     ict_use=ict_use_input,
+                     image=image_url_input,
+                     video_link=video_link_input,
+                     detail_word_url=detail_word_url_input,
+                     detail_pdf_url=detail_pdf_url_input,
+                     detail_ppt_url=detail_ppt_url_input,
+                     detail_excel_url=detail_excel_url_input,
+                 )
+                 if excel_output:
+                     st.download_button(
+                         label="⬇️ 授業カード.xlsm をダウンロード",
+                              file_name="授業カード_入力済.xlsm",
+                         mime="application/vnd.ms-excel.sheet.macroEnabled.12",
+                         key="download_filled_excel",
+                         help="入力した情報が反映されたExcelファイルをダウンロードします。"
+                     )
+                     st.success("Excelファイルの準備ができました！ダウンロードボタンをクリックしてください。")
+                 else:
+                     st.error("Excelファイルの作成に失敗しました。テンプレートファイルがあるか確認してください。")
+         # ★ここまでが新しい機能の追加箇所
+                
+        st.markdown("---")
+        
         # ねらい
        
         st.markdown("<h3><span class='header-icon'>🎯</span>ねらい</h3>", unsafe_allow_html=True)
@@ -1102,7 +1206,6 @@ else:
         with col3:
             st.markdown(f"**時間:** {selected_lesson['duration']}")
         with col4:
-            # ICT活用有無の表示を修正: True/Falseではなく、CSVの値（「ある」「なし」など）を直接表示
             st.markdown(f"**ICT活用:** {selected_lesson.get('ict_use', 'なし')}")
         with col5:
             st.markdown(f"**教科:** {selected_lesson.get('subject', 'その他')}")
