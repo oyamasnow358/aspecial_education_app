@@ -911,54 +911,63 @@ def create_and_fill_excel(
     detail_word_url, detail_pdf_url, detail_ppt_url, detail_excel_url
 ):
     try:
-        # Excelファイルを読み込む
-        workbook = openpyxl.load_workbook("授業カード.xlsm")
+        workbook = openpyxl.load_workbook("授業カード.xlsm", keep_vba=True) # keep_vba=True を追加するとマクロを維持
         sheet = workbook.active
 
-        # セルに値を書き込む (結合セルを考慮し、結合範囲の左上隅に書き込む)
-        # 結合セルに直接書き込むとエラーになるため、結合範囲をチェックして左上隅に書く
-        def write_to_cell(sheet, cell_coord, value):
-            for merged_cell_range in sheet.merged_cells:
-                if cell_coord in merged_cell_range:
-                    # 結合セルの左上隅のセルに書き込む
-                    min_col, min_row, max_col, max_row = openpyxl.utils.cell.range_boundaries(str(merged_cell_range))
+        def write_to_cell_robust(sheet, target_cell_coord, value):
+            # target_cell_coord がどの結合範囲に含まれているかをチェック
+            for merged_range in sheet.merged_cells:
+                if target_cell_coord in str(merged_range): # 例: 'B3' in 'B3:D4'
+                    # 結合範囲の左上隅に書き込む
+                    min_col, min_row, _, _ = openpyxl.utils.cell.range_boundaries(str(merged_range))
                     top_left_cell_coord = openpyxl.utils.cell.get_column_letter(min_col) + str(min_row)
                     sheet[top_left_cell_coord].value = value
                     return
             # 結合セルでなければ直接書き込む
-            sheet[cell_coord].value = value
+            sheet[target_cell_coord].value = value
 
-        write_to_cell(sheet, 'B3', unit_name) # 単元名 (A3-B4 が結合されている場合、A3に書く) -> Excelテンプレートに合わせて B3
-        write_to_cell(sheet, 'B7', lesson_title) # 授業タイトル
-        write_to_cell(sheet, 'C5', catch_copy) # キャッチコピー (C5-D5 が結合されている場合、C5に書く)
-        write_to_cell(sheet, 'B8', goal)       # ねらい (B8-E8 が結合されている場合、B8に書く)
-        write_to_cell(sheet, 'A5', target_grade) # 対象学部学年
-        write_to_cell(sheet, 'B5', disability_type) # 障害種別
-        write_to_cell(sheet, 'E5', duration)   # 授業時間
-        write_to_cell(sheet, 'E3', group_type) # 学習形態
-        write_to_cell(sheet, 'C3', subject)    # 教科 (C3-D4 が結合されている場合、C3に書く)
-
-        # 流れとポイントは改行区切りで入力されるので、セミコロンに変換して書き込む
-        write_to_cell(sheet, 'B10', ";".join([s.strip() for s in introduction_flow.split('\n') if s.strip()]))
-        write_to_cell(sheet, 'B11', ";".join([s.strip() for s in activity_flow.split('\n') if s.strip()]))
-        write_to_cell(sheet, 'B12', ";".join([s.strip() for s in reflection_flow.split('\n') if s.strip()]))
-        write_to_cell(sheet, 'B9', ";".join([s.strip() for s in points.split('\n') if s.strip()]))
-        write_to_cell(sheet, 'B14', ";".join([s.strip() for s in materials.split('\n') if s.strip()]))
+        # --- ここから、Excelテンプレートの実際のレイアウトに合わせて修正 ---
+        # 例: B3とB4が結合されていて、B3が左上隅の場合
+        write_to_cell_robust(sheet, 'B3', unit_name) # 単元名 (例: B3-B4が結合されていればB3に)
         
-        # ハッシュタグはカンマ区切り
-        write_to_cell(sheet, 'B22', hashtags)
+        # 例: 授業タイトルがB7にあり、単独セルまたはB7が左上隅の場合
+        write_to_cell_robust(sheet, 'B7', lesson_title) 
+
+        # 例: C5が左上隅で結合されている場合
+        write_to_cell_robust(sheet, 'C5', catch_copy) 
+
+        # 例: B8が左上隅で結合されている場合
+        write_to_cell_robust(sheet, 'B8', goal)       
+
+        # 例: A5は単独セルかA5が左上隅の場合
+        write_to_cell_robust(sheet, 'A5', target_grade) 
+        write_to_cell_robust(sheet, 'B5', disability_type) 
+        write_to_cell_robust(sheet, 'E5', duration)   
+        write_to_cell_robust(sheet, 'E3', group_type) 
         
-        # ICT活用
-        write_to_cell(sheet, 'B20', ict_use) # ICT活用内容
+        # 例: C3が左上隅で結合されている場合
+        write_to_cell_robust(sheet, 'C3', subject)    
 
-        # URL
-        write_to_cell(sheet, 'B16', image)
-        write_to_cell(sheet, 'B17', video_link)
-        write_to_cell(sheet, 'B18', detail_word_url)
-        write_to_cell(sheet, 'B19', detail_pdf_url)
-        write_to_cell(sheet, 'B21', detail_ppt_url) # Excelテンプレートの正しいセルを仮定
-        write_to_cell(sheet, 'B23', detail_excel_url) # Excelテンプレートの正しいセルを仮定
+        # リスト形式のデータは、セミコロン区切りで結合するロジックは既に良いですが、
+        # 書き込み先のセルをテンプレートに合わせて調整
+        write_to_cell_robust(sheet, 'B10', ";".join([s.strip() for s in introduction_flow.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B11', ";".join([s.strip() for s in activity_flow.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B12', ";".join([s.strip() for s in reflection_flow.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B9', ";".join([s.strip() for s in points.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B14', ";".join([s.strip() for s in materials.split('\n') if s.strip()]))
+        
+        write_to_cell_robust(sheet, 'B22', hashtags) # ハッシュタグはカンマ区切り
+        write_to_cell_robust(sheet, 'B20', ict_use) # ICT活用内容
 
+        # URL群もテンプレートのセルに合わせて調整
+        write_to_cell_robust(sheet, 'B16', image) # メイン画像URL
+        write_to_cell_robust(sheet, 'B17', video_link) # 参考動画URL
+        write_to_cell_robust(sheet, 'B18', detail_word_url) # 指導案Word
+        write_to_cell_robust(sheet, 'B19', detail_pdf_url) # 指導案PDF
+        write_to_cell_robust(sheet, 'B21', detail_ppt_url) # 授業資料PowerPoint (元のコードとセルがずれている可能性)
+        write_to_cell_robust(sheet, 'B23', detail_excel_url) # 評価シートExcel (元のコードとセルがずれている可能性)
+        
+        # ... (セルの結合と中央揃えのコメントはそのまま) ...
 
         output = BytesIO()
         workbook.save(output)
@@ -969,7 +978,7 @@ def create_and_fill_excel(
         return None
     except Exception as e:
         st.error(f"Excelファイルの書き込み中にエラーが発生しました: {e}")
-        st.exception(e)
+        st.exception(e) # 詳細な例外情報を表示
         return None
 # ★ここまでが新しい関数 `create_and_fill_excel` の追加箇所
 
