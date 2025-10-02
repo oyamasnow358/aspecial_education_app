@@ -911,50 +911,60 @@ def create_and_fill_excel(
     detail_word_url, detail_pdf_url, detail_ppt_url, detail_excel_url
 ):
     try:
-        workbook = openpyxl.load_workbook("授業カード.xlsm", keep_vba=True) # keep_vba=True を追加するとマクロを維持
+        workbook = openpyxl.load_workbook("授業カード.xlsm", keep_vba=True)
         sheet = workbook.active
 
         def write_to_cell_robust(sheet, target_cell_coord, value):
             # target_cell_coord がどの結合範囲に含まれているかをチェック
-            for merged_range in sheet.merged_cells:
-                if target_cell_coord in str(merged_range): # 例: 'B3' in 'B3:D4'
-                    # 結合範囲の左上隅に書き込む
-                    min_col, min_row, _, _ = openpyxl.utils.cell.range_boundaries(str(merged_range))
-                    top_left_cell_coord = openpyxl.utils.cell.get_column_letter(min_col) + str(min_row)
-                    sheet[top_left_cell_coord].value = value
-                    return
+            # Rangeオブジェクトで厳密にチェック
+            target_cell_obj = sheet[target_cell_coord]
+            if target_cell_obj.data_type == 'm': # MergedCellタイプかどうか
+                # 結合されている場合、その結合範囲の左上隅を探す
+                for merged_range in sheet.merged_cells:
+                    # target_cell_coord が merged_range 内にあるか
+                    min_col, min_row, max_col, max_row = openpyxl.utils.cell.range_boundaries(str(merged_range))
+                    
+                    # target_cell_coordの行と列を取得
+                    col_idx = openpyxl.utils.cell.column_index_from_string(re.findall(r'[A-Z]+', target_cell_coord)[0])
+                    row_idx = int(re.findall(r'\d+', target_cell_coord)[0])
+
+                    if min_row <= row_idx <= max_row and min_col <= col_idx <= max_col:
+                        # 結合範囲の左上隅のセル座標を特定
+                        top_left_cell_coord = openpyxl.utils.cell.get_column_letter(min_col) + str(min_row)
+                        sheet[top_left_cell_coord].value = value
+                        return
+            
             # 結合セルでなければ直接書き込む
             sheet[target_cell_coord].value = value
 
         # --- ここから、Excelテンプレートの実際のレイアウトに合わせて修正 ---
-        # 例: B3とB4が結合されていて、B3が左上隅の場合
-        write_to_cell_robust(sheet, 'B3', unit_name) # 単元名 (例: B3-B4が結合されていればB3に)
+        # テンプレートのB3が単元名を表示する結合セルの左上隅であると仮定
+        write_to_cell_robust(sheet, 'B3', unit_name)
         
-        # 例: 授業タイトルがB7にあり、単独セルまたはB7が左上隅の場合
+        # テンプレートのB7が授業タイトルを表示するセルの左上隅であると仮定
         write_to_cell_robust(sheet, 'B7', lesson_title) 
 
-        # 例: C5が左上隅で結合されている場合
+        # ... 以下同様に、テンプレートの結合状況に合わせて `write_to_cell_robust` を呼び出します ...
+        # 例: C5がキャッチコピーの左上隅
         write_to_cell_robust(sheet, 'C5', catch_copy) 
-
-        # 例: B8が左上隅で結合されている場合
+        # 例: B8がねらいの左上隅
         write_to_cell_robust(sheet, 'B8', goal)       
 
-        # 例: A5は単独セルかA5が左上隅の場合
+        # A5は単独セルか、A5が左上隅であると仮定
         write_to_cell_robust(sheet, 'A5', target_grade) 
         write_to_cell_robust(sheet, 'B5', disability_type) 
         write_to_cell_robust(sheet, 'E5', duration)   
         write_to_cell_robust(sheet, 'E3', group_type) 
         
-        # 例: C3が左上隅で結合されている場合
+        # C3が教科の結合セルの左上隅であると仮定
         write_to_cell_robust(sheet, 'C3', subject)    
 
-        # リスト形式のデータは、セミコロン区切りで結合するロジックは既に良いですが、
-        # 書き込み先のセルをテンプレートに合わせて調整
-        write_to_cell_robust(sheet, 'B10', ";".join([s.strip() for s in introduction_flow.split('\n') if s.strip()]))
-        write_to_cell_robust(sheet, 'B11', ";".join([s.strip() for s in activity_flow.split('\n') if s.strip()]))
-        write_to_cell_robust(sheet, 'B12', ";".join([s.strip() for s in reflection_flow.split('\n') if s.strip()]))
-        write_to_cell_robust(sheet, 'B9', ";".join([s.strip() for s in points.split('\n') if s.strip()]))
-        write_to_cell_robust(sheet, 'B14', ";".join([s.strip() for s in materials.split('\n') if s.strip()]))
+        # リスト形式のデータも、改行で表示するセルが結合セルの左上隅であると仮定
+        write_to_cell_robust(sheet, 'B10', "\n".join([s.strip() for s in introduction_flow.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B11', "\n".join([s.strip() for s in activity_flow.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B12', "\n".join([s.strip() for s in reflection_flow.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B9', "\n".join([s.strip() for s in points.split('\n') if s.strip()]))
+        write_to_cell_robust(sheet, 'B14', "\n".join([s.strip() for s in materials.split('\n') if s.strip()]))
         
         write_to_cell_robust(sheet, 'B22', hashtags) # ハッシュタグはカンマ区切り
         write_to_cell_robust(sheet, 'B20', ict_use) # ICT活用内容
@@ -964,8 +974,8 @@ def create_and_fill_excel(
         write_to_cell_robust(sheet, 'B17', video_link) # 参考動画URL
         write_to_cell_robust(sheet, 'B18', detail_word_url) # 指導案Word
         write_to_cell_robust(sheet, 'B19', detail_pdf_url) # 指導案PDF
-        write_to_cell_robust(sheet, 'B21', detail_ppt_url) # 授業資料PowerPoint (元のコードとセルがずれている可能性)
-        write_to_cell_robust(sheet, 'B23', detail_excel_url) # 評価シートExcel (元のコードとセルがずれている可能性)
+        write_to_cell_robust(sheet, 'B21', detail_ppt_url) # 授業資料PowerPoint
+        write_to_cell_robust(sheet, 'B23', detail_excel_url) # 評価シートExcel
         
         # ... (セルの結合と中央揃えのコメントはそのまま) ...
 
