@@ -357,11 +357,25 @@ load_css()
 def set_page(page):
     st.session_state.page_to_visit = page
 
+
 # st.session_stateをチェックしてページ遷移を実行
 if "page_to_visit" in st.session_state:
     page = st.session_state.page_to_visit
     del st.session_state.page_to_visit
     st.switch_page(page)
+
+    
+# st.session_stateの初期化
+if 'current_lesson_id' not in st.session_state:
+    st.session_state.current_lesson_id = None
+# ... (既存の初期化コードの続き) ...
+if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
+    st.session_state.show_all_flow = False
+# ★追加: 授業カード作成フォーム表示フラグ
+if 'show_create_form' not in st.session_state:
+    st.session_state.show_create_form = False
+
+  
 
 st.title("🌟 特別支援教育サポートアプリ")
 
