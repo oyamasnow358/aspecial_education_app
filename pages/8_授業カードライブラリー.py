@@ -12,7 +12,46 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+# --- Googleフォームへの外部リンク (ここに追加) ---
+st.markdown("""
+    <style>
+        .google-form-link-container {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 40px; /* 他のコンテンツとの間にスペースを設ける */
+        }
+        .google-form-link-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #4285F4; /* Googleのブランドカラー */
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+        .google-form-link-button:hover {
+            background-color: #357ae8;
+            transform: translateY(-3px);
+            box-shadow: 0 9px 20px rgba(0, 0, 0, 0.3);
+        }
+        .google-form-link-button .icon {
+            margin-right: 12px;
+            font-size: 1.5em;
+            color: white;
+        }
+    </style>
+    <div class="google-form-link-container">
+        <a href="https://leeson-abfy5bxayhavhoznzexj8r.streamlit.app/" target="_blank" class="google-form-link-button">
+            <span class="icon">📝</span> Googleフォームで授業カードを作成！
+        </a>
+    </div>
+""", unsafe_allow_html=True)
+# --- ここまで ---
 # --- CSS for Card Layout and General Styling ---
 def load_css():
     """カスタムCSSを読み込む関数"""
