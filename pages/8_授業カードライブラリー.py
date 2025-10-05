@@ -417,23 +417,29 @@ def load_css():
 load_css()
 
 # Google Sheets APIからデータを取得する関数
+# Google Sheets APIからデータを取得する関数
 @st.cache_data(ttl=3600)
 def load_data_from_google_sheet(spreadsheet_name, worksheet_name):
     try:
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         
-        # 修正箇所: st.secrets から 'GOOGLE_SHEETS_CREDENTIALS' を安全に取得
-        # キーが存在しない場合に備えて .get() メソッドを使用し、None の場合はエラーを発生させる
+        # ★修正と説明★
+        # st.secrets から 'GOOGLE_SHEETS_CREDENTIALS' を安全に取得します。
+        # .get() メソッドを使用することで、キーが存在しない場合に KeyError を発生させず、None を返します。
         creds_json_string = st.secrets.get("GOOGLE_SHEETS_CREDENTIALS")
         
+        # 認証情報が取得できなかった場合、具体的なエラーメッセージと共に例外を発生させます。
         if creds_json_string is None:
             raise KeyError(
-                "st.secrets has no key 'GOOGLE_SHEETS_CREDENTIALS'. "
-                "Did you forget to add it to secrets.toml, mount it to secret directory, "
-                "or the app settings on Streamlit Cloud? "
-                "More info: https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management"
+                "Streamlitのsecretsに 'GOOGLE_SHEETS_CREDENTIALS' キーが見つかりません。\n"
+                "Google Sheets API連携のためには、サービスアカウントのJSONキーを "
+                "Streamlitの `secrets.toml` ファイル、またはStreamlit Cloudの設定で `GOOGLE_SHEETS_CREDENTIALS` "
+                "という名前で設定する必要があります。\n"
+                "詳細は Streamlit のシークレット管理に関するドキュメントを参照してください: "
+                "https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management"
             )
         
+        # 取得したJSON文字列をPython辞書に変換し、認証情報を作成します。
         creds_info = json.loads(creds_json_string)
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope)
         
@@ -483,15 +489,19 @@ def load_data_from_google_sheet(spreadsheet_name, worksheet_name):
         return processed_records
 
     except FileNotFoundError:
-        # このエラーはcredentials_path引数を削除したため発生しなくなりますが、
-        # 念のため残しておきます（将来的には削除して良いでしょう）
+        # credentials_path引数を削除したため、このエラーは通常発生しなくなりましたが、
+        # 万が一のために残しておくことも可能です。
         st.error(f"サービスアカウントキーファイルが見つかりません。")
         st.stop()
     except KeyError as e:
+        # ★変更点★
+        # 上記の `if creds_json_string is None:` で発生させた KeyError をここで捕捉し、
+        # より詳細なメッセージを表示します。
         st.error(f"Google Sheets APIの認証情報が見つかりません: {e}")
         st.stop()
     except Exception as e:
-        st.error(f"Googleスプレッドシートからのデータ読み込み中にエラーが発生しました: {e}")
+        # その他の予期せぬエラーを捕捉します。
+        st.error(f"Googleスプレッドシートからのデータ読み込み中に予期せぬエラーが発生しました: {e}")
         st.exception(e)
         st.stop()
     return []
