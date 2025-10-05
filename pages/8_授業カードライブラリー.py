@@ -578,33 +578,7 @@ with st.sidebar:
     st.header("📚 データ登録・管理")
     st.markdown("---")
 
-    st.subheader("① Googleフォーム方式")
-    st.info("""
-    Googleフォームで入力されたデータは、自動的にGoogleスプレッドシートに蓄積され、このアプリに反映されます。
-    以下のボタンからフォームを開き、新しい授業カードを登録してください。
-    """)
-    #!!! ここに実際のGoogleフォームのリンクを貼り付けてください !!!
-    google_form_link = "https://forms.gle/YOUR_GOOGLE_FORM_LINK" # ここを実際のGoogleフォームのリンクに置き換えてください
-    st.markdown(
-        f"""
-        <a href="{google_form_link}" target="_blank">
-        <button style="
-        background-color: #4CAF50; color: white; border: none; padding: 10px 20px;
-        border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
-        transition: background-color 0.3s, transform 0.2s;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;
-        ">
-        📝 Googleフォームを開く
-        </button>
-        </a>
-        """, unsafe_allow_html=True
-    )
-    if google_form_link == "https://forms.gle/YOUR_GOOGLE_FORM_LINK":
-        st.warning("⚠️ Googleフォームのリンクを実際のURLに更新してください。")
-
-    st.markdown("---")
-
-    st.subheader("② ファイルテンプレート方式")
+    st.subheader("ファイルテンプレート")
     st.info("""
     ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
     """)
