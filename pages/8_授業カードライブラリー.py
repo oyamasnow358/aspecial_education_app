@@ -5,6 +5,11 @@ import re # ハッシュタグ抽出用
 import io # Word/Excelファイルダウンロード・アップロード用
 from io import BytesIO # Excelアップロード用
 import xlsxwriter # エラー解決のためにインポートを追加
+# ★追加ここから★
+import gspread # Google Sheets API連携用
+from oauth2client.service_account import ServiceAccountCredentials # 認証情報
+import json # JSONキーファイル読み込み用
+# ★追加ここまで★
 
 st.set_page_config(
     page_title="授業カードライブラリー",
@@ -411,6 +416,178 @@ def load_css():
 
 load_css()
 
+# Google Sheets APIからデータを取得する関数
+@st.cache_data(ttl=3600)
+def load_data_from_google_sheet(spreadsheet_name, worksheet_name): # credentials_path 引数を削除
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        # secrets.toml からJSON文字列を読み込む
+        # st.secrets.GOOGLE_SHEETS_CREDENTIALS はJSON文字列として取得される
+        creds_json_string = st.secrets["GOOGLE_SHEETS_CREDENTIALS"]
+        
+        # JSON文字列をバイトストリームに変換して ServiceAccountCredentials に渡す
+        creds_info = json.loads(creds_json_string) # JSON文字列をPython辞書に変換
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope) # 辞書から認証情報を生成
+        
+        client = gspread.authorize(creds)
+        
+        # スプレッドシート名で開く
+        spreadsheet = client.open(spreadsheet_name)
+        # ワークシート名で開く
+        worksheet = spreadsheet.worksheet(worksheet_name)
+        
+        # 全てのデータをリストのリストとして取得
+        data = worksheet.get_all_values()
+        
+        # ヘッダー行を取得
+        headers = data[0]
+        # データ行を取得
+        records = data[1:]
+        
+        # 辞書のリストに変換
+        processed_records = []
+        for row in records:
+            if any(cell.strip() for cell in row): # 空行をスキップ
+                row_dict = {}
+                for i, header in enumerate(headers):
+                    # ヘッダー名に基づいてデータを処理
+                    if header in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'material_photos']:
+                        # セミコロン区切りのリストに変換（空文字列を除外）
+                        row_dict[header] = [item.strip() for item in row[i].split(';') if item.strip()] if row[i] else []
+                    elif header == 'hashtags':
+                        # カンマ区切りのリストに変換（空文字列を除外）
+                        row_dict[header] = [item.strip() for item in row[i].split(',') if item.strip()] if row[i] else []
+                    elif header == 'unit_order':
+                        # 整数に変換、失敗したらデフォルト値
+                        try:
+                            row_dict[header] = int(row[i])
+                        except (ValueError, TypeError):
+                            row_dict[header] = 9999
+                    elif header == 'ict_use':
+                        # 真偽値または文字列に変換
+                        val = str(row[i]).strip().lower()
+                        row_dict[header] = 'あり' if val == 'true' or val == 'はい' else ('なし' if val == 'false' or val == 'いいえ' or val == '' else val)
+                    else:
+                        # その他の項目は文字列としてそのまま保持（NaNや空欄も考慮）
+                        row_dict[header] = str(row[i]).strip() if row[i] else ''
+                
+                # 'id' がない場合は自動生成
+                if 'id' not in row_dict or not row_dict['id'].strip():
+                    # 既存のCSVデータと重複しないIDを生成するためのロジックを考慮する必要があります
+                    # ここでは一旦ダミーIDを割り当てるが、後で結合時に適切に処理する
+                    row_dict['id'] = f"gs_temp_{len(processed_records)}"
+                else:
+                    try:
+                        row_dict['id'] = int(row_dict['id']) # IDを数値として保持
+                    except ValueError:
+                        row_dict['id'] = str(row_dict['id']) # 数値でない場合は文字列
+                        
+                # unit_lesson_titleの補完ロジック
+                if 'unit_lesson_title' not in row_dict or not row_dict['unit_lesson_title'].strip():
+                    row_dict['unit_lesson_title'] = row_dict.get('unit_name', '単元内授業')
+                
+                processed_records.append(row_dict)
+        
+        return processed_records
+
+    except FileNotFoundError:
+        st.error(f"サービスアカウントキーファイル '{credentials_path}' が見つかりません。")
+        st.stop()
+    except Exception as e:
+        st.error(f"Googleスプレッドシートからのデータ読み込み中にエラーが発生しました: {e}")
+        st.exception(e)
+        st.stop()
+    return [] # エラー時は空リストを返す
+
+ #Google Sheets API の設定
+
+GOOGLE_SHEET_SPREADSHEET_NAME = st.secrets.get("google_sheet_spreadsheet_name", "授業カード （回答）")
+GOOGLE_SHEET_WORKSHEET_NAME = st.secrets.get("google_sheet_worksheet_name", "フォームの回答 1")
+
+try:
+    sheet_lesson_data_records = load_data_from_google_sheet(
+        spreadsheet_name=GOOGLE_SHEET_SPREADSHEET_NAME, # キーワード引数を使用
+        worksheet_name=GOOGLE_SHEET_WORKSHEET_NAME     # キーワード引数を使用
+    )
+    st.success("Googleスプレッドシートから最新データを読み込みました。")
+except Exception as e:
+    st.warning(f"Googleスプレッドシートからのデータ読み込みに失敗しました: {e}")
+    sheet_lesson_data_records = []
+
+# Excelテンプレートダウンロード関数 (get_excel_template) のすぐ下あたりに追加
+# この関数は、Googleフォームからのデータを受け取り、Excelを生成するために使用します。
+def generate_excel_from_form_data(form_data):
+    # 既存のExcelテンプレートファイル（授業カード.xlsm）を読み込む
+    # BytesIOでメモリ上で処理するため、元のファイルは変更されません。
+    output_excel = BytesIO()
+    try:
+        with open("授業カード.xlsm", "rb") as f:
+            workbook_data = BytesIO(f.read())
+        
+        wb = load_workbook(workbook_data, read_only=False, keep_vba=True)
+        ws = wb.active # アクティブなシート
+
+        # フォームデータをExcelの指定セルに書き込む
+        # ここをあなたのExcelファイルのセル位置に合わせて調整してください。
+        # Googleフォームの項目名（スプレッドシートのヘッダー名）と、Excelのセル位置を対応させます。
+        
+        # 例:
+        # スプレッドシートのヘッダー  -> Excelのセル
+        # '単元名'                -> B2
+        # 'キャッチコピー'          -> C2
+        # 'ねらい'                -> D2
+        # '対象学年'              -> E2
+        # '障害種別'              -> F2
+        # '時間'                  -> G2
+        # '準備物'                -> H2
+        # 'ハッシュタグ'            -> M2
+        # 'メイン画像URL'           -> N2 (画像URLをN2に書くことを想定)
+        # 'ICT活用有無'           -> U2 (A列からのインデックスで考えるとV2になる可能性も)
+        # '教科'                  -> V2
+        # '学習集団の単位'        -> W2
+        # '単元内の授業タイトル'    -> X2
+
+        ws['B2'] = form_data.get('単元名', '')
+        ws['C2'] = form_data.get('キャッチコピー', '')
+        ws['D2'] = form_data.get('ねらい', '')
+        ws['E2'] = form_data.get('対象学年', '')
+        ws['F2'] = form_data.get('障害種別', '')
+        ws['G2'] = form_data.get('時間', '')
+        ws['H2'] = form_data.get('準備物', '') # semicolon delimited list for excel template
+        ws['M2'] = form_data.get('ハッシュタグ', '') # comma delimited list for excel template
+        ws['N2'] = form_data.get('メイン画像URL', '')
+        ws['U2'] = form_data.get('ICT活用有無', '')
+        ws['V2'] = form_data.get('教科', '')
+        ws['W2'] = form_data.get('学習集団の単位', '')
+        ws['X2'] = form_data.get('単元内の授業タイトル', '')
+        
+        # 他の必要な項目も同様に追加
+        # 例: introduction_flow, activity_flow, reflection_flow, points など
+        # これらのリスト項目は、Excelテンプレートではどのように表示したいですか？
+        # 例えば、セミコロンで結合して1つのセルに入れる場合：
+        ws['I2'] = '; '.join(form_data.get('導入の流れ', []))
+        ws['J2'] = '; '.join(form_data.get('活動の流れ', []))
+        ws['K2'] = '; '.join(form_data.get('振り返りの流れ', []))
+        ws['L2'] = '; '.join(form_data.get('指導のポイント', []))
+        
+        # 詳細資料ダウンロードURLも同様に
+        ws['Q2'] = form_data.get('指導案WordファイルURL', '')
+        ws['R2'] = form_data.get('指導案PDFファイルURL', '')
+        ws['S2'] = form_data.get('授業資料PowerPointファイルURL', '')
+        ws['T2'] = form_data.get('評価シートExcelファイルURL', '')
+        
+        wb.save(output_excel)
+        output_excel.seek(0)
+        return output_excel.getvalue()
+
+    except FileNotFoundError:
+        st.error("⚠️ '授業カード.xlsm' ファイルが見つかりません。アプリケーションと同じ階層に配置してください。")
+        return None
+    except Exception as e:
+        st.error(f"Excelファイルの生成中にエラーが発生しました: {e}")
+        st.exception(e)
+        return None
+    
 # --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
 # st.columnsを使って、左端に配置する
 col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
@@ -578,29 +755,104 @@ with st.sidebar:
     st.header("📚 データ登録・管理")
     st.markdown("---")
 
-    st.subheader("① Googleフォーム方式")
-    st.info("""
-    Googleフォームで入力されたデータは、自動的にGoogleスプレッドシートに蓄積され、このアプリに反映されます。
-    以下のボタンからフォームを開き、新しい授業カードを登録してください。
-    """)
-    #!!! ここに実際のGoogleフォームのリンクを貼り付けてください !!!
-    google_form_link = "https://forms.gle/YOUR_GOOGLE_FORM_LINK" # ここを実際のGoogleフォームのリンクに置き換えてください
-    st.markdown(
-        f"""
-        <a href="{google_form_link}" target="_blank">
-        <button style="
-        background-color: #4CAF50; color: white; border: none; padding: 10px 20px;
-        border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
-        transition: background-color 0.3s, transform 0.2s;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;
-        ">
-        📝 Googleフォームを開く
-        </button>
-        </a>
-        """, unsafe_allow_html=True
+    # ... (既存の Sidebar for Data Entry and Filters のコード) ...
+
+st.subheader("② ファイルテンプレート方式")
+st.info("""
+ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
+""")
+
+# ... (Excelマクロありのサンプルファイルダウンロード、CSVテンプレートダウンロード、ファイルアップロードの既存コード) ...
+
+# ★変更ここから★
+st.markdown("---") # 区切り線を追加
+
+st.subheader("③ Googleフォームからの受領カード作成")
+st.info("""
+以下のGoogleフォームから入力された回答をもとに、個別の授業カードExcelファイルを生成・ダウンロードできます。
+最新の回答を読み込むには「更新」ボタンを押してください。
+""")
+
+# !!! ここに実際のGoogleフォームのリンクを貼り付けてください !!!
+google_form_input_link = "https://forms.gle/YOUR_GOOGLE_FORM_FOR_EXCEL_CREATION_LINK" # ここをあなたのGoogleフォームのURLに置き換えてください
+st.markdown(
+    f"""
+    <a href="{google_form_input_link}" target="_blank">
+    <button style="
+    background-color: #4CAF50; color: white; border: none; padding: 10px 20px;
+    border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; margin-bottom: 15px;
+    ">
+    📝 Googleフォームで入力する
+    </button>
+    </a>
+    """, unsafe_allow_html=True
+)
+if google_form_input_link == "https://docs.google.com/forms/d/e/1FAIpQLSdqRDY5cr5wdSR8nYKmc8pyD7wzVgKli21mLUg7ECtpVLm1iw/viewform?usp=header":
+    st.warning("⚠️ 「Googleフォームで入力する」のリンクを実際のURLに更新してください。")
+
+if st.button("最新のフォーム回答を読み込む (データ更新)", key="refresh_form_data"):
+    load_data_from_google_sheet.clear()
+    # ここも credentials_path を削除
+    sheet_data_refreshed = load_data_from_google_sheet(
+        GOOGLE_SHEET_SPREADSHEET_NAME,
+        GOOGLE_SHEET_WORKSHEET_NAME
     )
-    if google_form_link == "https://forms.gle/YOUR_GOOGLE_FORM_LINK":
-        st.warning("⚠️ Googleフォームのリンクを実際のURLに更新してください。")
+    # 新しく読み込んだデータを既存の lesson_data と結合するロジックをここで実行
+    # 簡単な方法としては、既存のGoogle Sheets由来のデータを一度クリアし、新しく読み込んだもので置き換える
+    st.session_state.lesson_data = [
+        rec for rec in st.session_state.lesson_data 
+        if not (isinstance(rec.get('id'), str) and rec['id'].startswith('gs_temp_'))
+    ] # Google Sheets由来の古いデータを削除
+    st.session_state.lesson_data.extend(sheet_data_refreshed) # 新しいデータを追加
+    st.success("Googleフォームの最新回答を読み込みました！")
+    st.experimental_rerun()
+
+# Googleフォームから取得したデータの中で、まだExcelファイルが作成されていないもの、または最新のものを選択できるようにする
+# ここでは、全てのGoogle Sheetsからの回答を対象とします。
+if sheet_lesson_data_records:
+    # Google Sheetからのデータのみを対象とするため、ここでは sheet_lesson_data_records を直接使う
+    # または、lesson_data_raw (全体の結合データ) からソースがGoogle Sheetのものをフィルタリングしても良い
+    # 一貫性のために、ここでは lesson_data_df からfilterして使用する
+    google_sheet_entries = [rec for rec in lesson_data_df.to_dict(orient='records') if isinstance(rec.get('id'), str) and rec['id'].startswith('gs_temp_')]
+    
+    if google_sheet_entries:
+        # ドロップダウンリストに表示するオプションを作成
+        # 例: "{単元名} - {タイムスタンプ}"
+        selection_options = [
+            f"{entry.get('unit_name', '不明な単元')} - {entry.get('タイムスタンプ', '日時不明')}" # 'タイムスタンプ'はスプレッドシートのA列目にあることが多い
+            for entry in google_sheet_entries
+        ]
+        
+        selected_index = st.selectbox(
+            "Excel化するフォーム回答を選択してください",
+            options=range(len(selection_options)),
+            format_func=lambda x: selection_options[x]
+        )
+
+        if selected_index is not None:
+            selected_form_entry = google_sheet_entries[selected_index]
+            
+            # Excel生成ボタン
+            if st.button(f"「{selected_form_entry.get('unit_name', '選択された回答')}」のExcelをダウンロード", key="download_generated_excel"):
+                excel_data = generate_excel_from_form_data(selected_form_entry)
+                if excel_data:
+                    download_filename = f"{selected_form_entry.get('unit_name', '授業カード')}_フォーム回答.xlsm"
+                    st.download_button(
+                        label="⬇️ Excelファイルをダウンロード",
+                        data=excel_data,
+                        file_name=download_filename,
+                        mime="application/vnd.ms-excel.sheet.macroEnabled.12",
+                        help="Googleフォームの回答から生成されたExcelファイルをダウンロードします。"
+                    )
+                    st.success("指定されたフォーム回答からExcelファイルを生成しました！")
+    else:
+        st.info("まだGoogleフォームからの回答がありません。")
+else:
+    st.info("Googleスプレッドシートからのデータ読み込みに問題があるか、データがありません。")
+
+# ★変更ここまで★
 
     st.markdown("---")
 
