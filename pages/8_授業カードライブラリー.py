@@ -418,71 +418,63 @@ load_css()
 
 # Google Sheets APIからデータを取得する関数
 @st.cache_data(ttl=3600)
-def load_data_from_google_sheet(spreadsheet_name, worksheet_name): # credentials_path 引数を削除
+def load_data_from_google_sheet(spreadsheet_name, worksheet_name):
     try:
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        # secrets.toml からJSON文字列を読み込む
-        # st.secrets.GOOGLE_SHEETS_CREDENTIALS はJSON文字列として取得される
-        creds_json_string = st.secrets["GOOGLE_SHEETS_CREDENTIALS"]
         
-        # JSON文字列をバイトストリームに変換して ServiceAccountCredentials に渡す
-        creds_info = json.loads(creds_json_string) # JSON文字列をPython辞書に変換
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope) # 辞書から認証情報を生成
+        # 修正箇所: st.secrets から 'GOOGLE_SHEETS_CREDENTIALS' を安全に取得
+        # キーが存在しない場合に備えて .get() メソッドを使用し、None の場合はエラーを発生させる
+        creds_json_string = st.secrets.get("GOOGLE_SHEETS_CREDENTIALS")
+        
+        if creds_json_string is None:
+            raise KeyError(
+                "st.secrets has no key 'GOOGLE_SHEETS_CREDENTIALS'. "
+                "Did you forget to add it to secrets.toml, mount it to secret directory, "
+                "or the app settings on Streamlit Cloud? "
+                "More info: https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management"
+            )
+        
+        creds_info = json.loads(creds_json_string)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope)
         
         client = gspread.authorize(creds)
         
-        # スプレッドシート名で開く
         spreadsheet = client.open(spreadsheet_name)
-        # ワークシート名で開く
         worksheet = spreadsheet.worksheet(worksheet_name)
         
-        # 全てのデータをリストのリストとして取得
         data = worksheet.get_all_values()
         
-        # ヘッダー行を取得
         headers = data[0]
-        # データ行を取得
         records = data[1:]
         
-        # 辞書のリストに変換
         processed_records = []
         for row in records:
-            if any(cell.strip() for cell in row): # 空行をスキップ
+            if any(cell.strip() for cell in row):
                 row_dict = {}
                 for i, header in enumerate(headers):
-                    # ヘッダー名に基づいてデータを処理
                     if header in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'material_photos']:
-                        # セミコロン区切りのリストに変換（空文字列を除外）
                         row_dict[header] = [item.strip() for item in row[i].split(';') if item.strip()] if row[i] else []
                     elif header == 'hashtags':
-                        # カンマ区切りのリストに変換（空文字列を除外）
                         row_dict[header] = [item.strip() for item in row[i].split(',') if item.strip()] if row[i] else []
                     elif header == 'unit_order':
-                        # 整数に変換、失敗したらデフォルト値
                         try:
                             row_dict[header] = int(row[i])
                         except (ValueError, TypeError):
                             row_dict[header] = 9999
                     elif header == 'ict_use':
-                        # 真偽値または文字列に変換
                         val = str(row[i]).strip().lower()
                         row_dict[header] = 'あり' if val == 'true' or val == 'はい' else ('なし' if val == 'false' or val == 'いいえ' or val == '' else val)
                     else:
-                        # その他の項目は文字列としてそのまま保持（NaNや空欄も考慮）
                         row_dict[header] = str(row[i]).strip() if row[i] else ''
                 
-                # 'id' がない場合は自動生成
                 if 'id' not in row_dict or not row_dict['id'].strip():
-                    # 既存のCSVデータと重複しないIDを生成するためのロジックを考慮する必要があります
-                    # ここでは一旦ダミーIDを割り当てるが、後で結合時に適切に処理する
                     row_dict['id'] = f"gs_temp_{len(processed_records)}"
                 else:
                     try:
-                        row_dict['id'] = int(row_dict['id']) # IDを数値として保持
+                        row_dict['id'] = int(row_dict['id'])
                     except ValueError:
-                        row_dict['id'] = str(row_dict['id']) # 数値でない場合は文字列
+                        row_dict['id'] = str(row_dict['id'])
                         
-                # unit_lesson_titleの補完ロジック
                 if 'unit_lesson_title' not in row_dict or not row_dict['unit_lesson_title'].strip():
                     row_dict['unit_lesson_title'] = row_dict.get('unit_name', '単元内授業')
                 
@@ -491,13 +483,18 @@ def load_data_from_google_sheet(spreadsheet_name, worksheet_name): # credentials
         return processed_records
 
     except FileNotFoundError:
-        st.error(f"サービスアカウントキーファイル '{credentials_path}' が見つかりません。")
+        # このエラーはcredentials_path引数を削除したため発生しなくなりますが、
+        # 念のため残しておきます（将来的には削除して良いでしょう）
+        st.error(f"サービスアカウントキーファイルが見つかりません。")
+        st.stop()
+    except KeyError as e:
+        st.error(f"Google Sheets APIの認証情報が見つかりません: {e}")
         st.stop()
     except Exception as e:
         st.error(f"Googleスプレッドシートからのデータ読み込み中にエラーが発生しました: {e}")
         st.exception(e)
         st.stop()
-    return [] # エラー時は空リストを返す
+    return []
 
  #Google Sheets API の設定
 
