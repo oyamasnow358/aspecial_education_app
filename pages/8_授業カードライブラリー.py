@@ -543,7 +543,8 @@ if 'lesson_data' not in st.session_state:
     st.session_state.lesson_data = lesson_data_raw # アプリ内でデータを更新できるようにセッションステートに保持
 if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
     st.session_state.show_all_flow = False
-
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 1
 # --- Helper Functions ---
 
 def set_detail_page(lesson_id):
@@ -939,6 +940,34 @@ if st.session_state.current_lesson_id is None:
 
         if match_search and match_tags and match_subject and match_unit:
             filtered_lessons.append(lesson)
+        
+        # --- ★ここからページネーション処理の追加★ ---
+        CARDS_PER_PAGE = 10 # 1ページあたりの表示件数
+
+        # 総ページ数を計算
+        total_pages = (len(filtered_lessons) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
+        if total_pages == 0: # カードが0枚の場合の特殊処理
+            total_pages = 1 
+
+        # 現在のページが総ページ数を超えないように調整
+        if st.session_state.current_page > total_pages:
+            st.session_state.current_page = total_pages
+        if st.session_state.current_page < 1:
+            st.session_state.current_page = 1
+    
+        # 表示する授業カードの範囲を計算
+        start_index = (st.session_state.current_page - 1) * CARDS_PER_PAGE
+        end_index = start_index + CARDS_PER_PAGE
+        displayed_lessons = filtered_lessons[start_index:end_index]
+
+    # --- ▲ここまでページネーション処理の追加▲ ---
+
+    st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
+    if displayed_lessons: # filtered_lessons ではなく displayed_lessons をループする
+        for lesson in displayed_lessons: # ここを `displayed_lessons` に変更
+            # 教科と単元名が空文字列や'単元なし'の場合は表示しない
+            display_subject = lesson['subject'] if lesson['subject'] and lesson['subject'] != 'その他' else ''
+            display_unit = lesson['unit_name'] if lesson['unit_name'] and lesson['unit_name'] != '単元なし' else ''
     
             
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
@@ -978,8 +1007,56 @@ if st.session_state.current_lesson_id is None:
              </div>
             </div>
              """, unsafe_allow_html=True)
+# ... (既存の授業カード表示コードここまで) ...
+
+    else:
+        st.info("条件に合う授業カードは見つかりませんでした。")
+    st.markdown("</div>", unsafe_allow_html=True) # lesson-card-grid の閉じタグ
+
+    # --- ★ここからページネーションUIの追加★ ---
+    st.markdown("---")
+    st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+
+    col_prev, *col_pages, col_next = st.columns([1] * (total_pages + 2)) # 前ページ、ページ番号、次ページ用のカラム
+
+    # 前ページボタン
+    with col_prev:
+        if st.session_state.current_page > 1:
+            if st.button("⏪ 前ページ", key="prev_page_bottom"):
+                st.session_state.current_page -= 1
+                st.rerun()
+        else:
+            st.empty() # 表示を合わせるため空のウィジェットを配置
+
+    # ページ番号ボタン
+    for i in range(total_pages):
+        page_num = i + 1
+        with col_pages[i]:
+            if st.button(
+                str(page_num),
+                key=f"page_btn_{page_num}_bottom",
+                type="primary" if st.session_state.current_page == page_num else "secondary"
+            ):
+                st.session_state.current_page = page_num
+                st.rerun()
+
+    # 次ページボタン
+    with col_next:
+        if st.session_state.current_page < total_pages:
+            if st.button("次ページ ⏩", key="next_page_bottom"):
+                st.session_state.current_page += 1
+                st.rerun()
+        else:
+            st.empty() # 表示を合わせるため空のウィジェットを配置
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("---")
+    # --- ▲ここまでページネーションUIの追加▲ ---
+
+
 
 else:
+    st.info("条件に合う授業カードは見つかりませんでした。")
     # --- Lesson Card Detail View ---
 
     selected_lesson = next((lesson for lesson in st.session_state.lesson_data if lesson['id'] == st.session_state.current_lesson_id), None)
@@ -1231,7 +1308,7 @@ else:
             st.info("参考動画は登録されていません。")
             st.markdown("</div>", unsafe_allow_html=True)
 
-
+        
         # 詳細資料ダウンロード
         # 既存のif文の条件を変更
         if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url'] or selected_lesson['detail_ppt_url'] or selected_lesson['detail_excel_url']: # ★変更
@@ -1245,7 +1322,7 @@ else:
             if selected_lesson['detail_excel_url']: # ★追加
                 st.markdown(f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>', unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
-
+   
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
 
@@ -1421,8 +1498,29 @@ st.markdown("""
     .lesson-card .stButton > button {
         width: 100%;
         margin-top: auto; /* ボタンをカードの下部に固定 */
+    } 
+    /* --- ページネーションボタンのスタイル調整 --- */
+    .st-emotion-cache-1yr0e9g { /* st.columnsの親要素 */
+        justify-content: center; /* ページネーションボタンを中央に寄せる */
+        gap: 10px; /* ボタン間のスペースを調整 */
     }
-
+    .st-emotion-cache-1yr0e9g button {
+        min-width: 40px; /* ページ番号ボタンの最小幅 */
+        height: 40px; /* ページ番号ボタンの高さ */
+        padding: 0 10px;
+        font-size: 1.1em;
+    }
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"] {
+        border-radius: 50% !important; /* ページ番号ボタンを丸くする */
+    }
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"][kind="primary"] {
+        background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
+        border-color: #8A2BE2 !important;
+    }
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_prev_page"],
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_next_page"] {
+        border-radius: 20px !important; /* 前次ページボタンの角丸 */
+    }
     /* Detail Page Styles */
     .detail-section {
         background-color: white;
