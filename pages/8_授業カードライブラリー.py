@@ -731,7 +731,7 @@ with st.sidebar:
                 max_id = max(existing_ids) if existing_ids else 0
 
                 new_entries = []
-                for _, row in new_data_df.iterrows():
+                for idx, row in new_data_df.iterrows(): # ループ変数にidxを追加
                     current_id = row.get('id')
                     if pd.isna(current_id) or current_id in existing_ids:
                         max_id += 1
@@ -762,13 +762,13 @@ with st.sidebar:
                         'reflection_flow': row.get('reflection_flow', []),   
                         'points': row.get('points', []),
                         'hashtags': row.get('hashtags', []),
-                        'image': process_string_column(new_data_df.iloc[[_]], 'image', '').iloc[0], # ★変更: imageカラムもprocess_string_columnで処理
+                        'image': process_string_column(new_data_df.iloc[[idx]], 'image', '').iloc[0], # idxを渡す
                         'material_photos': row.get('material_photos', []),
-                        'video_link': process_string_column(new_data_df.iloc[[_]], 'video_link', '').iloc[0], # ★変更: video_linkもprocess_string_columnで処理
-                        'detail_word_url': process_string_column(new_data_df.iloc[[_]], 'detail_word_url', '').iloc[0], # ★変更
-                        'detail_pdf_url': process_string_column(new_data_df.iloc[[_]], 'detail_pdf_url', '').iloc[0],   # ★変更
-                        'detail_ppt_url': process_string_column(new_data_df.iloc[[_]], 'detail_ppt_url', '').iloc[0],   # ★変更
-                        'detail_excel_url': process_string_column(new_data_df.iloc[[_]], 'detail_excel_url', '').iloc[0], # ★変更
+                        'video_link': process_string_column(new_data_df.iloc[[idx]], 'video_link', '').iloc[0], # idxを渡す
+                        'detail_word_url': process_string_column(new_data_df.iloc[[idx]], 'detail_word_url', '').iloc[0], # idxを渡す
+                        'detail_pdf_url': process_string_column(new_data_df.iloc[[idx]], 'detail_pdf_url', '').iloc[0],   # idxを渡す
+                        'detail_ppt_url': process_string_column(new_data_df.iloc[[idx]], 'detail_ppt_url', '').iloc[0],   # idxを渡す
+                        'detail_excel_url': process_string_column(new_data_df.iloc[[idx]], 'detail_excel_url', '').iloc[0], # idxを渡す
                         'ict_use': row.get('ict_use', 'なし'), # ここもデフォルト値取得ロジックを強化 (Falseから'なし'に変更)
                         'subject': row.get('subject', 'その他'),
                         'group_type': row.get('group_type', '全体'),
@@ -944,25 +944,25 @@ if st.session_state.current_lesson_id is None:
 
         if match_search and match_tags and match_subject and match_unit: # ★ここを修正
             filtered_lessons.append(lesson)
-        
-        # --- ★ここからページネーション処理の追加★ --- (★ここから追加)
-        CARDS_PER_PAGE = 10 # 1ページあたりの表示件数
-
-        # 総ページ数を計算
-        total_pages = (len(filtered_lessons) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
-        if total_pages == 0: # カードが0枚の場合の特殊処理
-            total_pages = 1 
-
-        # 現在のページが総ページ数を超えないように調整
-        if st.session_state.current_page > total_pages:
-            st.session_state.current_page = total_pages
-        if st.session_state.current_page < 1:
-            st.session_state.current_page = 1
     
-        # 表示する授業カードの範囲を計算
-        start_index = (st.session_state.current_page - 1) * CARDS_PER_PAGE
-        end_index = start_index + CARDS_PER_PAGE
-        displayed_lessons = filtered_lessons[start_index:end_index]
+    # --- ★ここからページネーション処理の追加★ --- (★ここから追加)
+    CARDS_PER_PAGE = 10 # 1ページあたりの表示件数
+
+    # 総ページ数を計算
+    total_pages = (len(filtered_lessons) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
+    if total_pages == 0: # カードが0枚の場合の特殊処理
+        total_pages = 1 
+
+    # 現在のページが総ページ数を超えないように調整
+    if st.session_state.current_page > total_pages:
+        st.session_state.current_page = total_pages
+    if st.session_state.current_page < 1:
+        st.session_state.current_page = 1
+
+    # 表示する授業カードの範囲を計算
+    start_index = (st.session_state.current_page - 1) * CARDS_PER_PAGE
+    end_index = start_index + CARDS_PER_PAGE
+    displayed_lessons = filtered_lessons[start_index:end_index]
 
     # --- ▲ここまでページネーション処理の追加▲ ---
 
@@ -1144,29 +1144,23 @@ else: # 詳細ページ
         if st.session_state.show_all_flow:
             if selected_lesson['introduction_flow']:
                 
-                st.markdown("<h4><span class='icon'>🚀</span>導入</h4>", unsafe_allow_html=True)
-                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
+                st.markdown("<div class='flow-section'><h4><span class='icon'>🚀</span>導入</h4><ol class='flow-list'>", unsafe_allow_html=True)
                 for step in selected_lesson['introduction_flow']:
                     st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                st.markdown("</ol>", unsafe_allow_html=True)
-                # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
+                st.markdown("</ol></div>", unsafe_allow_html=True)
 
             if selected_lesson['activity_flow']:
-                st.markdown("<h4><span class='icon'>💡</span>活動</h4>", unsafe_allow_html=True)
-                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
+                st.markdown("<div class='flow-section'><h4><span class='icon'>💡</span>活動</h4><ol class='flow-list'>", unsafe_allow_html=True)
                 for step in selected_lesson['activity_flow']:
                     st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                st.markdown("</ol>", unsafe_allow_html=True)
-                # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
+                st.markdown("</ol></div>", unsafe_allow_html=True)
 
             if selected_lesson['reflection_flow']:
                 
-                st.markdown("<h4><span class='icon'>💭</span>振り返り</h4>", unsafe_allow_html=True)
-                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)
+                st.markdown("<div class='flow-section'><h4><span class='icon'>💭</span>振り返り</h4><ol class='flow-list'>", unsafe_allow_html=True)
                 for step in selected_lesson['reflection_flow']:
                     st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                st.markdown("</ol>", unsafe_allow_html=True)
-                # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
+                st.markdown("</ol></div>", unsafe_allow_html=True)
         
         st.markdown("</div>", unsafe_allow_html=True) # flow-content-wrapper の閉じタグ
         
@@ -1176,7 +1170,6 @@ else: # 詳細ページ
        
         st.markdown("<h3><span class='header-icon'>🎯</span>ねらい</h3>", unsafe_allow_html=True)
         st.markdown(f"<p>{selected_lesson['goal']}</p>", unsafe_allow_html=True)
-        # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
         st.markdown("---")
         # 対象・種別・時間・教科・単元・学習集団の単位 (表示カラム追加)
         
@@ -1199,7 +1192,6 @@ else: # 詳細ページ
         # 単元名は別途表示（関連カードセクションと連動させるため）
         st.markdown(f"<p style='font-size:1.1em; font-weight:bold; margin-top:10px;'>単元名: <span style='color:#8A2BE2;'>{selected_lesson.get('unit_name', '単元なし')}</span></p>", unsafe_allow_html=True)
 
-        # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
 
         # --- 単元の授業の流れ (新規追加または既存セクションを拡張) --- (★ここから追加)
         if selected_lesson.get('unit_name') and selected_lesson.get('unit_name') != '単元なし':
@@ -1252,7 +1244,6 @@ else: # 詳細ページ
             
             st.markdown("<h3><span class='header-icon'>✂️</span>準備物</h3>", unsafe_allow_html=True)
             st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
 
         # 指導のポイント
         if selected_lesson['points']:
@@ -1262,17 +1253,15 @@ else: # 詳細ページ
             for point in selected_lesson['points']:
                 st.markdown(f"<li>{point}</li>", unsafe_allow_html=True)
             st.markdown("</ul>", unsafe_allow_html=True)
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
 
         # ハッシュタグ
         if selected_lesson['hashtags']:
             
             st.markdown("<h3><span class='header-icon'>#️⃣</span>ハッシュタグ</h3>", unsafe_allow_html=True)
             st.markdown(
-                f"<p>{''.join(f'<span class=\"tag-badge\" style=\"margin-right: 5px;\">#{tag}</span>' for tag in selected_lesson['hashtags'])}</p>",
+                f"<p>{''.join(f'<span class=\"tag-badge\" style=\"margin-right: 5px;\">#{tag}</span>' for tag in selected_lesson['hashtags'] if tag)}</p>",
                 unsafe_allow_html=True
             )
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
 
         # 教材写真
         if selected_lesson['material_photos']: # リストが空でない場合のみ表示
@@ -1288,7 +1277,6 @@ else: # 詳細ページ
                         st.image(photo_url, use_container_width=True)
                     else:
                         st.warning("一部の教材写真URLが無効なため表示できませんでした。") # 必要に応じてメッセージ
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
 
         # 動画リンク (★ここを修正/追加)
         if selected_lesson['video_link'].strip(): # video_linkが空文字列でないことを確認 (strip()で空白も考慮)
@@ -1298,12 +1286,10 @@ else: # 詳細ページ
                 st.video(selected_lesson['video_link'])
             except Exception as e:
                 st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
         else:
             # 動画リンクが空の場合にメッセージを表示
             st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
             st.info("参考動画は登録されていません。")
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
 
         
         # 詳細資料ダウンロード (★ここを修正/追加)
@@ -1318,7 +1304,6 @@ else: # 詳細ページ
                 st.markdown(f'<a href="{selected_lesson["detail_ppt_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #D24726; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📊 授業資料 (PowerPoint)</button></a>', unsafe_allow_html=True)
             if selected_lesson['detail_excel_url']: # ★追加
                 st.markdown(f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>', unsafe_allow_html=True)
-            # st.markdown("</div>", unsafe_allow_html=True) # 不要な閉じタグを削除
    
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
