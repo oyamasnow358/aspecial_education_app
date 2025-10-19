@@ -15,6 +15,8 @@ st.set_page_config(
 
 def load_css():
     """カスタムCSSを読み込む関数"""
+    # ★修正箇所★ f-string内部のバックスラッシュ問題を回避するため、url()を含む部分は通常の文字列に。
+    # StreamlitはMarkdown内でHTMLを解釈するので、f-stringである必要はない。
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
