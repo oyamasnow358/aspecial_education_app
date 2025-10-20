@@ -15,9 +15,10 @@ st.set_page_config(
 
 def load_css():
     """カスタムCSSを読み込む関数"""
-    # ★修正箇所★ f-string内部のバックスラッシュ問題を回避するため、url()を含む部分は通常の文字列に。
+    # f-string内部のバックスラッシュ問題を回避するため、url()を含む部分は通常の文字列に。
     # StreamlitはMarkdown内でHTMLを解釈するので、f-stringである必要はない。
-    st.markdown("""
+    st.markdown(
+        r"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
         
@@ -408,12 +409,14 @@ def load_css():
             box-shadow: 0 8px 15px rgba(74,144,226,0.2) !important;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """
+    , unsafe_allow_html=True)
 
 load_css()
 
 # --- Googleフォームへの外部リンク (ここに追加) ---
-st.markdown("""
+st.markdown(
+    r"""
     <style>
         .google-form-link-container {
             text-align: center;
@@ -450,7 +453,8 @@ st.markdown("""
             <span class="icon">📝</span> Googleフォームで授業カードを作成！
         </a>
     </div>
-""", unsafe_allow_html=True)
+"""
+, unsafe_allow_html=True)
 # --- ここまで ---
 # --- CSS for Card Layout and General Styling ---
 # --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
@@ -1008,7 +1012,7 @@ if st.session_state.current_lesson_id is None:
                      </div>
                  </div>
                  <div class="lesson-card-tags">
-                     {''.join(f'<span class=\"tag-badge\">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+                     {''.join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
                  </div>
                  {st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
              </div>
@@ -1079,7 +1083,8 @@ else: # 詳細ページ
 
         st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['unit_name'], use_container_width=True) # 画像キャプションも単元名に
 
-        st.markdown("""
+        st.markdown(
+            r"""
             <style>
                 .flow-section {
                     background-color: #f9f9f9;
@@ -1141,7 +1146,8 @@ else: # 詳細ページ
                     color: #666;
                 }
             </style>
-        """, unsafe_allow_html=True)
+        """
+        , unsafe_allow_html=True)
 
         # 授業の流れセクション
         st.subheader("授業の流れ")
@@ -1228,13 +1234,15 @@ else: # 詳細ページ
                  else:
                     # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
                     # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
-                     st.markdown(f"""
+                     st.markdown(
+                         r"""
                          <li>
-                             <a href="#" onclick="document.querySelector('button[data-testid=\\"stButton_unit_flow_link_direct_{lesson_in_unit['id']}\\"]').click(); return false;" style="text-decoration: none; color: inherit;">
-                                 {display_title}
+                             <a href="#" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_direct_""" + str(lesson_in_unit['id']) + r"""\"]').click(); return false;" style="text-decoration: none; color: inherit;">
+                                 """ + display_title + r"""
                              </a>
                          </li>
-                     """, unsafe_allow_html=True) # FIX: f-string内のバックスラッシュをエスケープ
+                     """
+                     , unsafe_allow_html=True)
                      # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
                      st.button(
                          "隠しボタン", # ボタンのテキストは表示されないので何でもOK
@@ -1323,7 +1331,8 @@ else: # 詳細ページ
         st.button("↩️ 一覧に戻る", on_click=back_to_list)
 
 # --- Custom CSS for Styling ---
-st.markdown("""
+st.markdown(
+    r"""
 <style>
     /* General body and text */
     body {
@@ -1563,4 +1572,5 @@ st.markdown("""
         width: 350px;
     }
 </style>
-""", unsafe_allow_html=True)
+"""
+, unsafe_allow_html=True)
