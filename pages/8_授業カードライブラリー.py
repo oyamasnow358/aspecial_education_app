@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import base64
-import re # ハッシュタグ抽出用
-import io # Word/Excelファイルダウンロード・アップロード用
-from io import BytesIO # Excelアップロード用
-import xlsxwriter # エラー解決のためにインポートを追加
+import re  # ハッシュタグ抽出用
+import io  # Word/Excelファイルダウンロード・アップロード用
+from io import BytesIO  # Excelアップロード用
+import xlsxwriter  # エラー解決のためにインポートを追加
 
 st.set_page_config(
     page_title="授業カードライブラリー",
@@ -13,12 +13,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
 def load_css():
     """カスタムCSSを読み込む関数"""
-    # f-string内部のバックスラッシュ問題を回避するため、url()を含む部分は通常の文字列に。
-    # StreamlitはMarkdown内でHTMLを解釈するので、f-stringである必要はない。
-    st.markdown(
-        r"""
+    css = r"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
         
@@ -410,13 +408,13 @@ def load_css():
         }
     </style>
     """
-    , unsafe_allow_html=True)
+    st.markdown(css, unsafe_allow_html=True)
+
 
 load_css()
 
 # --- Googleフォームへの外部リンク (ここに追加) ---
-st.markdown(
-    r"""
+google_form_css = r"""
     <style>
         .google-form-link-container {
             text-align: center;
@@ -448,18 +446,20 @@ st.markdown(
             color: white;
         }
     </style>
+"""
+google_form_html = """
     <div class="google-form-link-container">
         <a href="https://leeson-abfy5bxayhavhoznzexj8r.streamlit.app/" target="_blank" class="google-form-link-button">
             <span class="icon">📝</span> Googleフォームで授業カードを作成！
         </a>
     </div>
 """
-, unsafe_allow_html=True)
+st.markdown(google_form_css + google_form_html, unsafe_allow_html=True)
 # --- ここまで ---
 # --- CSS for Card Layout and General Styling ---
 # --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
 # st.columnsを使って、左端に配置する
-col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
+col_back, _ = st.columns([0.15, 0.85])  # ボタン用に狭いカラムを確保
 with col_back:
     # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
     st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
@@ -482,14 +482,13 @@ try:
             'unit_lesson_title': lambda x: str(x) if pd.notna(x) else '',
             'video_link': lambda x: str(x) if pd.notna(x) else '',
             # ★追加・変更：image, 資料ダウンロードURLも空欄を''として読み込む
-            'image': lambda x: str(x) if pd.notna(x) else '', # メイン画像も空文字列処理を追加
+            'image': lambda x: str(x) if pd.notna(x) else '',  # メイン画像も空文字列処理を追加
             'detail_word_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_pdf_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_ppt_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_excel_url': lambda x: str(x) if pd.notna(x) else '',
         }
     )
-
 
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
@@ -512,7 +511,7 @@ try:
         # ICT使用の値をそのまま文字列として保持
         lesson_data_df['ict_use'] = lesson_data_df['ict_use'].astype(str)
     else:
-        lesson_data_df['ict_use'] = 'なし' # カラムがない場合はデフォルトで「なし」
+        lesson_data_df['ict_use'] = 'なし'  # カラムがない場合はデフォルトで「なし」
 
     # 'subject', 'unit_name', 'group_type' カラムが存在しない場合、デフォルト値で作成
     if 'subject' not in lesson_data_df.columns:
@@ -523,23 +522,23 @@ try:
     lesson_data_df['unit_name'] = lesson_data_df['unit_name'].apply(lambda x: '単元なし' if str(x).strip() == '' or str(x).lower() == 'nan' else str(x).strip())
 
     if 'group_type' not in lesson_data_df.columns:
-        lesson_data_df['group_type'] = '全体' # 例: 全体, 小グループ, 個別 など
+        lesson_data_df['group_type'] = '全体'  # 例: 全体, 小グループ, 個別 など
 
     # 各要素 (辞書) に対して unit_lesson_title キーが存在しない場合は追加し、空文字列で埋める
     lesson_data = lesson_data_df.to_dict(orient='records')
-    for lesson in lesson_data: # FIX: KeyError対策としてsetdefaultを追加
-        lesson.setdefault('unit_lesson_title', "") # FIX: KeyError対策としてsetdefaultを追加
-    
-    st.session_state.lesson_data = lesson_data # FIX: st.session_state.lesson_dataをここで初期化
-    
-    lesson_data_raw = lesson_data_df.to_dict(orient='records') # FIX: lesson_data_rawの定義を移動
+    for lesson in lesson_data:  # FIX: KeyError対策としてsetdefaultを追加
+        lesson.setdefault('unit_lesson_title', "")  # FIX: KeyError対策としてsetdefaultを追加
+
+    st.session_state.lesson_data = lesson_data  # FIX: st.session_state.lesson_dataをここで初期化
+
+    lesson_data_raw = lesson_data_df.to_dict(orient='records')  # FIX: lesson_data_rawの定義を移動
 
 except FileNotFoundError:
     st.error("lesson_cards.csv ファイルが見つかりませんでした。pages フォルダと同じ階層に配置してください。")
     st.stop()
 except Exception as e:
     st.error(f"CSVファイルの読み込み中にエラーが発生しました: {e}")
-    st.exception(e) # デバッグのために例外の詳細を表示
+    st.exception(e)  # デバッグのために例外の詳細を表示
     st.stop()
 
 # st.session_stateの初期化 (★ここを修正/追加)
@@ -549,27 +548,27 @@ if 'search_query' not in st.session_state:
     st.session_state.search_query = ""
 if 'selected_hashtags' not in st.session_state:
     st.session_state.selected_hashtags = []
-if 'selected_subject' not in st.session_state: # 教科フィルター
+if 'selected_subject' not in st.session_state:  # 教科フィルター
     st.session_state.selected_subject = "全て"
-if 'selected_unit' not in st.session_state: # 単元フィルターを追加
+if 'selected_unit' not in st.session_state:  # 単元フィルターを追加
     st.session_state.selected_unit = "全て"
 if 'lesson_data' not in st.session_state:
-    st.session_state.lesson_data = lesson_data_raw # アプリ内でデータを更新できるようにセッションステートに保持
-if 'show_all_flow' not in st.session_state: # 授業の流れ全体表示フラグ
+    st.session_state.lesson_data = lesson_data_raw  # アプリ内でデータを更新できるようにセッションステートに保持
+if 'show_all_flow' not in st.session_state:  # 授業の流れ全体表示フラグ
     st.session_state.show_all_flow = False
-if 'current_page' not in st.session_state: # ページネーション用
+if 'current_page' not in st.session_state:  # ページネーション用
     st.session_state.current_page = 1
 # --- Helper Functions ---
 
 def set_detail_page(lesson_id):
     """詳細ページへの遷移をトリガーする関数"""
     st.session_state.current_lesson_id = lesson_id
-    st.session_state.show_all_flow = False # 詳細ページに遷移したらフロー表示をリセット
+    st.session_state.show_all_flow = False  # 詳細ページに遷移したらフロー表示をリセット
 
 def back_to_list():
     """一覧ページに戻る関数"""
     st.session_state.current_lesson_id = None
-    st.session_state.show_all_flow = False # 一覧に戻ったらフロー表示をリセット
+    st.session_state.show_all_flow = False  # 一覧に戻ったらフロー表示をリセット
 
 def toggle_all_flow_display():
     """授業の流れ全体の表示を切り替える関数"""
@@ -578,11 +577,11 @@ def toggle_all_flow_display():
 
 # 授業カードのヘッダーカラム定義 (★ここを修正/追加)
 LESSON_CARD_COLUMNS = [
-    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type", 
+    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type",
     "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
-    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url", 
-    "detail_ppt_url", "detail_excel_url", # ★追加: PowerPointとExcelのURLカラム
-    "ict_use", "subject", "group_type", "unit_order", "unit_lesson_title" 
+    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url",
+    "detail_ppt_url", "detail_excel_url",  # ★追加: PowerPointとExcelのURLカラム
+    "ict_use", "subject", "group_type", "unit_order", "unit_lesson_title"
 ]
 
 # Excelテンプレートダウンロード関数
@@ -591,10 +590,10 @@ def get_excel_template():
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         template_df.to_excel(writer, index=False, sheet_name='授業カードテンプレート')
-        workbook  = writer.book
+        workbook = writer.book
         worksheet = writer.sheets['授業カードテンプレート']
         # ヘッダーにコメントを追加（入力ガイド） (★ここを追加)
-        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)') 
+        worksheet.write_comment('B1', '例: 「買い物学習」, 「話し言葉の学習」 (単元名)')
         worksheet.write_comment('C1', '例: 生活スキルを楽しく学ぶ実践的な買い物学習！')
         worksheet.write_comment('D1', '例: お店での買い物の手順を理解し、お金の計算ができるようになる。')
         worksheet.write_comment('E1', '例: 小学部3年')
@@ -611,12 +610,12 @@ def get_excel_template():
         worksheet.write_comment('P1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
         worksheet.write_comment('Q1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
         worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('S1', '指導案PowerPointファイルのダウンロードURL (無い場合は空欄でOK)') # ★追加
-        worksheet.write_comment('T1', '指導案ExcelファイルのダウンロードURL (無い場合は空欄でOK)')     # ★追加
-        worksheet.write_comment('U1', 'ICT活用有無 (TRUEまたはFALSE)') # インデックスがずれるため注意
+        worksheet.write_comment('S1', '指導案PowerPointファイルのダウンロードURL (無い場合は空欄でOK)')  # ★追加
+        worksheet.write_comment('T1', '指導案ExcelファイルのダウンロードURL (無い場合は空欄でOK)')  # ★追加
+        worksheet.write_comment('U1', 'ICT活用有無 (TRUEまたはFALSE)')  # インデックスがずれるため注意
         worksheet.write_comment('V1', '例: 生活単元学習,国語,算数など (教科)')
         worksheet.write_comment('W1', '例: 全体,個別,小グループ  (学習集団の単位)')
-        worksheet.write_comment('X1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)') 
+        worksheet.write_comment('X1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)')
     processed_data = output.getvalue()
     return processed_data
 
@@ -667,7 +666,7 @@ with st.sidebar:
     # ファイルのアップロード
     uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。")
 
-        
+
     if uploaded_file is not None:
         try:
             if uploaded_file.name.endswith('.xlsx'):
@@ -678,7 +677,7 @@ with st.sidebar:
                 st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
                 st.stop()
 
-            required_cols = ["unit_name", "goal"] 
+            required_cols = ["unit_name", "goal"]
             if not all(col in new_data_df.columns for col in required_cols):
                 st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
                 # どのカラムが不足しているか具体的に示す
@@ -690,7 +689,7 @@ with st.sidebar:
                         # ★変更: リストカラムの処理を強化。空文字列を除外する。
                         return df[col_name].apply(lambda x: [item.strip() for item in str(x).split(separator) if item.strip()] if pd.notna(x) and str(x).strip() != '' else [])
                     return [[]] * len(df)
-                
+
                 # 単一文字列カラムのNaN/空文字列処理も同様に強化 (★ここを追加)
                 def process_string_column(df, col_name, default_value):
                     if col_name in df.columns:
@@ -702,15 +701,15 @@ with st.sidebar:
                 if 'unit_order' in new_data_df.columns:
                     new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
                 else:
-                    new_data_df['unit_order'] = 9999 # カラムがない場合はデフォルト値
-             
+                    new_data_df['unit_order'] = 9999  # カラムがない場合はデフォルト値
+
                 if 'unit_lesson_title' in new_data_df.columns:
                     # NaNや空文字列を適切に処理
                     new_data_df['unit_lesson_title'] = new_data_df['unit_lesson_title'].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '')
                 else:
                     # 'unit_lesson_title' カラムがない場合、'unit_name' から設定
-                    new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内授業') # デフォルトでunit_nameを使用
-                
+                    new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内授業')  # デフォルトでunit_nameを使用
+
                 # lesson_dict の構築部分で新しいカラムを追加 (★ここを削除/修正)
                 # この部分はループの外に出すべきではないため、後続のループ内で処理されるようにする。
                 # 元のコードにあった不要な lesson_dict の定義を削除
@@ -729,7 +728,7 @@ with st.sidebar:
                 # ★変更: material_photosも上記で定義したprocess_list_columnを使用する
                 new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
 
-                 # ICT活用有無の処理 (★ここを修正)
+                # ICT活用有無の処理 (★ここを修正)
                 if 'ict_use' in new_data_df.columns:
                     # ICT使用の値をそのまま文字列として保持し、NaNや空文字列は「なし」に
                     new_data_df['ict_use'] = new_data_df['ict_use'].astype(str).apply(lambda x: x.strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'なし')
@@ -745,7 +744,7 @@ with st.sidebar:
                 max_id = max(existing_ids) if existing_ids else 0
 
                 new_entries = []
-                for idx, row in new_data_df.iterrows(): # ループ変数にidxを追加
+                for idx, row in new_data_df.iterrows():  # ループ変数にidxを追加
                     current_id = row.get('id')
                     if pd.isna(current_id) or current_id in existing_ids:
                         max_id += 1
@@ -757,10 +756,10 @@ with st.sidebar:
                             if row_id in existing_ids:
                                 max_id += 1
                                 row_id = max_id
-                        except ValueError: # idが数値でない場合
+                        except ValueError:  # idが数値でない場合
                             max_id += 1
                             row_id = max_id
-                    
+
                     # lesson_dict の構築部分で新しいカラムを追加 (★ここを修正/追加)
                     lesson_dict = {
                         'id': row_id,
@@ -771,40 +770,38 @@ with st.sidebar:
                         'disability_type': row.get('disability_type', '不明'),
                         'duration': row.get('duration', '不明'),
                         'materials': row.get('materials', ''),
-                        'introduction_flow': row.get('introduction_flow', []), 
-                        'activity_flow': row.get('activity_flow', []),     
-                        'reflection_flow': row.get('reflection_flow', []),   
+                        'introduction_flow': row.get('introduction_flow', []),
+                        'activity_flow': row.get('activity_flow', []),
+                        'reflection_flow': row.get('reflection_flow', []),
                         'points': row.get('points', []),
                         'hashtags': row.get('hashtags', []),
-                        'image': process_string_column(new_data_df.iloc[[idx]], 'image', '').iloc[0], # idxを渡す
+                        'image': process_string_column(new_data_df.iloc[[idx]], 'image', '').iloc[0],  # idxを渡す
                         'material_photos': row.get('material_photos', []),
-                        'video_link': process_string_column(new_data_df.iloc[[idx]], 'video_link', '').iloc[0], # idxを渡す
-                        'detail_word_url': process_string_column(new_data_df.iloc[[idx]], 'detail_word_url', '').iloc[0], # idxを渡す
-                        'detail_pdf_url': process_string_column(new_data_df.iloc[[idx]], 'detail_pdf_url', '').iloc[0],   # idxを渡す
-                        'detail_ppt_url': process_string_column(new_data_df.iloc[[idx]], 'detail_ppt_url', '').iloc[0],   # idxを渡す
-                        'detail_excel_url': process_string_column(new_data_df.iloc[[idx]], 'detail_excel_url', '').iloc[0], # idxを渡す
-                        'ict_use': row.get('ict_use', 'なし'), # ここもデフォルト値取得ロジックを強化 (Falseから'なし'に変更)
+                        'video_link': process_string_column(new_data_df.iloc[[idx]], 'video_link', '').iloc[0],  # idxを渡す
+                        'detail_word_url': process_string_column(new_data_df.iloc[[idx]], 'detail_word_url', '').iloc[0],  # idxを渡す
+                        'detail_pdf_url': process_string_column(new_data_df.iloc[[idx]], 'detail_pdf_url', '').iloc[0],  # idxを渡す
+                        'detail_ppt_url': process_string_column(new_data_df.iloc[[idx]], 'detail_ppt_url', '').iloc[0],  # idxを渡す
+                        'detail_excel_url': process_string_column(new_data_df.iloc[[idx]], 'detail_excel_url', '').iloc[0],  # idxを渡す
+                        'ict_use': row.get('ict_use', 'なし'),  # ここもデフォルト値取得ロジックを強化 (Falseから'なし'に変更)
                         'subject': row.get('subject', 'その他'),
                         'group_type': row.get('group_type', '全体'),
-                        'unit_order': row.get('unit_order', 9999), # ここもデフォルト値取得ロジックを強化
-                        'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業')) # デフォルトでtitleを使用 (★変更)
+                        'unit_order': row.get('unit_order', 9999),  # ここもデフォルト値取得ロジックを強化
+                        'unit_lesson_title': row.get('unit_lesson_title', row.get('unit_name', '単元内の授業'))  # デフォルトでtitleを使用 (★変更)
                     }
                     new_entries.append(lesson_dict)
-                    existing_ids.add(row_id) # 新しく生成されたIDも既存IDに加える
+                    existing_ids.add(row_id)  # 新しく生成されたIDも既存IDに加える
 
                 st.session_state.lesson_data.extend(new_entries)
                 st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
                 st.experimental_rerun()
         except Exception as e:
             st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
-            st.exception(e) # デバッグのために例外の詳細を表示
+            st.exception(e)  # デバッグのために例外の詳細を表示
 
-  
 
         st.markdown("---")
-    
 
-    
+
 # --- Main Page Logic ---
 
 if st.session_state.current_lesson_id is None:
@@ -822,9 +819,9 @@ if st.session_state.current_lesson_id is None:
             st.session_state.search_query,
             placeholder="例: 買い物、生活単元、小学部",
             key="search_input",
-            label_visibility="visible" # これでラベルが常に見えるようになる
+            label_visibility="visible"  # これでラベルが常に見えるようになる
         )
-    
+
     all_hashtags = sorted(list(set(tag for lesson in st.session_state.lesson_data for tag in lesson['hashtags'] if tag)))
 
     with tag_col:
@@ -833,14 +830,14 @@ if st.session_state.current_lesson_id is None:
             options=all_hashtags,
             default=st.session_state.selected_hashtags,
             placeholder="選択してください",
-            label_visibility="visible" # これでラベルが常に見えるようになる
+            label_visibility="visible"  # これでラベルが常に見えるようになる
         )
-        
+
 # カテゴリーで絞り込みのセクション (★ここから追加)
-    st.markdown("---") # 区切り線
+    st.markdown("---")  # 区切り線
     st.subheader("カテゴリーで絞り込み")
 
-    col_subject, col_unit = st.columns(2) # 2カラムに分割して表示
+    col_subject, col_unit = st.columns(2)  # 2カラムに分割して表示
 
     with col_subject:
         all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
@@ -848,8 +845,8 @@ if st.session_state.current_lesson_id is None:
 
         # on_changeコールバック関数を定義
         def update_subject_selection():
-            st.session_state.selected_subject = st.session_state.main_page_subject_filter_v4 # selectboxのkeyで直接値を取得
-            st.session_state.selected_unit = "全て" # 教科が変わったら単元フィルターをリセット
+            st.session_state.selected_subject = st.session_state.main_page_subject_filter_v4  # selectboxのkeyで直接値を取得
+            st.session_state.selected_unit = "全て"  # 教科が変わったら単元フィルターをリセット
 
         # selected_subject が有効なオプションに含まれていない場合、"全て"にリセット
         if st.session_state.selected_subject not in all_subjects:
@@ -858,17 +855,17 @@ if st.session_state.current_lesson_id is None:
         try:
             default_subject_index = all_subjects.index(st.session_state.selected_subject)
         except ValueError:
-            default_subject_index = 0 # 見つからない場合は「全て」に設定
+            default_subject_index = 0  # 見つからない場合は「全て」に設定
 
         st.selectbox(
             "教科を選択",
             options=all_subjects,
             index=default_subject_index,
             key="main_page_subject_filter_v4",
-            on_change=update_subject_selection, # on_changeイベントハンドラを設定
+            on_change=update_subject_selection,  # on_changeイベントハンドラを設定
             label_visibility="visible"
         )
-    
+
     with col_unit:
         # 選択された教科に基づいて単元をフィルタリング
         if st.session_state.selected_subject == "全て":
@@ -899,13 +896,12 @@ if st.session_state.current_lesson_id is None:
             key="main_page_unit_filter_v4",
             on_change=update_unit_selection,
             label_visibility="visible"
-        )       
+        )
 
-        
 
-    st.markdown("---") # 区切り線
+    st.markdown("---")  # 区切り線
 
-  
+
     filtered_lessons = []
     # search_lower をループの前に初期化するか、
     # 検索クエリがない場合は、検索ロジックを完全にスキップするように変更します。
@@ -915,10 +911,10 @@ if st.session_state.current_lesson_id is None:
         match_search = True
         match_tags = True
         match_subject = True
-        match_unit = True # 単元フィルターを追加 (★ここを追加)
+        match_unit = True  # 単元フィルターを追加 (★ここを追加)
 
         # Keyword search のロジックを修正
-        if st.session_state.search_query: # 検索クエリがある場合のみ検索を実行
+        if st.session_state.search_query:  # 検索クエリがある場合のみ検索を実行
             search_lower = st.session_state.search_query.lower()
             if not (
                 (search_lower in str(lesson.get('unit_name', '')).lower()) or
@@ -927,14 +923,14 @@ if st.session_state.current_lesson_id is None:
                 (search_lower in str(lesson.get('goal', '')).lower()) or
                 (search_lower in str(lesson.get('target_grade', '')).lower()) or
                 (search_lower in str(lesson.get('disability_type', '')).lower()) or
-                (search_lower in str(lesson.get('duration', '')).lower()) or # duration も追加しました
-                (search_lower in str(lesson.get('materials', '')).lower()) or 
+                (search_lower in str(lesson.get('duration', '')).lower()) or  # duration も追加しました
+                (search_lower in str(lesson.get('materials', '')).lower()) or
                 any(search_lower in str(step).lower() for step in lesson.get('introduction_flow', [])) or
-                any(search_lower in str(step).lower() for step in lesson.get('activity_flow', [])) or     
-                any(search_lower in str(step).lower() for step in lesson.get('reflection_flow', [])) or   
-                any(search_lower in str(point).lower() for point in lesson.get('points', [])) or 
+                any(search_lower in str(step).lower() for step in lesson.get('activity_flow', [])) or
+                any(search_lower in str(step).lower() for step in lesson.get('reflection_flow', [])) or
+                any(search_lower in str(point).lower() for point in lesson.get('points', [])) or
                 any(search_lower in str(t).lower() for t in lesson.get('hashtags', [])) or
-                (search_lower in str(lesson.get('unit_lesson_title', '')).lower()) # ★ここを追加
+                (search_lower in str(lesson.get('unit_lesson_title', '')).lower())  # ★ここを追加
             ):
                 match_search = False
         # else:
@@ -950,22 +946,22 @@ if st.session_state.current_lesson_id is None:
         if st.session_state.selected_subject != "全て":
             if lesson.get('subject') != st.session_state.selected_subject:
                 match_subject = False
-        
+
         # Unit filter (新規追加) (★ここを追加)
         if st.session_state.selected_unit != "全て":
             if lesson.get('unit_name') != st.session_state.selected_unit:
                 match_unit = False
 
-        if match_search and match_tags and match_subject and match_unit: # ★ここを修正
+        if match_search and match_tags and match_subject and match_unit:  # ★ここを修正
             filtered_lessons.append(lesson)
-    
+
     # --- ★ここからページネーション処理の追加★ --- (★ここから追加)
-    CARDS_PER_PAGE = 10 # 1ページあたりの表示件数
+    CARDS_PER_PAGE = 10  # 1ページあたりの表示件数
 
     # 総ページ数を計算
     total_pages = (len(filtered_lessons) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE
-    if total_pages == 0: # カードが0枚の場合の特殊処理
-        total_pages = 1 
+    if total_pages == 0:  # カードが0枚の場合の特殊処理
+        total_pages = 1
 
     # 現在のページが総ページ数を超えないように調整
     if st.session_state.current_page > total_pages:
@@ -981,59 +977,71 @@ if st.session_state.current_lesson_id is None:
     # --- ▲ここまでページネーション処理の追加▲ ---
 
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
-    if displayed_lessons: # filtered_lessons ではなく displayed_lessons をループする (★ここを修正)
-        for lesson in displayed_lessons: # ここを `displayed_lessons` に変更 (★ここを修正)
+    if displayed_lessons:  # filtered_lessons ではなく displayed_lessons をループする (★ここを修正)
+        for lesson in displayed_lessons:  # ここを `displayed_lessons` に変更 (★ここを修正)
             # 教科と単元名が空文字列や'単元なし'の場合は表示しない
             display_subject = lesson['subject'] if lesson['subject'] and lesson['subject'] != 'その他' else ''
             display_unit = lesson['unit_name'] if lesson['unit_name'] and lesson['unit_name'] != '単元なし' else ''
-    
-            
-            # 教科と単元名を組み合わせる
-            subject_unit_display = ""
+
+            # 教科と単元名を組み合わせるHTMLを事前に作成
+            subject_unit_display_html = ""
             if display_subject and display_unit:
-                subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject} / {display_unit}</span>"
+                subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{} / {}</span>'.format(display_subject, display_unit)
             elif display_subject:
-                subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject}</span>"
+                subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{}</span>'.format(display_subject)
             elif display_unit:
-                subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
+                subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{}</span>'.format(display_unit)
 
             # タグHTMLを事前に作成しておき、f文字列内の複雑なネストを避ける
-            tags_html = "".join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson.get('hashtags', []) if tag)
+            tags_html = "".join('<span class="tag-badge">#{}</span>'.format(tag) for tag in lesson.get('hashtags', []) if tag)
 
-            lesson_card_html = f"""
+            # f-stringの内部にHTMLエスケープやバックフラッシュが含まれないように修正
+            lesson_card_html = """
             <div class="lesson-card">
-             <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['unit_name']}">
+             <img class="lesson-card-image" src="{}" alt="{}">
              <div class="lesson-card-content">
                  <div>
-                     {subject_unit_display}
-                     <div class="lesson-card-title">{lesson['unit_name']}</div> 
-                     <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
-                     <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
+                     {}
+                     <div class="lesson-card-title">{}</div> 
+                     <div class="lesson-card-catchcopy">{}</div>
+                     <div class="lesson-card-goal">🎯 ねらい: {}</div>
                      <div class="lesson-card-meta">
-                <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
-                <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
-                         <span><span class="icon">⏱</span>{lesson['duration']}</span>
+                <span><span class="icon">🎓</span>{}</span>
+                <span><span class="icon">🧩</span>{}</span>
+                         <span><span class="icon">⏱</span>{}</span>
                      </div>
                  </div>
                  <div class="lesson-card-tags">
-                     {tags_html}
+                     {}
                  </div>
-                 {st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
+                 {}
              </div>
             </div>
-             """
+             """.format(
+                lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image',
+                lesson['unit_name'],
+                subject_unit_display_html,
+                lesson['unit_name'],
+                lesson['catch_copy'],
+                lesson['goal'],
+                lesson['target_grade'],
+                lesson['disability_type'],
+                lesson['duration'],
+                tags_html,
+                st.button("👇この授業の詳細を見る", key="detail_btn_{}".format(lesson['id']), on_click=set_detail_page, args=(lesson['id'],))
+            )
             st.markdown(lesson_card_html, unsafe_allow_html=True)
 # ... (既存の授業カード表示コードここまで) ...
 
     else:
         st.info("条件に合う授業カードは見つかりませんでした。")
-    st.markdown("</div>", unsafe_allow_html=True) # lesson-card-grid の閉じタグ
+    st.markdown("</div>", unsafe_allow_html=True)  # lesson-card-grid の閉じタグ
 
     # --- ★ここからページネーションUIの追加★ --- (★ここから追加)
     st.markdown("---")
     st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
 
-    col_prev, *col_pages, col_next = st.columns([1] * (total_pages + 2)) # 前ページ、ページ番号、次ページ用のカラム
+    col_prev, *col_pages, col_next = st.columns([1] * (total_pages + 2))  # 前ページ、ページ番号、次ページ用のカラム
 
     # 前ページボタン
     with col_prev:
@@ -1042,7 +1050,7 @@ if st.session_state.current_lesson_id is None:
                 st.session_state.current_page -= 1
                 st.rerun()
         else:
-            st.empty() # 表示を合わせるため空のウィジェットを配置
+            st.empty()  # 表示を合わせるため空のウィジェットを配置
 
     # ページ番号ボタン
     for i in range(total_pages):
@@ -1050,7 +1058,7 @@ if st.session_state.current_lesson_id is None:
         with col_pages[i]:
             if st.button(
                 str(page_num),
-                key=f"page_btn_{page_num}_bottom",
+                key="page_btn_{}_bottom".format(page_num),
                 type="primary" if st.session_state.current_page == page_num else "secondary"
             ):
                 st.session_state.current_page = page_num
@@ -1063,7 +1071,7 @@ if st.session_state.current_lesson_id is None:
                 st.session_state.current_page += 1
                 st.rerun()
         else:
-            st.empty() # 表示を合わせるため空のウィジェットを配置
+            st.empty()  # 表示を合わせるため空のウィジェットを配置
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
@@ -1071,7 +1079,7 @@ if st.session_state.current_lesson_id is None:
 
 
 
-else: # 詳細ページ
+else:  # 詳細ページ
     # st.info("条件に合う授業カードは見つかりませんでした。") # この行は詳細ページ表示時には不要なので削除またはコメントアウト
     # --- Lesson Card Detail View ---
 
@@ -1080,16 +1088,18 @@ else: # 詳細ページ
     if selected_lesson:
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_top")
 
-        st.markdown(f"<h1 class='detail-header'>{selected_lesson['unit_name']}</h1>", unsafe_allow_html=True) # メインタイトルをに変更
+        # HTMLをf-stringの外で組み立てる
+        header_html = "<h1 class='detail-header'>{}</h1>".format(selected_lesson['unit_name'])
+        st.markdown(header_html, unsafe_allow_html=True)
         if selected_lesson['catch_copy']:
-            st.markdown(f"<h3 class='detail-header'>{selected_lesson['catch_copy']}</h3>", unsafe_allow_html=True)
+            catchcopy_html = "<h3 class='detail-header'>{}</h3>".format(selected_lesson['catch_copy'])
+            st.markdown(catchcopy_html, unsafe_allow_html=True)
         else:
             st.markdown("<br>", unsafe_allow_html=True)
 
-        st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['unit_name'], use_container_width=True) # 画像キャプションも単元名に
+        st.image(selected_lesson['image'] if selected_lesson['image'] else 'https://via.placeholder.com/800x400?text=No+Image', caption=selected_lesson['unit_name'], use_container_width=True)  # 画像キャプションも単元名に
 
-        st.markdown(
-            r"""
+        detail_css = r"""
             <style>
                 .flow-section {
                     background-color: #f9f9f9;
@@ -1152,66 +1162,68 @@ else: # 詳細ページ
                 }
             </style>
         """
-        , unsafe_allow_html=True)
+        st.markdown(detail_css, unsafe_allow_html=True)
 
         # 授業の流れセクション
         st.subheader("授業の流れ")
         # ボタンとコンテンツの間に明確な区切りを入れる
-        st.button(f"{'授業の流れを非表示' if st.session_state.show_all_flow else '授業の流れを表示'} 🔃", on_click=toggle_all_flow_display, key=f"toggle_all_flow_{selected_lesson['id']}")
-        
+        st.button('{} 🔃'.format('授業の流れを非表示' if st.session_state.show_all_flow else '授業の流れを表示'), on_click=toggle_all_flow_display, key="toggle_all_flow_{}".format(selected_lesson['id']))
+
         # ここにコンテンツを表示するDivを追加し、CSSで上部の余白を調整
         st.markdown("<div class='flow-content-wrapper'>", unsafe_allow_html=True)
 
         if st.session_state.show_all_flow:
             if selected_lesson['introduction_flow']:
-                
-                st.markdown("<div class='flow-section'><h4><span class='icon'>🚀</span>導入</h4><ol class='flow-list'>", unsafe_allow_html=True)
+                intro_html = "<div class='flow-section'><h4><span class='icon'>🚀</span>導入</h4><ol class='flow-list'>"
                 for step in selected_lesson['introduction_flow']:
-                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                st.markdown("</ol></div>", unsafe_allow_html=True)
+                    intro_html += "<li>{}</li>".format(step)
+                intro_html += "</ol></div>"
+                st.markdown(intro_html, unsafe_allow_html=True)
 
             if selected_lesson['activity_flow']:
-                st.markdown("<div class='flow-section'><h4><span class='icon'>💡</span>活動</h4><ol class='flow-list'>", unsafe_allow_html=True)
+                activity_html = "<div class='flow-section'><h4><span class='icon'>💡</span>活動</h4><ol class='flow-list'>"
                 for step in selected_lesson['activity_flow']:
-                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                st.markdown("</ol></div>", unsafe_allow_html=True)
+                    activity_html += "<li>{}</li>".format(step)
+                activity_html += "</ol></div>"
+                st.markdown(activity_html, unsafe_allow_html=True)
 
             if selected_lesson['reflection_flow']:
-                
-                st.markdown("<div class='flow-section'><h4><span class='icon'>💭</span>振り返り</h4><ol class='flow-list'>", unsafe_allow_html=True)
+                reflection_html = "<div class='flow-section'><h4><span class='icon'>💭</span>振り返り</h4><ol class='flow-list'>"
                 for step in selected_lesson['reflection_flow']:
-                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                st.markdown("</ol></div>", unsafe_allow_html=True)
-        
-        st.markdown("</div>", unsafe_allow_html=True) # flow-content-wrapper の閉じタグ
-        
+                    reflection_html += "<li>{}</li>".format(step)
+                reflection_html += "</ol></div>"
+                st.markdown(reflection_html, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)  # flow-content-wrapper の閉じタグ
+
         st.markdown("---")
 
         # ねらい
-       
+
         st.markdown("<h3><span class='header-icon'>🎯</span>ねらい</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p>{selected_lesson['goal']}</p>", unsafe_allow_html=True)
+        st.markdown("<p>{}</p>".format(selected_lesson['goal']), unsafe_allow_html=True)
         st.markdown("---")
         # 対象・種別・時間・教科・単元・学習集団の単位 (表示カラム追加)
-        
+
         st.markdown("<h3><span class='header-icon'>ℹ️</span>基本情報</h3>", unsafe_allow_html=True)
         # 6カラムに変更
-        col1, col2, col3, col4, col5, col6 = st.columns(6) 
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
         with col1:
-            st.markdown(f"**対象学年:** {selected_lesson['target_grade']}")
+            st.markdown("**対象学年:** {}".format(selected_lesson['target_grade']))
         with col2:
-            st.markdown(f"**障害種別:** {selected_lesson['disability_type']}")
+            st.markdown("**障害種別:** {}".format(selected_lesson['disability_type']))
         with col3:
-            st.markdown(f"**時間:** {selected_lesson['duration']}")
+            st.markdown("**時間:** {}".format(selected_lesson['duration']))
         with col4:
-            st.markdown(f"**ICT活用:** {selected_lesson.get('ict_use', 'なし')}")
+            st.markdown("**ICT活用:** {}".format(selected_lesson.get('ict_use', 'なし')))
         with col5:
-            st.markdown(f"**教科:** {selected_lesson.get('subject', 'その他')}")
-        with col6: # 新規追加
-            st.markdown(f"**学習集団:** {selected_lesson.get('group_type', '全体')}")    
-        
+            st.markdown("**教科:** {}".format(selected_lesson.get('subject', 'その他')))
+        with col6:  # 新規追加
+            st.markdown("**学習集団:** {}".format(selected_lesson.get('group_type', '全体')))
+
         # 単元名は別途表示（関連カードセクションと連動させるため）
-        st.markdown(f"<p style='font-size:1.1em; font-weight:bold; margin-top:10px;'>単元名: <span style='color:#8A2BE2;'>{selected_lesson.get('unit_name', '単元なし')}</span></p>", unsafe_allow_html=True)
+        unit_name_html = "<p style='font-size:1.1em; font-weight:bold; margin-top:10px;'>単元名: <span style='color:#8A2BE2;'>{}</span></p>".format(selected_lesson.get('unit_name', '単元なし'))
+        st.markdown(unit_name_html, unsafe_allow_html=True)
 
 
         # --- 単元の授業の流れ (新規追加または既存セクションを拡張) --- (★ここから追加)
@@ -1226,69 +1238,71 @@ else: # 詳細ページ
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
 
             if sorted_lessons_in_unit:
-             st.markdown(f"<h3><span class='header-icon'>📚</span>「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
-             st.markdown("<ol class='flow-list'>", unsafe_allow_html=True) # 番号付きリスト
-            
-             for lesson_in_unit in sorted_lessons_in_unit:
-                 # unit_lesson_title が存在すればそれを使用、なければ unit_name を使用
-                 display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name'] 
-                 is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
-                
-                 if is_current_lesson:
-                     st.markdown(f"<li style='font-weight: bold; color: #8A2BE2;'>{display_title} 【現在の授業】</li>", unsafe_allow_html=True)
-                 else:
-                    # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
-                    # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
-                     link_html = r"""
-                         <li>
-                             <a href="#" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_direct_""" + str(lesson_in_unit['id']) + r"""\"]').click(); return false;" style="text-decoration: none; color: inherit;">
-                                 """ + display_title + r"""
-                             </a>
-                         </li>
-                     """
-                     st.markdown(link_html, unsafe_allow_html=True)
-                     # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
-                     st.button(
-                         "隠しボタン", # ボタンのテキストは表示されないので何でもOK
-                         key=f"unit_flow_link_direct_{lesson_in_unit['id']}",
-                         on_click=set_detail_page,
-                         args=(lesson_in_unit['id'],),
-                         help="この授業の詳細を表示します",
-                     )
-            
-            st.markdown("</ol>", unsafe_allow_html=True)
+                unit_flow_header_html = "<h3><span class='header-icon'>📚</span>「{}」の授業の流れ</h3>".format(unit_name_to_search)
+                st.markdown(unit_flow_header_html, unsafe_allow_html=True)
+                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)  # 番号付きリスト
 
-        st.markdown("---") # 区切り線
+                for lesson_in_unit in sorted_lessons_in_unit:
+                    # unit_lesson_title が存在すればそれを使用、なければ unit_name を使用
+                    display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name']
+                    is_current_lesson = (lesson_in_unit['id'] == selected_lesson['id'])
+
+                    if is_current_lesson:
+                        list_item_html = "<li style='font-weight: bold; color: #8A2BE2;'>{} 【現在の授業】</li>".format(display_title)
+                        st.markdown(list_item_html, unsafe_allow_html=True)
+                    else:
+                        # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
+                        # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
+                        link_html = """
+                            <li>
+                                <a href="#" onclick="document.querySelector('button[data-testid="stButton_unit_flow_link_direct_{}"]').click(); return false;" style="text-decoration: none; color: inherit;">
+                                    {}
+                                </a>
+                            </li>
+                        """.format(lesson_in_unit['id'], display_title)
+                        st.markdown(link_html, unsafe_allow_html=True)
+                        # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
+                        st.button(
+                            "隠しボタン",  # ボタンのテキストは表示されないので何でもOK
+                            key="unit_flow_link_direct_{}".format(lesson_in_unit['id']),
+                            on_click=set_detail_page,
+                            args=(lesson_in_unit['id'],),
+                            help="この授業の詳細を表示します",
+                        )
+
+                st.markdown("</ol>", unsafe_allow_html=True)
+
+        st.markdown("---")  # 区切り線
         # 既存の「準備物」以下のセクションはそのまま残す
 
         # 準備物
         if selected_lesson['materials']:
-            
+
             st.markdown("<h3><span class='header-icon'>✂️</span>準備物</h3>", unsafe_allow_html=True)
-            st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
+            st.markdown("<p>{}</p>".format(selected_lesson['materials']), unsafe_allow_html=True)
 
         # 指導のポイント
         if selected_lesson['points']:
-            
-            st.markdown("<h3><span class='header-icon'>💡</span>指導のポイント</h3>", unsafe_allow_html=True)
+
+            st.markdown("<h3><span classt='header-icon'>💡</span>指導のポイント</h3>", unsafe_allow_html=True)
             st.markdown("<ul>", unsafe_allow_html=True)
             for point in selected_lesson['points']:
-                st.markdown(f"<li>{point}</li>", unsafe_allow_html=True)
+                st.markdown("<li>{}</li>".format(point), unsafe_allow_html=True)
             st.markdown("</ul>", unsafe_allow_html=True)
 
         # ハッシュタグ
         if selected_lesson['hashtags']:
-            
+
             st.markdown("<h3><span class='header-icon'>#️⃣</span>ハッシュタグ</h3>", unsafe_allow_html=True)
-            tags_html_detail = "".join(f'<span class="tag-badge" style="margin-right: 5px;">#{tag}</span>' for tag in selected_lesson.get('hashtags', []) if tag)
+            tags_html_detail = "".join('<span class="tag-badge" style="margin-right: 5px;">#{}</span>'.format(tag) for tag in selected_lesson.get('hashtags', []) if tag)
             st.markdown(
-                f"<p>{tags_html_detail}</p>",
+                "<p>{}</p>".format(tags_html_detail),
                 unsafe_allow_html=True
             )
 
         # 教材写真
-        if selected_lesson['material_photos']: # リストが空でない場合のみ表示
-            
+        if selected_lesson['material_photos']:  # リストが空でない場合のみ表示
+
             st.markdown("<h3><span class='header-icon'>📸</span>授業・教材写真</h3>", unsafe_allow_html=True)
             cols = st.columns(3)
             # material_photosリスト内の各URLをst.imageで表示。
@@ -1296,42 +1310,42 @@ else: # 詳細ページ
             for i, photo_url in enumerate(selected_lesson['material_photos']):
                 with cols[i % 3]:
                     # ここで個別のURLが空文字列でないことを再度チェックするとより安全
-                    if photo_url.strip(): 
+                    if photo_url.strip():
                         st.image(photo_url, use_container_width=True)
                     else:
-                        st.warning("一部の教材写真URLが無効なため表示できませんでした。") # 必要に応じてメッセージ
+                        st.warning("一部の教材写真URLが無効なため表示できませんでした。")  # 必要に応じてメッセージ
 
         # 動画リンク (★ここを修正/追加)
-        if selected_lesson['video_link'].strip(): # video_linkが空文字列でないことを確認 (strip()で空白も考慮)
-            
+        if selected_lesson['video_link'].strip():  # video_linkが空文字列でないことを確認 (strip()で空白も考慮)
+
             st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
             try:
                 st.video(selected_lesson['video_link'])
             except Exception as e:
-                st.warning(f"動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {e}")
+                st.warning("動画の読み込み中に問題が発生しました。リンクを確認してください。エラー: {}".format(e))
         else:
             # 動画リンクが空の場合にメッセージを表示
             st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
             st.info("参考動画は登録されていません。")
 
-        
+
         # 詳細資料ダウンロード (★ここを修正/追加)
         # 既存のif文の条件を変更
-        if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url'] or selected_lesson['detail_ppt_url'] or selected_lesson['detail_excel_url']: # ★変更
+        if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url'] or selected_lesson['detail_ppt_url'] or selected_lesson['detail_excel_url']:  # ★変更
             st.markdown("<h3><span class='header-icon'>📄</span>詳細資料ダウンロード</h3>", unsafe_allow_html=True)
             if selected_lesson['detail_word_url']:
-                word_button_html = f'<a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>'
+                word_button_html = '<a href="{}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>'.format(selected_lesson["detail_word_url"])
                 st.markdown(word_button_html, unsafe_allow_html=True)
             if selected_lesson['detail_pdf_url']:
-                pdf_button_html = f'<a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📚 指導案 (PDF)</button></a>'
+                pdf_button_html = '<a href="{}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📚 指導案 (PDF)</button></a>'.format(selected_lesson["detail_pdf_url"])
                 st.markdown(pdf_button_html, unsafe_allow_html=True)
-            if selected_lesson['detail_ppt_url']: # ★追加
-                ppt_button_html = f'<a href="{selected_lesson["detail_ppt_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #D24726; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📊 授業資料 (PowerPoint)</button></a>'
+            if selected_lesson['detail_ppt_url']:  # ★追加
+                ppt_button_html = '<a href="{}" target="_blank" style="text-decoration: none;"><button style="background-color: #D24726; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📊 授業資料 (PowerPoint)</button></a>'.format(selected_lesson["detail_ppt_url"])
                 st.markdown(ppt_button_html, unsafe_allow_html=True)
-            if selected_lesson['detail_excel_url']: # ★追加
-                excel_button_html = f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>'
+            if selected_lesson['detail_excel_url']:  # ★追加
+                excel_button_html = '<a href="{}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>'.format(selected_lesson["detail_excel_url"])
                 st.markdown(excel_button_html, unsafe_allow_html=True)
-   
+
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
 
@@ -1340,8 +1354,7 @@ else: # 詳細ページ
         st.button("↩️ 一覧に戻る", on_click=back_to_list)
 
 # --- Custom CSS for Styling ---
-st.markdown(
-    r"""
+global_css = r"""
 <style>
     /* General body and text */
     body {
@@ -1582,4 +1595,4 @@ st.markdown(
     }
 </style>
 """
-, unsafe_allow_html=True)
+st.markdown(global_css, unsafe_allow_html=True)
