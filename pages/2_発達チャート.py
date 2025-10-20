@@ -1,11 +1,11 @@
 import streamlit as st
 import io
-import json # jsonモジュールを追加
+import json
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
-import os # osモジュールを追加
+import os
 
 # --- ▼ 共通CSSの読み込み ▼ ---
 # (変更ないため、コードは前のものをそのままお使いください)
@@ -207,14 +207,15 @@ def load_guidance_data(_sheets_service, spreadsheet_id):
 
 # --- Google API関連のセットアップ ---
 try:
-    # RenderのSecret Filesからサービスアカウントキーを読み込む
-    # 環境変数にファイルパスではなく、JSON文字列そのものを格納していると仮定
-    google_credentials_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
-    if not google_credentials_json:
-        raise ValueError("環境変数 'GOOGLE_SHEETS_CREDENTIALS' が設定されていません。")
+    # RenderのSecret Filesからサービスアカウントキーをファイルとして読み込む
+    # Secret Filesは通常 /etc/secrets/ ディレクトリにマウントされる
+    secret_file_path = "/etc/secrets/GOOGLE_SHEETS_CREDENTIALS"
+
+    if not os.path.exists(secret_file_path):
+        raise FileNotFoundError(f"Secret file not found at {secret_file_path}. Please check Render Secret Files configuration.")
     
-    # JSON文字列をPython辞書に変換
-    google_credentials_info = json.loads(google_credentials_json)
+    with open(secret_file_path, "r") as f:
+        google_credentials_info = json.load(f) # ファイルからJSONを直接ロード
 
     credentials = Credentials.from_service_account_info(
         google_credentials_info,
