@@ -1,11 +1,14 @@
 import streamlit as st
 import io
+import json # jsonモジュールを追加
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
+import os # osモジュールを追加
 
 # --- ▼ 共通CSSの読み込み ▼ ---
+# (変更ないため、コードは前のものをそのままお使いください)
 def load_css():
     """カスタムCSSを読み込む関数"""
     css = """
@@ -189,18 +192,13 @@ def load_guidance_data(_sheets_service, spreadsheet_id):
             spreadsheetId=spreadsheet_id, range="シート2!A1:V"
         ).execute().get('values', [])
         
-        if not sheet_data:
-            st.warning("発達段階表データが見つかりませんでした。")
-            return None
-
         headers = [h.strip() for h in sheet_data[0]]
         data_map = {key: {} for key in headers}
         for row in sheet_data[1:]:
-            # 22列目 (インデックス21) が年齢ステップ
             if len(row) > 21 and row[21].isdigit():
                 age_step = int(row[21])
                 for j, key in enumerate(headers):
-                    if j < len(row): # rowの長さを超えないようにチェック
+                    if j < len(row):
                         data_map[key][age_step] = row[j]
         return data_map
     except Exception as e:
@@ -208,16 +206,24 @@ def load_guidance_data(_sheets_service, spreadsheet_id):
         return None
 
 # --- Google API関連のセットアップ ---
-# このセクションは、Streamlit Cloudのシークレット管理に依存するため、
-# そのまま残しますが、認証エラーが発生した場合は、
-# st.secretsの設定を再確認してください。
 try:
+    # RenderのSecret Filesからサービスアカウントキーを読み込む
+    # 環境変数にファイルパスではなく、JSON文字列そのものを格納していると仮定
+    google_credentials_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
+    if not google_credentials_json:
+        raise ValueError("環境変数 'GOOGLE_SHEETS_CREDENTIALS' が設定されていません。")
+    
+    # JSON文字列をPython辞書に変換
+    google_credentials_info = json.loads(google_credentials_json)
+
     credentials = Credentials.from_service_account_info(
-        st.secrets["google_credentials"],
+        google_credentials_info,
         scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     )
     sheets_service = build('sheets', 'v4', credentials=credentials)
     drive_service = build('drive', 'v3', credentials=credentials)
+    
+    # スプレッドシートIDは変更なし
     SPREADSHEET_ID = "1yXSXSjYBaV2jt2BNO638Y2YZ6U7rdOCv5ScozlFq_EE"
     
     # 発達段階の目安データを読み込む
@@ -225,7 +231,6 @@ try:
 
 except Exception as e:
     st.error(f"Google APIの認証またはデータ読み込みでエラーが発生しました: {e}")
-    # エラーが発生した場合、アプリケーションの続行は意味がないため停止
     st.stop()
 
 
@@ -246,21 +251,17 @@ with st.form("chart_form"):
     for i, category in enumerate(categories):
         with cols[i % 3]:
             with st.container(border=True):
-                # HTMLをf-stringの外で組み立てる
-                category_html = "<strong>{}</strong>".format(category)
-                st.markdown(category_html, unsafe_allow_html=True)
-                
+                st.markdown(f"**{category}**")
                 selected_options[category] = st.radio(
                     f"{category}の選択肢:", options, key=f"radio_{category}", label_visibility="collapsed"
                 )
 
+                # ★★★ここが新しい機能！★★★
                 with st.expander("▼ 目安を見る"):
                     if guidance_map and category in guidance_map:
                         for age_text, age_step in age_categories_map.items():
                             description = guidance_map[category].get(age_step, "（記載なし）")
-                            # ここもHTMLをf-stringの外で組み立てる
-                            description_html = "**{}:** {}".format(age_text, description)
-                            st.markdown(description_html, unsafe_allow_html=True)
+                            st.markdown(f"**{age_text}:** {description}")
                     else:
                         st.write("このカテゴリの目安データはありません。")
     
@@ -270,8 +271,8 @@ with st.form("chart_form"):
 if submitted:
     with st.spinner('スプレッドシートにデータを書き込み、チャートを更新しています... しばらくお待ちください。'):
         try:
+            # (書き込みロジックは元のコードと同じでOK)
             sheet_name = "シート1"
-            
             # 1. 各カテゴリと選択肢をスプレッドシートに書き込む
             values_to_write = [[cat, '', opt] for cat, opt in selected_options.items()]
             sheets_service.spreadsheets().values().update(
@@ -297,15 +298,7 @@ if submitted:
             ).execute()
             
             # 4. B19:B30の段階を+1（最大12）
-            # データが数値であることを確認し、Noneや空文字列に対応
-            updated_b_values = []
-            for row in sheet1_data:
-                val = row[1] if len(row) > 1 else ""
-                if isinstance(val, str) and val.isdigit():
-                    updated_b_values.append([min(12, int(val) + 1)])
-                else:
-                    updated_b_values.append([""]) # 数値でない場合は空文字列または適切なデフォルト値
-            
+            updated_b_values = [[min(12, int(row[1]) + 1) if len(row) > 1 and row[1].isdigit() else ""] for row in sheet1_data]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!B19:B30",
                 valueInputOption="RAW", body={"values": updated_b_values}
@@ -313,40 +306,21 @@ if submitted:
 
             # 5. C19:C30を更新
             b_to_c_mapping = {v: k for k, v in age_categories.items()}
-            updated_c_values = []
-            for b_val_list in updated_b_values:
-                b_val = b_val_list[0] if b_val_list else ""
-                updated_c_values.append([b_to_c_mapping.get(b_val, "該当なし")])
-            
+            updated_c_values = [[b_to_c_mapping.get(b[0], "該当なし")] for b in updated_b_values]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!C19:C30",
                 valueInputOption="RAW", body={"values": updated_c_values}
             ).execute()
 
             # 7. D3:D14とD19:D30を更新 (guidance_mapを再利用)
-            category_names = [row[0].strip() if row else "" for row in sheet1_data]
-
-            results_d3 = []
-            for cat, age in zip(category_names, converted_values):
-                age_val = int(age[0]) if age and isinstance(age[0], str) and age[0].isdigit() else None
-                if age_val is not None:
-                    results_d3.append([guidance_map.get(cat, {}).get(age_val, "該当なし")])
-                else:
-                    results_d3.append(["該当なし"]) # 年齢データがない場合
-
+            category_names = [row[0].strip() for row in sheet1_data]
+            results_d3 = [[guidance_map.get(cat, {}).get(int(age[0]), "該当なし")] for cat, age in zip(category_names, converted_values) if age and age[0]]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!D3:D14",
                 valueInputOption="RAW", body={"values": results_d3}
             ).execute()
 
-            results_d19 = []
-            for cat, b in zip(category_names, updated_b_values):
-                b_val = int(b[0]) if b and isinstance(b[0], str) and b[0].isdigit() else None
-                if b_val is not None:
-                    results_d19.append([guidance_map.get(cat, {}).get(b_val, "該当なし")])
-                else:
-                    results_d19.append(["該当なし"]) # 年齢データがない場合
-            
+            results_d19 = [[guidance_map.get(cat, {}).get(b[0], "該当なし")] for cat, b in zip(category_names, updated_b_values) if b and b[0]]
             sheets_service.spreadsheets().values().update(
                 spreadsheetId=SPREADSHEET_ID, range=f"{sheet_name}!D19:D30",
                 valueInputOption="RAW", body={"values": results_d19}
@@ -357,9 +331,7 @@ if submitted:
             st.session_state.chart_created = True # 結果表示用のフラグ
 
         except HttpError as e:
-            # エラーの詳細をデコードして表示
-            error_message = e.content.decode() if e.content else str(e)
-            st.error(f"スプレッドシートへのアクセス中にエラーが発生しました: {error_message}")
+            st.error(f"スプレッドシートへのアクセス中にエラーが発生しました: {e.content.decode()}")
             st.session_state.chart_created = False
         except Exception as e:
             st.error(f"書き込み中に予期せぬエラーが発生しました: {e}")
@@ -367,15 +339,14 @@ if submitted:
 
 # チャート作成が成功した場合のみ結果表示エリアを表示
 if st.session_state.get('chart_created', False):
-    footer_hr_html = '<hr class="footer-hr">'
-    st.markdown(footer_hr_html, unsafe_allow_html=True)
+    st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
     st.header("作成したチャートの確認と保存")
 
     with st.container(border=True):
         col1, col2 = st.columns(2)
         with col1:
             sheet_gid = "0"
-            spreadsheet_url_chart = "https://docs.google.com/spreadsheets/d/{}/edit#gid={}".format(SPREADSHEET_ID, sheet_gid)
+            spreadsheet_url_chart = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit#gid={sheet_gid}"
             st.link_button("🌐 スプレッドシートでチャートを確認", spreadsheet_url_chart, use_container_width=True)
         with col2:
             if st.button("💾 Excel形式でダウンロード", use_container_width=True):
@@ -401,7 +372,7 @@ if st.session_state.get('chart_created', False):
                 type="primary"
             )
 
-st.markdown(footer_hr_html, unsafe_allow_html=True)
+st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
 st.header("📈 成長傾向の分析")
 with st.container(border=True):
     st.markdown("これまでの発達チャートデータから成長グラフを作成したい場合は、以下のツールをご利用ください。")
