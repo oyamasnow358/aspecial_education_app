@@ -521,22 +521,14 @@ try:
     if 'group_type' not in lesson_data_df.columns:
         lesson_data_df['group_type'] = '全体' # 例: 全体, 小グループ, 個別 など
 
-    # lesson_data_raw を辞書の配列に変換する前に、各辞書で欠損キーを初期化する (★ここを修正)
-    lesson_data_raw = lesson_data_df.to_dict(orient='records')
-    for lesson in lesson_data_raw: # 各要素(辞書)に対してsetdefaultを実行 (★修正条件1)
-        lesson.setdefault('unit_lesson_title', "") # unit_lesson_titleキーが存在しない場合は空文字列で埋める
-        # 他のキーも必要に応じて同様に埋めることを検討する
-        lesson.setdefault('image', '')
-        lesson.setdefault('material_photos', [])
-        lesson.setdefault('video_link', '')
-        lesson.setdefault('detail_word_url', '')
-        lesson.setdefault('detail_pdf_url', '')
-        lesson.setdefault('detail_ppt_url', '')
-        lesson.setdefault('detail_excel_url', '')
-        lesson.setdefault('ict_use', 'なし')
-        lesson.setdefault('subject', 'その他')
-        lesson.setdefault('group_type', '全体')
-        lesson.setdefault('unit_order', 9999)
+    # 各要素 (辞書) に対して unit_lesson_title キーが存在しない場合は追加し、空文字列で埋める
+    lesson_data = lesson_data_df.to_dict(orient='records')
+    for lesson in lesson_data: # FIX: KeyError対策としてsetdefaultを追加
+        lesson.setdefault('unit_lesson_title', "") # FIX: KeyError対策としてsetdefaultを追加
+    
+    st.session_state.lesson_data = lesson_data # FIX: st.session_state.lesson_dataをここで初期化
+    
+    lesson_data_raw = lesson_data_df.to_dict(orient='records') # FIX: lesson_data_rawの定義を移動
 
 except FileNotFoundError:
     st.error("lesson_cards.csv ファイルが見つかりませんでした。pages フォルダと同じ階層に配置してください。")
@@ -1238,11 +1230,11 @@ else: # 詳細ページ
                     # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
                      st.markdown(f"""
                          <li>
-                             <a href="#" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_direct_{lesson_in_unit['id']}\"]').click(); return false;" style="text-decoration: none; color: inherit;">
+                             <a href="#" onclick="document.querySelector('button[data-testid=\\"stButton_unit_flow_link_direct_{lesson_in_unit['id']}\\"]').click(); return false;" style="text-decoration: none; color: inherit;">
                                  {display_title}
                              </a>
                          </li>
-                     """, unsafe_allow_html=True)
+                     """, unsafe_allow_html=True) # FIX: f-string内のバックスラッシュをエスケープ
                      # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
                      st.button(
                          "隠しボタン", # ボタンのテキストは表示されないので何でもOK
