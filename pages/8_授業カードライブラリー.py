@@ -996,7 +996,11 @@ if st.session_state.current_lesson_id is None:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_subject}</span>"
             elif display_unit:
                 subject_unit_display = f"<span class='card-subject-unit'><span class='icon'>📖</span>{display_unit}</span>"
-            st.markdown(f"""
+
+            # タグHTMLを事前に作成しておき、f文字列内の複雑なネストを避ける
+            tags_html = "".join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson.get('hashtags', []) if tag)
+
+            lesson_card_html = f"""
             <div class="lesson-card">
              <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['unit_name']}">
              <div class="lesson-card-content">
@@ -1012,12 +1016,13 @@ if st.session_state.current_lesson_id is None:
                      </div>
                  </div>
                  <div class="lesson-card-tags">
-                     {''.join(f'<span class="tag-badge">#{tag}</span>' for tag in lesson['hashtags'] if tag)}
+                     {tags_html}
                  </div>
                  {st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))}
              </div>
             </div>
-             """, unsafe_allow_html=True)
+             """
+            st.markdown(lesson_card_html, unsafe_allow_html=True)
 # ... (既存の授業カード表示コードここまで) ...
 
     else:
@@ -1234,15 +1239,14 @@ else: # 詳細ページ
                  else:
                     # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
                     # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
-                     st.markdown(
-                         r"""
+                     link_html = r"""
                          <li>
                              <a href="#" onclick="document.querySelector('button[data-testid=\"stButton_unit_flow_link_direct_""" + str(lesson_in_unit['id']) + r"""\"]').click(); return false;" style="text-decoration: none; color: inherit;">
                                  """ + display_title + r"""
                              </a>
                          </li>
                      """
-                     , unsafe_allow_html=True)
+                     st.markdown(link_html, unsafe_allow_html=True)
                      # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
                      st.button(
                          "隠しボタン", # ボタンのテキストは表示されないので何でもOK
@@ -1276,8 +1280,9 @@ else: # 詳細ページ
         if selected_lesson['hashtags']:
             
             st.markdown("<h3><span class='header-icon'>#️⃣</span>ハッシュタグ</h3>", unsafe_allow_html=True)
+            tags_html_detail = "".join(f'<span class="tag-badge" style="margin-right: 5px;">#{tag}</span>' for tag in selected_lesson.get('hashtags', []) if tag)
             st.markdown(
-                f"<p>{''.join(f'<span class=\"tag-badge\" style=\"margin-right: 5px;\">#{tag}</span>' for tag in selected_lesson['hashtags'] if tag)}</p>",
+                f"<p>{tags_html_detail}</p>",
                 unsafe_allow_html=True
             )
 
@@ -1315,13 +1320,17 @@ else: # 詳細ページ
         if selected_lesson['detail_word_url'] or selected_lesson['detail_pdf_url'] or selected_lesson['detail_ppt_url'] or selected_lesson['detail_excel_url']: # ★変更
             st.markdown("<h3><span class='header-icon'>📄</span>詳細資料ダウンロード</h3>", unsafe_allow_html=True)
             if selected_lesson['detail_word_url']:
-                st.markdown(f'<a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>', unsafe_allow_html=True)
+                word_button_html = f'<a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #264A9D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📖 指導案 (Word)</button></a>'
+                st.markdown(word_button_html, unsafe_allow_html=True)
             if selected_lesson['detail_pdf_url']:
-                st.markdown(f'<a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📚 指導案 (PDF)</button></a>', unsafe_allow_html=True)
+                pdf_button_html = f'<a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #B40000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📚 指導案 (PDF)</button></a>'
+                st.markdown(pdf_button_html, unsafe_allow_html=True)
             if selected_lesson['detail_ppt_url']: # ★追加
-                st.markdown(f'<a href="{selected_lesson["detail_ppt_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #D24726; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📊 授業資料 (PowerPoint)</button></a>', unsafe_allow_html=True)
+                ppt_button_html = f'<a href="{selected_lesson["detail_ppt_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #D24726; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📊 授業資料 (PowerPoint)</button></a>'
+                st.markdown(ppt_button_html, unsafe_allow_html=True)
             if selected_lesson['detail_excel_url']: # ★追加
-                st.markdown(f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>', unsafe_allow_html=True)
+                excel_button_html = f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>'
+                st.markdown(excel_button_html, unsafe_allow_html=True)
    
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
