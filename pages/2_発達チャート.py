@@ -204,23 +204,40 @@ def load_guidance_data(_sheets_service, spreadsheet_id):
     except Exception as e:
         st.error(f"発達段階表データの読み込み中にエラーが発生しました: {e}")
         return None
-
 # --- Google API関連のセットアップ ---
 try:
     # RenderのSecret Filesからサービスアカウントキーをファイルとして読み込む
     # Secret Filesは通常 /etc/secrets/ ディレクトリにマウントされる
     secret_file_path = "/etc/secrets/GOOGLE_SHEETS_CREDENTIALS"
 
+    # ▼ ここからが、変更（追加）する部分です ▼
     if not os.path.exists(secret_file_path):
+        # ファイルが見つからない場合に、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
+        st.error(f"エラー: Secret file not found at {secret_file_path}. RenderのSecret Files設定を確認してください。")
         raise FileNotFoundError(f"Secret file not found at {secret_file_path}. Please check Render Secret Files configuration.")
     
     with open(secret_file_path, "r") as f:
-        google_credentials_info = json.load(f) # ファイルからJSONを直接ロード
+        file_content = f.read() # JSON文字列として読み込む
+        # 読み込んだファイルの先頭100文字をStreamlitアプリ上に表示します。
+        st.info(f"Secret file '{secret_file_path}' を読み込みました。内容の先頭100文字: {file_content[:100]}...") 
+        
+        try:
+            google_credentials_info = json.loads(file_content) # JSON文字列をパース
+            # JSONとして正常にパースできたことをStreamlitアプリ上に表示します。
+            st.info("Secret fileの内容をJSONとして正常にパースできました。")
+        except json.JSONDecodeError as json_e:
+            # JSONパースエラーが発生した場合、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
+            st.error(f"エラー: Secret fileの内容が不正なJSONです: {json_e}")
+            raise json_e # 例外を再発生させて、外側のtry-exceptで捕捉させます
 
+    # JSONからGoogle認証情報を構築します。
     credentials = Credentials.from_service_account_info(
         google_credentials_info,
         scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     )
+    # 認証情報構築を試みていることをStreamlitアプリ上に表示します。
+    st.info("Google認証情報の構築を試みています...") 
+    
     sheets_service = build('sheets', 'v4', credentials=credentials)
     drive_service = build('drive', 'v3', credentials=credentials)
     
@@ -229,10 +246,20 @@ try:
     
     # 発達段階の目安データを読み込む
     guidance_map = load_guidance_data(sheets_service, SPREADSHEET_ID)
+    # 全ての処理が成功した場合に、成功メッセージをStreamlitアプリ上に表示します。
+    st.success("Google API認証およびデータ読み込みに成功しました。") 
 
+# ▲ ここまでが、変更（追加）する部分です ▲
+
+except HttpError as e:
+    # Google API呼び出し中にHTTPエラーが発生した場合
+    st.error(f"Google API呼び出し中にHTTPエラーが発生しました: {e.content.decode()}")
+    st.stop()
 except Exception as e:
+    # その他の予期せぬエラーが発生した場合
     st.error(f"Google APIの認証またはデータ読み込みでエラーが発生しました: {e}")
     st.stop()
+
 
 
 st.title("📊 発達チャート作成")
