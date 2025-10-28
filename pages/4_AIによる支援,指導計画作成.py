@@ -322,9 +322,85 @@ with st.container(border=True):
 - 1回で書ききれない場合は、何回になってもよいので、複数回に分けて出力する。
 - 指導方針は全体的な視点で、各実態は200〜300文字で丁寧に描写してください。""", language="text")
 
-# --- プロンプト④ ---
+ # --- 新プロンプト④ ---
 with st.container(border=True):
-    st.header("プロンプト④【個別の指導計画：評価】")
+    st.header("プロンプト④【個別の指導計画：目標と手立て】")
+    st.write("個別の指導計画の目標と具体的な手立てを、選択された教科ごとに生成します。")
+
+    # 教科の選択
+    subject_options = [
+        "自立活動","日常生活の指導","職業","生活単元学習","作業学習","国語", "算数", "美術", "理科", "社会", "音楽", "図画工作", "体育", "家庭", 
+        "外国語活動", "総合的な学習の時間", "自立活動", "日常生活の指導","保険","数学"
+    ]
+    selected_subjects = st.multiselect("✅ 目標と手立てを作成する教科を選択（複数選択可）", subject_options, key="selected_subjects_4")
+
+    # 実態や課題の入力（各教科用）
+    jittai_inputs_4 = {}
+    st.markdown("---")
+    st.subheader("💡 各教科の実態や課題を入力してください")
+    for subject in selected_subjects:
+        jittai_inputs_4[subject] = st.text_area(f"✅ 【{subject}】に関する内容、お子さんの実態や課題を入力",
+                                                  value="（例：ミニトマトの植生を行った（種上・観察・記録・収穫・調理）",
+                                                  height=100, key=f"jittai_4_{subject}")
+
+    # 指導方針の入力（参考情報として）
+    shido_hoshin_4 = st.text_area("✅ 実態や課題",
+                                  value="（例：文字を読むことに抵抗がある、数の概念が理解しづらい、落ち着いて座っていられない、友達とのコミュニケーションが苦手など）、不適切行動が起きた時に繰り返さないようにする。絵カードや手話による要求を増やす。など）",
+                                  height=100, key="shido_hoshin_4_global")
+
+    if st.button("プロンプト④ を生成", key="btn_4", use_container_width=True):
+        full_prompt_output = []
+        for subject in selected_subjects:
+            num_items = 3 if subject in ["自立活動", "日常生活の指導"] else 2
+            current_jittai = jittai_inputs_4.get(subject, "")
+
+            prompt_for_subject = f"""
+以下の情報をもとに、個別の指導計画における【{subject}】の目標と手立てを作成してください。
+
+【入力】
+教科：{subject}
+教科の内容：{current_jittai}
+参考指導方針：{shido_hoshin_4}
+
+【出力項目】
+1. 目標（{num_items}つ）：
+   ・各目標は30字以内程度で、お子さんが達成すべき具体的な行動や状態を示すこと。
+   ・教育的で柔らかい表現にすること。
+
+2. 手立て（{num_items}つ）：
+   ・各手立ては30字から50字程度で、目標達成のために学校現場で実践可能な具体的な支援内容や方法を示すこと。
+   ・お子さんの実態や課題、指導方針を考慮し、個別具体的な内容にすること。
+
+【出力フォーマット例】
+【{subject}】
+目標：
+・（目標1：30字以内）
+・（目標2：30字以内）
+{"・（目標3：30字以内）" if num_items == 3 else ""}
+
+手立て：
+・（手立て1：30～50字）
+・（手立て2：30～50字）
+{"・（手立て3：30～50字）" if num_items == 3 else ""}
+
+【条件】：
+- 「～です。～ます。」調ではなく、「～である。」調で統一してください。
+- 添付資料（個別の指導計画など）がある場合は、その書き方を参考にしてください。
+- 他の教科の目標や手立ては出力せず、指定された【{subject}】のみを出力してください。
+- 目標と手立ての数は、自立活動と日常生活の指導は3つ以上、それ以外は2つとしてください。
+- 目標と手立ての内容は、入力された実態や課題、参考指導方針と連動させて具体的に記述してください。
+"""
+            full_prompt_output.append(prompt_for_subject)
+
+        st.subheader("📄 生成されたプロンプト④（コピーして使ってください）")
+        if not full_prompt_output:
+            st.warning("教科が選択されていません。")
+        else:
+            st.code("\n---\n".join(full_prompt_output), language="text") # 各教科のプロンプトを区切り線で結合して表示
+
+# --- プロンプト⑤ ---
+with st.container(border=True):
+    st.header("プロンプト⑤【個別の指導計画：評価】")
     st.write("指導計画を基に、活動の様子を評価する文章を作成します。")
 
     use_file_4 = st.checkbox(
@@ -379,13 +455,13 @@ with st.container(border=True):
 - 各教科について、【教科名の見出し】と200～300文字程度の評価文を作成してください。
 - 文体は、実務で使用されるような柔らかく教育的な表現にしてください。"""
 
-        st.subheader("📄 生成されたプロンプト④（コピーして使ってください）")
+        st.subheader("📄 生成されたプロンプト⑥（コピーして使ってください）")
         st.code(prompt_full_4, language="text")
 
 
 # --- プロンプト⑤ ---
 with st.container(border=True):
-    st.header("プロンプト⑤【前期・後期の所見】")
+    st.header("プロンプト⑥【前期・後期の所見】")
     st.write("評価文や計画書を基に、総合的な所見を作成します。")
 
     term_choice = st.radio("どちらの所見を作成しますか？", ("前期", "後期／学年末"), key="term_choice", horizontal=True)
@@ -410,7 +486,7 @@ with st.container(border=True):
         key="shoken_input"
     )
 
-    if st.button("プロンプト⑤ を生成", key="btn_5", use_container_width=True):
+    if st.button("プロンプト⑥ を生成", key="btn_5", use_container_width=True):
         prompt_intro_5 = ""
         prompt_main_source_5 = ""
 
@@ -452,7 +528,7 @@ with st.container(border=True):
 【{term_choice}用の個別条件】：
 {specific_conditions}"""
 
-        st.subheader(f"📄 生成されたプロンプト⑤（{term_choice}の所見用）")
+        st.subheader(f"📄 生成されたプロンプト⑥（{term_choice}の所見用）")
         st.code(prompt_full_5, language="text")
 
 st.markdown("---")
