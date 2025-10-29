@@ -423,7 +423,7 @@ with st.container(border=True):
         key="evaluation_activities_4"
     )
 
-    if st.button("プロンプト④ を生成", key="btn_4", use_container_width=True):
+    if st.button("プロンプト④ を生成", key="btn_5", use_container_width=True):
         prompt_intro_4 = ""
         prompt_main_source_4 = ""
 
@@ -455,11 +455,11 @@ with st.container(border=True):
 - 各教科について、【教科名の見出し】と200～300文字程度の評価文を作成してください。
 - 文体は、実務で使用されるような柔らかく教育的な表現にしてください。"""
 
-        st.subheader("📄 生成されたプロンプト⑥（コピーして使ってください）")
+        st.subheader("📄 生成されたプロンプト⑤（コピーして使ってください）")
         st.code(prompt_full_4, language="text")
 
 
-# --- プロンプト⑤ ---
+# --- プロンプト⑥ ---
 with st.container(border=True):
     st.header("プロンプト⑥【前期・後期の所見】")
     st.write("評価文や計画書を基に、総合的な所見を作成します。")
@@ -486,7 +486,7 @@ with st.container(border=True):
         key="shoken_input"
     )
 
-    if st.button("プロンプト⑥ を生成", key="btn_5", use_container_width=True):
+    if st.button("プロンプト⑥ を生成", key="btn_6", use_container_width=True):
         prompt_intro_5 = ""
         prompt_main_source_5 = ""
 
