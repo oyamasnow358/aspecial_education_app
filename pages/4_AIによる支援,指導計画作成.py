@@ -423,7 +423,7 @@ with st.container(border=True):
         key="evaluation_activities_4"
     )
 
-    if st.button("プロンプト④ を生成", key="btn_5", use_container_width=True):
+    if st.button("プロンプト⑤ を生成", key="btn_5", use_container_width=True):
         prompt_intro_4 = ""
         prompt_main_source_4 = ""
 
