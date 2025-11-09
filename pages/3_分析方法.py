@@ -134,6 +134,18 @@ def load_css():
         [data-testid="stExpanderToggleIcon"] {
             display: none;
         }
+        /* st.expanderのカスタムアイコン */
+        .streamlit-expanderHeader > div:first-child::before {
+            content: '▼'; /* 閉じたときのアイコン */
+            font-size: 1.2em;
+            margin-right: 0.5em;
+            transition: transform 0.2s ease-in-out;
+        }
+        .streamlit-expanderHeader.is-expanded > div:first-child::before {
+            content: '▲'; /* 開いたときのアイコン */
+            transform: rotate(0deg); /* 開いた状態なので回転させない */
+        }
+
 
         /* --- フッターの区切り線 --- */
         .footer-hr {
@@ -173,11 +185,45 @@ def load_css():
             font-size: 0.9em;
             line-height: 1.4;
         }
-        /* 選択時のスタイルは、st.buttonのデフォルトスタイルを調整するか、
-           st.markdown + JavaScriptでbuttonを自作する必要があります。
-           今回はst.buttonのデフォルトを活かしています。 */
-        /* .analysis-card.selected はst.buttonでは直接適用が難しいため、
-           st.buttonのデフォルトのPrimaryスタイルなどで代替を検討 */
+
+        /* 「特にオススメ！アンケート分析ツール」の強調スタイル */
+        .recommended-tool {
+            background-color: #fff3e0; /* 薄いオレンジ系の背景 */
+            border-left: 8px solid #ff9800; /* オレンジの強調線 */
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            animation: pulse 1.5s infinite alternate; /* 軽くアニメーション */
+        }
+        .recommended-tool h4 {
+            color: #e65100; /* 濃いオレンジ */
+            font-size: 1.4em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .recommended-tool h4::before {
+            content: '✨';
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .recommended-tool p {
+            color: #424242;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        .recommended-tool .st-emotion-cache-1f8d4gq a { /* st.page_linkのリンクスタイル調整 */
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #1976d2; /* リンク色を強調 */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+            100% { transform: scale(1.01); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); }
+        }
 
     </style>
     """
@@ -252,66 +298,76 @@ if "selected_method" not in st.session_state:
     st.session_state.selected_method = None
 if "show_toukei_description" not in st.session_state:
     st.session_state.show_toukei_description = False
+if "show_analysis_methods" not in st.session_state:
+    st.session_state.show_analysis_methods = False
+if "show_student_conditions" not in st.session_state:
+    st.session_state.show_student_conditions = False
+
+
+# 「特にオススメ！アンケート分析ツール」をマストで表示
+st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
+st.markdown("<h4>アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
+st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
+st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # 分析方法一覧の表示（右側）
-st.subheader("分析方法の一覧から探す")
-st.write("気になる分析方法をクリックして詳細をご覧ください。")
+if st.button("「分析方法の一覧から探す」を表示/非表示", key="toggle_analysis_methods"):
+    st.session_state.show_analysis_methods = not st.session_state.show_analysis_methods
 
-# 3列で分析方法カードを表示
-cols_count = 3
-cols = st.columns(cols_count)
-col_idx = 0
+if st.session_state.show_analysis_methods:
+    st.subheader("分析方法の一覧から探す")
+    st.write("気になる分析方法をクリックして詳細をご覧ください。")
 
-for method_name, method_info in methods.items():
-    with cols[col_idx % cols_count]:
-        # Streamlitのボタンはクリック時に再実行されるため、その挙動を利用
-        # カスタムCSSクラス 'analysis-card-btn' を適用するためにHTMLを直接記述
-        button_html = f"""
-        <div class="analysis-card-btn">
-            <h4>{method_name}</h4>
-            <p>{method_info['description']}</p>
-        </div>
-        """
-        # st.buttonでクリックを検知し、見た目はHTMLでカスタマイズ
-        # ただし、st.buttonのカスタマイズは限定的。今回はuse_container_widthで対応
-        if st.button(
-            f"**{method_name}**\n\n_{method_info['description']}_", 
-            key=f"method_btn_{method_name}",
-            use_container_width=True,
-            type="primary" if st.session_state.selected_method == method_name else "secondary" # 選択状態をprimaryボタンで強調
-        ):
-            st.session_state.selected_method = method_name
-            if method_name == "統計学的分析方法":
-                st.session_state.show_toukei_description = True # 統計学的分析方法が選択されたら表示
-            else:
-                st.session_state.show_toukei_description = False # それ以外は非表示に
-            st.rerun() # 選択されたらすぐに詳細を表示するために再実行
+    # 3列で分析方法カードを表示
+    cols_count = 3
+    cols = st.columns(cols_count)
+    col_idx = 0
 
-    col_idx += 1
+    for method_name, method_info in methods.items():
+        with cols[col_idx % cols_count]:
+            if st.button(
+                f"**{method_name}**\n\n_{method_info['description']}_", 
+                key=f"method_btn_{method_name}",
+                use_container_width=True,
+                type="primary" if st.session_state.selected_method == method_name else "secondary"
+            ):
+                st.session_state.selected_method = method_name
+                if method_name == "統計学的分析方法":
+                    st.session_state.show_toukei_description = True
+                else:
+                    st.session_state.show_toukei_description = False
+                st.rerun()
+        col_idx += 1
 
 
 st.markdown("---") # 区切り線
 
-st.subheader("児童・生徒の実態から探す")
-condition = st.selectbox("実態を選んでください", list(student_conditions.keys()))
+# 「児童・生徒の実態から探す」セクションの表示/非表示
+if st.button("「児童・生徒の実態から探す」を表示/非表示", key="toggle_student_conditions"):
+    st.session_state.show_student_conditions = not st.session_state.show_student_conditions
 
-st.write("💡 **この実態に適した療法・分析法:**")
-cols_for_condition = st.columns(3)
-col_idx_condition = 0
-for method in student_conditions[condition]:
-    if method in methods:
-        if cols_for_condition[col_idx_condition % 3].button(
-            method, 
-            key=f"btn_condition_{method}",
-            type="primary" if st.session_state.selected_method == method else "secondary" # 選択状態をprimaryボタンで強調
-        ):
-            st.session_state.selected_method = method
-            if method == "統計学的分析方法":
-                st.session_state.show_toukei_description = True # 統計学的分析方法が選択されたら表示
-            else:
-                st.session_state.show_toukei_description = False # それ以外は非表示に
-            st.rerun()
-    col_idx_condition += 1
+if st.session_state.show_student_conditions:
+    st.subheader("児童・生徒の実態から探す")
+    condition = st.selectbox("実態を選んでください", list(student_conditions.keys()))
+
+    st.write("💡 **この実態に適した療法・分析法:**")
+    cols_for_condition = st.columns(3)
+    col_idx_condition = 0
+    for method in student_conditions[condition]:
+        if method in methods:
+            if cols_for_condition[col_idx_condition % 3].button(
+                method, 
+                key=f"btn_condition_{method}",
+                type="primary" if st.session_state.selected_method == method else "secondary"
+            ):
+                st.session_state.selected_method = method
+                if method == "統計学的分析方法":
+                    st.session_state.show_toukei_description = True
+                else:
+                    st.session_state.show_toukei_description = False
+                st.rerun()
+        col_idx_condition += 1
 
 
 # --- 詳細表示 ---
@@ -338,12 +394,10 @@ if st.session_state.selected_method:
         unsafe_allow_html=True
     )
 
-    # st.containerの代わりに、borderスタイルを適用したdivを直接生成し、idを付与
-    st.markdown(f'<div id="section-{safe_method_id}" class="st-emotion-cache-1r6slb0">', unsafe_allow_html=True) # ここでIDを付与
+    st.markdown(f'<div id="section-{safe_method_id}" class="st-emotion-cache-1r6slb0">', unsafe_allow_html=True)
 
-    # 統計学的分析方法の表示制御
     if st.session_state.selected_method == "統計学的分析方法":
-        if st.button("「統計学的分析方法」の説明を表示/非表示", key="toggle_toukei_description"):
+        if st.button("「統計学的分析方法」の説明を表示/非表示", key="toggle_toukei_description_in_detail"):
             st.session_state.show_toukei_description = not st.session_state.show_toukei_description
             
         if st.session_state.show_toukei_description:
@@ -353,7 +407,7 @@ if st.session_state.selected_method:
                     st.markdown(f.read(), unsafe_allow_html=True)
             else:
                 st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
-    else: # 統計学的分析方法以外の場合は常に表示
+    else:
         file_path = methods.get(st.session_state.selected_method)["file"]
         if file_path and os.path.exists(file_path):
             with open(file_path, "r", encoding="utf-8") as f:
@@ -361,7 +415,6 @@ if st.session_state.selected_method:
         else:
             st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
 
-    # 選択された療法に応じたコンテンツを表示
     method = st.session_state.selected_method
 
     if method == "CBT（認知行動療法）":
@@ -395,28 +448,28 @@ if st.session_state.selected_method:
         st.info("##### 🛠️ 統計学 分析ツール一覧")
         st.markdown("初めての方へ：**統計分析に役立つ強力なツールが揃っています！**")
         # アンケート分析ツールを強調
-        st.markdown("#### ✨ 特にオススメ！アンケート分析ツール ✨")
+        st.markdown('<div class="recommended-tool">', unsafe_allow_html=True) # ここでも強調スタイルを適用
+        st.markdown("<h4>アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
         st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
         st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
+        st.markdown('</div>', unsafe_allow_html=True)
+
         st.markdown("#### その他の統計分析ツール")
         st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
         st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
         st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
         st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-        # 統計ツールをイメージする画像を追加
         st.image("https://i.imgur.com/ASnp6PS.png", caption="データ分析をサポートするツール群", use_container_width=True)
         
-        
 
-    st.markdown('</div>', unsafe_allow_html=True) # IDを付与したdivの閉じタグ
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # フッターの区切り線
 st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 
-# 関連ツール＆リンクをst.expanderで囲む
-with st.expander("🔗 全ての関連ツール＆リンクを表示", expanded=False): # デフォルトで閉じる
+with st.expander("🔗 全ての関連ツール＆リンクを表示", expanded=False):
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("##### 📁 教育・心理分析ツール")
@@ -436,7 +489,6 @@ st.markdown("---")
 st.markdown("##### 🗨️ ご意見・ご感想")
 st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
 st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
-# st.markdown('</div>', unsafe_allow_html=True) # この閉じタグは不要なので削除
 
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 st.warning("""
