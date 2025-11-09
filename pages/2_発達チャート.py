@@ -247,7 +247,7 @@ try:
     # 発達段階の目安データを読み込む
     guidance_map = load_guidance_data(sheets_service, SPREADSHEET_ID)
     # 全ての処理が成功した場合に、成功メッセージをStreamlitアプリ上に表示します。
-    # st.success("Google API認証およびデータ読み込みに成功しました。") 
+    st.success("プログラムは正常に認証情報を構築、Google API認証およびデータ読み込みに成功しました。") 
 
 # ▲ ここまでが、変更（追加）する部分です ▲
 
