@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 import os
+import base64 # 新しくインポート
 
 # --- ▼ 共通CSSの読み込み ▼ ---
 # (変更ないため、コードは前のものをそのままお使いください)
@@ -204,31 +205,30 @@ def load_guidance_data(_sheets_service, spreadsheet_id):
     except Exception as e:
         st.error(f"発達段階表データの読み込み中にエラーが発生しました: {e}")
         return None
+
 # --- Google API関連のセットアップ ---
 try:
-    # RenderのSecret Filesからサービスアカウントキーをファイルとして読み込む
-    # Secret Filesは通常 /etc/secrets/ ディレクトリにマウントされる
-    secret_file_path = "/etc/secrets/GOOGLE_SHEETS_CREDENTIALS"
+    # Renderの環境変数からBase64エンコードされた認証情報を取得
+    base64_credentials = os.getenv("GOOGLE_SHEETS_CREDENTIALS_BASE64") # 環境変数名を調整してください
 
-    # ▼ ここからが、変更（追加）する部分です ▼
-    if not os.path.exists(secret_file_path):
-        # ファイルが見つからない場合に、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
-        st.error(f"エラー: Secret file not found at {secret_file_path}. RenderのSecret Files設定を確認してください。")
-        raise FileNotFoundError(f"Secret file not found at {secret_file_path}. Please check Render Secret Files configuration.")
+    if not base64_credentials:
+        # 環境変数が見つからない場合に、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
+        st.error("エラー: 環境変数 'GOOGLE_SHEETS_CREDENTIALS_BASE64' が設定されていません。Renderの環境変数設定を確認してください。")
+        raise ValueError("GOOGLE_SHEETS_CREDENTIALS_BASE64 environment variable not set.")
     
-    with open(secret_file_path, "r") as f:
-        file_content = f.read() # JSON文字列として読み込む
-        # 読み込んだファイルの先頭100文字をStreamlitアプリ上に表示します。
-        st.info(f"Secret file '{secret_file_path}' を読み込みました。内容の先頭100文字: {file_content[:100]}...") 
-        
-        try:
-            google_credentials_info = json.loads(file_content) # JSON文字列をパース
-            # JSONとして正常にパースできたことをStreamlitアプリ上に表示します。
-            st.info("Secret fileの内容をJSONとして正常にパースできました。")
-        except json.JSONDecodeError as json_e:
-            # JSONパースエラーが発生した場合、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
-            st.error(f"エラー: Secret fileの内容が不正なJSONです: {json_e}")
-            raise json_e # 例外を再発生させて、外側のtry-exceptで捕捉させます
+    # Base64デコード
+    decoded_credentials = base64.b64decode(base64_credentials).decode('utf-8')
+    # 読み込んだファイルの先頭100文字をStreamlitアプリ上に表示します。
+    st.info(f"環境変数からBase64デコードされた認証情報を読み込みました。内容の先頭100文字: {decoded_credentials[:100]}...") 
+    
+    try:
+        google_credentials_info = json.loads(decoded_credentials) # JSON文字列をパース
+        # JSONとして正常にパースできたことをStreamlitアプリ上に表示します。
+        st.info("認証情報の内容をJSONとして正常にパースできました。")
+    except json.JSONDecodeError as json_e:
+        # JSONパースエラーが発生した場合、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
+        st.error(f"エラー: Base64デコードされた内容が不正なJSONです: {json_e}")
+        raise json_e # 例外を再発生させて、外側のtry-exceptで捕捉させます
 
     # JSONからGoogle認証情報を構築します。
     credentials = Credentials.from_service_account_info(
@@ -249,8 +249,6 @@ try:
     # 全ての処理が成功した場合に、成功メッセージをStreamlitアプリ上に表示します。
     st.success("Google API認証およびデータ読み込みに成功しました。") 
 
-# ▲ ここまでが、変更（追加）する部分です ▲
-
 except HttpError as e:
     # Google API呼び出し中にHTTPエラーが発生した場合
     st.error(f"Google API呼び出し中にHTTPエラーが発生しました: {e.content.decode()}")
@@ -259,7 +257,6 @@ except Exception as e:
     # その他の予期せぬエラーが発生した場合
     st.error(f"Google APIの認証またはデータ読み込みでエラーが発生しました: {e}")
     st.stop()
-
 
 
 st.title("📊 発達チャート作成")
