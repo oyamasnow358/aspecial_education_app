@@ -204,11 +204,12 @@ def load_css():
             display: flex;
             align-items: center;
         }
-        .recommended-tool h4::before {
+        /* H4タグの前に自動で✨を追加するのをやめる */
+        /* .recommended-tool h4::before {
             content: '✨';
             margin-right: 10px;
             font-size: 1.2em;
-        }
+        } */
         .recommended-tool p {
             color: #424242;
             font-size: 1.1em;
@@ -306,7 +307,7 @@ if "show_student_conditions" not in st.session_state:
 
 # 「特にオススメ！アンケート分析ツール」をマストで表示
 st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
-st.markdown("<h4>アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
+st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True) # ここを修正
 st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
 st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
 st.markdown('</div>', unsafe_allow_html=True)
@@ -448,8 +449,8 @@ if st.session_state.selected_method:
         st.info("##### 🛠️ 統計学 分析ツール一覧")
         st.markdown("初めての方へ：**統計分析に役立つ強力なツールが揃っています！**")
         # アンケート分析ツールを強調
-        st.markdown('<div class="recommended-tool">', unsafe_allow_html=True) # ここでも強調スタイルを適用
-        st.markdown("<h4>アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
+        st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
+        st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True) # ここも修正
         st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
         st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
         st.markdown('</div>', unsafe_allow_html=True)
