@@ -219,12 +219,12 @@ try:
     with open(secret_file_path, "r") as f:
         file_content = f.read() # JSON文字列として読み込む
         # 読み込んだファイルの先頭100文字をStreamlitアプリ上に表示します。
-        st.info(f"Secret file '{secret_file_path}' を読み込みました。内容の先頭100文字: {file_content[:100]}...") 
+        # st.info(f"Secret file '{secret_file_path}' を読み込みました。内容の先頭100文字: {file_content[:100]}...") 
         
         try:
             google_credentials_info = json.loads(file_content) # JSON文字列をパース
             # JSONとして正常にパースできたことをStreamlitアプリ上に表示します。
-            st.info("Secret fileの内容をJSONとして正常にパースできました。")
+            # st.info("Secret fileの内容をJSONとして正常にパースできました。")
         except json.JSONDecodeError as json_e:
             # JSONパースエラーが発生した場合、エラーメッセージをStreamlitアプリ上に表示し、処理を停止します。
             st.error(f"エラー: Secret fileの内容が不正なJSONです: {json_e}")
@@ -236,7 +236,7 @@ try:
         scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     )
     # 認証情報構築を試みていることをStreamlitアプリ上に表示します。
-    st.info("Google認証情報の構築を試みています...") 
+    # st.info("Google認証情報の構築を試みています...") 
     
     sheets_service = build('sheets', 'v4', credentials=credentials)
     drive_service = build('drive', 'v3', credentials=credentials)
@@ -247,7 +247,7 @@ try:
     # 発達段階の目安データを読み込む
     guidance_map = load_guidance_data(sheets_service, SPREADSHEET_ID)
     # 全ての処理が成功した場合に、成功メッセージをStreamlitアプリ上に表示します。
-    st.success("Google API認証およびデータ読み込みに成功しました。") 
+    # st.success("Google API認証およびデータ読み込みに成功しました。") 
 
 # ▲ ここまでが、変更（追加）する部分です ▲
 

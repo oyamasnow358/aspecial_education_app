@@ -201,15 +201,7 @@ def load_css():
             font-size: 1.4em;
             margin-top: 0;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
         }
-        /* H4タグの前に自動で✨を追加するのをやめる */
-        /* .recommended-tool h4::before {
-            content: '✨';
-            margin-right: 10px;
-            font-size: 1.2em;
-        } */
         .recommended-tool p {
             color: #424242;
             font-size: 1.1em;
@@ -260,7 +252,9 @@ img_mindfulness = "https://i.imgur.com/zheqhdv.png"
 img_pecs = "https://i.imgur.com/Hw4PIKo.jpeg"
 img_cbt = "https://i.imgur.com/vnMHFNE.png"
 # 統計学ツールのイメージ画像（仮）
-img_stats_tools = "https://i.imgur.com/y1Jg8j0.png" # グラフやデータ分析をイメージさせる画像URLに差し替えてください
+# ここで直接画像URLを定義
+img_stats_tools_chart = "https://i.imgur.com/ASnp6PS.png" 
+
 
 # 療法・分析法とマークダウンファイルの対応
 methods = {
@@ -307,9 +301,11 @@ if "show_student_conditions" not in st.session_state:
 
 # 「特にオススメ！アンケート分析ツール」をマストで表示
 st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
-st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True) # ここを修正
+st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
 st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
 st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
+# ここに画像を挿入
+st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # 分析方法一覧の表示（右側）
@@ -450,9 +446,11 @@ if st.session_state.selected_method:
         st.markdown("初めての方へ：**統計分析に役立つ強力なツールが揃っています！**")
         # アンケート分析ツールを強調
         st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
-        st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True) # ここも修正
+        st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
         st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
         st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
+        # ここにも画像を挿入
+        st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("#### その他の統計分析ツール")
@@ -461,7 +459,8 @@ if st.session_state.selected_method:
         st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
         st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-        st.image("https://i.imgur.com/ASnp6PS.png", caption="データ分析をサポートするツール群", use_container_width=True)
+        # ここは上記でマスト表示されるので削除
+        # st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
         
 
     st.markdown('</div>', unsafe_allow_html=True)
