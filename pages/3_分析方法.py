@@ -186,16 +186,7 @@ def load_css():
             line-height: 1.4;
         }
 
-        /* 「特にオススメ！アンケート分析ツール」の強調スタイル */
-        .recommended-tool {
-            background-color: #fff3e0; /* 薄いオレンジ系の背景 */
-            border-left: 8px solid #ff9800; /* オレンジの強調線 */
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            animation: pulse 1.5s infinite alternate; /* 軽くアニメーション */
-        }
+        
         .recommended-tool h4 {
             color: #e65100; /* 濃いオレンジ */
             font-size: 1.4em;
@@ -236,6 +227,23 @@ with col_back:
 # --- ▲ 戻るボタンの配置 ▲ ---
 
 st.title("📈 分析方法")
+st.markdown("""
+<style>
+.recommended-tool {
+    background-color: #fff3e0; /* 薄いオレンジ系の背景 */
+    border-left: 8px solid #ff9800; /* オレンジの強調線 */
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    /* animation: pulse 1.5s infinite alternate; */ /* Streamlitのマークダウン内ではCSSアニメーションが効かない場合があります */
+}
+
+/* アニメーションをPythonで表現する、または別の方法を検討 */
+</style>
+""", unsafe_allow_html=True)
+
+# テキストを表示
 st.write("ここでは、特別支援教育で使える教育学的、心理学的、統計学的分析方法の解説と、実践で使えるツールを紹介します。")
 
 
