@@ -186,32 +186,7 @@ def load_css():
             line-height: 1.4;
         }
 
-        /* 「特にオススメ！アンケート分析ツール」の強調スタイル */
-        .recommended-tool {
-            background-color: #fff3e0; /* 薄いオレンジ系の背景 */
-            border-left: 8px solid #ff9800; /* オレンジの強調線 */
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            animation: pulse 1.5s infinite alternate; /* 軽くアニメーション */
-        }
-        .recommended-tool h4 {
-            color: #e65100; /* 濃いオレンジ */
-            font-size: 1.4em;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .recommended-tool p {
-            color: #424242;
-            font-size: 1.1em;
-            line-height: 1.6;
-        }
-        .recommended-tool .st-emotion-cache-1f8d4gq a { /* st.page_linkのリンクスタイル調整 */
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #1976d2; /* リンク色を強調 */
-        }
+        
 
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
