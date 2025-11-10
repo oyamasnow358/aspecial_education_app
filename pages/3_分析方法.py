@@ -220,7 +220,11 @@ st.markdown("""
     margin: 30px 0;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    /* animation: pulse 1.5s infinite alternate; */ /* Streamlitのマークダウン内ではCSSアニメーションが効かない場合があります */
+    /* width: fit-content; */ /* テキストの幅に合わせる (モダンなブラウザ向け) */
+    display: inline-block; /* テキストの幅に合わせる (より広範な互換性) */
+    font-weight: bold; /* 文字を太字にする */
+    color: #333333; /* 文字色を少し濃くする */
+    /* animation: pulse 1.5s infinite alternate; */
 }
 
 /* アニメーションをPythonで表現する、または別の方法を検討 */
