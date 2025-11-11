@@ -297,7 +297,7 @@ if st.session_state.get("show_iwatsuki_features", False):
                         sheet[cell_address] = content
                         
                         # 結合セルに対応（D12~H12など）
-                        if sheet_name == "プランA":
+                        if sheet_name == "プランＡ":
                             if label == "特別な教育的ニーズ":
                                 sheet.merge_cells('D12:H12')
                                 sheet['D12'].alignment = Alignment(wrap_text=True, vertical='top')
@@ -307,7 +307,7 @@ if st.session_state.get("show_iwatsuki_features", False):
                             elif label == "支援内容": # E18はF18と結合
                                 sheet.merge_cells('E18:F18')
                                 sheet['E18'].alignment = Alignment(wrap_text=True, vertical='top')
-                        elif sheet_name == "プランB":
+                        elif sheet_name == "プランＢ(実態)":
                             if label == "指導方針":
                                 sheet.merge_cells('C5:F5')
                                 sheet['C5'].alignment = Alignment(wrap_text=True, vertical='top')
