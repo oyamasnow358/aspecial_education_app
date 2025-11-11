@@ -212,26 +212,29 @@ st.info(
     """
 )
 
-
-
-
 # --- ▼▼▼ ChatGPTへのリンク ▼▼▼ ---
 with st.container(border=True):
     st.markdown("""
     <div style="background-color: #e9f5ff; padding: 15px 20px; border: 2px solid #4a90e2; border-radius: 10px;">
         <h2 style="margin-top: 0; color: #2c3e50; border-left: none; text-align: center;">
-            🚀 プロンプトをコピーしたら、ChatGPTへ！
+            🚀 プロンプトをコピーしたら、AIチャットへ！
         </h2>
         <p style="text-align: center; font-size: 1.1em; margin-bottom: 15px;">
-            下のボタンを押すとChatGPTが開きます。コピーしたプロンプトを貼り付けて、文章作成を始めましょう。
+            下のボタンを押すと各AIチャットが開きます。コピーしたプロンプトを貼り付けて、文章作成を始めましょう。
         </p>
     </div>
     """, unsafe_allow_html=True)
     
     # ボタンを中央に配置するための列
-    b_col1, b_col2, b_col3 = st.columns([1,1.5,1])
+    b_col1, b_col2, b_col3 = st.columns([1, 1.5, 1])
     with b_col2:
         st.link_button("ChatGPT を開いて文章作成を始める ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
+
+    # Geminiへのリンクを追加
+    st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
+    b_col_g1, b_col_g2, b_col_g3 = st.columns([1, 1.5, 1])
+    with b_col_g2:
+        st.link_button("Gemini を開いて文章作成を始める ↗", "https://gemini.google.com/", type="secondary", use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
 
@@ -453,7 +456,7 @@ with st.expander("プロンプト⑤【個別の指導計画：評価】"):
         st.write("指導計画を基に、活動の様子を評価する文章を作成します。")
 
         use_file_4 = st.checkbox(
-            "ChatGPTにWord/Excel等のファイルを添付して、主たる情報源として利用する", 
+            "AIにWord/Excel等のファイルを添付して、主たる情報源として利用する", 
             key="use_file_4"
         )
         st.caption("💡 ファイルを添付する場合、下のテキストエリアは補足として利用できます。")
@@ -517,7 +520,7 @@ with st.expander("プロンプト⑥【前期・後期の所見】"):
         term_choice = st.radio("どちらの所見を作成しますか？", ("前期", "後期／学年末"), key="term_choice", horizontal=True)
 
         use_file_5 = st.checkbox(
-            "ChatGPTに評価文等のファイルを添付して、主たる情報源として利用する",
+            "AIに評価文等のファイルを添付して、主たる情報源として利用する",
             key="use_file_5"
         )
         st.caption("💡 ファイルを添付する場合、下のテキストエリアは補足として利用できます。")
