@@ -594,7 +594,7 @@ st.markdown("---")
 
 # --- 「岩槻はるかぜ特別支援学校の人」ボタンと機能追加 ---
 st.header("✨ 特別支援学校向け機能")
-if st.button("岩槻はるかぜ特別支援学校の人向け、ペーストされた内容を基にプラン（Excel）をダウンロードできます", use_container_width=True, type="secondary"):
+if st.button("岩槻はるかぜ特別支援学校の人向け,ボタンを押して各項目ペーストすればプランA(表紙),プランB(実態)をダウンロードできます", use_container_width=True, type="secondary"):
     st.session_state["show_iwatsuki_features"] = not st.session_state.get("show_iwatsuki_features", False)
 
 if st.session_state.get("show_iwatsuki_features", False):
