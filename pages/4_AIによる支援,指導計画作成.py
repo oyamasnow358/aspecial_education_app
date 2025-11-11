@@ -242,109 +242,6 @@ with st.container(border=True):
 
 st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
 
-# --- 「岩槻はるかぜ特別支援学校の人」ボタンと機能追加 ---
-st.header("✨ 特別支援学校向け機能")
-if st.button("岩槻はるかぜ特別支援学校の人", use_container_width=True, type="secondary"):
-    st.session_state["show_iwatsuki_features"] = not st.session_state.get("show_iwatsuki_features", False)
-
-if st.session_state.get("show_iwatsuki_features", False):
-    st.subheader("AIの出力をExcelに貼り付け")
-    st.info("AIの出力内容を以下のテキストエリアに貼り付け、対応するシートとセルを指定してExcelファイルをダウンロードしてください。")
-
-    # Excelシートとセル情報の定義
-    excel_mappings = {
-        "プランA": {
-            "特別な教育的ニーズ": "D12",
-            "合理的配慮の実施内容": "D15",
-            "目標・機関名": "D18",
-            "支援内容": "E18"
-        },
-        "プランB": {
-            "指導方針": "C5",
-            "1健康の保持": "D8",
-            "2心理的な安定": "D10",
-            "3人間関係の形成": "D12",
-            "4環境の把握": "D14",
-            "5身体の動き": "D16",
-            "6コミュニケーション": "D18",
-            "7その他": "D20",
-        }
-    }
-
-    # 各項目と対応するテキストエリア、シート、セル
-    ai_output_inputs = {}
-    for sheet_name, cells in excel_mappings.items():
-        st.markdown(f"#### シート: {sheet_name}")
-        for label, cell_address in cells.items():
-            key = f"{sheet_name}_{label}"
-            ai_output_inputs[key] = st.text_area(f"「{label}」の内容をここに貼り付け（セル: {cell_address}）", key=key, height=150)
-
-    if st.button("Excelに書き出してダウンロード", type="primary", use_container_width=True):
-        try:
-            # プロジェクトと同じ階層にあるプラン.xlsxを読み込む
-            # st.cache_dataやst.cache_resourceはファイル読み込みには適さないため、直接読み込む
-            workbook = load_workbook("プラン.xlsx")
-            
-            # 各シートにデータを書き込む
-            for sheet_name, cells in excel_mappings.items():
-                if sheet_name in workbook.sheetnames:
-                    sheet = workbook[sheet_name]
-                    for label, cell_address in cells.items():
-                        key = f"{sheet_name}_{label}"
-                        content = ai_output_inputs.get(key, "")
-                        
-                        # セルに内容を書き込み
-                        sheet[cell_address] = content
-                        
-                        # 結合セルに対応（D12~H12など）
-                        if sheet_name == "プランＡ":
-                            if label == "特別な教育的ニーズ":
-                                sheet.merge_cells('D12:H12')
-                                sheet['D12'].alignment = Alignment(wrap_text=True, vertical='top')
-                            elif label == "合理的配慮の実施内容":
-                                sheet.merge_cells('D15:H15')
-                                sheet['D15'].alignment = Alignment(wrap_text=True, vertical='top')
-                            elif label == "支援内容": # E18はF18と結合
-                                sheet.merge_cells('E18:F18')
-                                sheet['E18'].alignment = Alignment(wrap_text=True, vertical='top')
-                        elif sheet_name == "プランＢ(実態)":
-                            if label == "指導方針":
-                                sheet.merge_cells('C5:F5')
-                                sheet['C5'].alignment = Alignment(wrap_text=True, vertical='top')
-                            elif label.startswith("1") or label.startswith("2") or label.startswith("3") or \
-                                 label.startswith("4") or label.startswith("5") or label.startswith("6") or \
-                                 label.startswith("7"):
-                                # 指導に結びつく実態のD列はF列まで結合
-                                # 例: "1健康の保持": "D8" -> D8:F8
-                                col_start = cell_address[0] # D
-                                row_num = cell_address[1:] # 8
-                                sheet.merge_cells(f'{col_start}{row_num}:F{row_num}')
-                                sheet[cell_address].alignment = Alignment(wrap_text=True, vertical='top')
-
-                        # テキストの折り返しと上部揃えを設定 (結合セルも考慮)
-                        sheet[cell_address].alignment = Alignment(wrap_text=True, vertical='top')
-                else:
-                    st.warning(f"Excelファイルにシート「{sheet_name}」が見つかりませんでした。")
-
-            # 変更をBytesIOに保存してダウンロード可能にする
-            excel_file = BytesIO()
-            workbook.save(excel_file)
-            excel_file.seek(0) # ファイルの先頭に戻る
-
-            st.download_button(
-                label="ダウンロード「プラン.xlsx」",
-                data=excel_file,
-                file_name="プラン_更新版.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary"
-            )
-            st.success("Excelファイルが正常に更新され、ダウンロード準備ができました！")
-
-        except FileNotFoundError:
-            st.error("エラー: 'プラン.xlsx' ファイルが見つかりませんでした。WEBアプリと同じ階層に配置されていることを確認してください。")
-        except Exception as e:
-            st.error(f"Excelファイルの書き込み中にエラーが発生しました: {e}")
-
 st.markdown("---") # 区切り線
 
 # --- プロンプト① ---
@@ -694,6 +591,110 @@ with st.expander("プロンプト⑥【前期・後期の所見】"):
             st.code(prompt_full_5, language="text")
 
 st.markdown("---")
+
+# --- 「岩槻はるかぜ特別支援学校の人」ボタンと機能追加 ---
+st.header("✨ 特別支援学校向け機能")
+if st.button("岩槻はるかぜ特別支援学校の人向け、ペーストされた内容を基にプラン（Excel）をダウンロードできます", use_container_width=True, type="secondary"):
+    st.session_state["show_iwatsuki_features"] = not st.session_state.get("show_iwatsuki_features", False)
+
+if st.session_state.get("show_iwatsuki_features", False):
+    st.subheader("AIの出力をExcelに貼り付け")
+    st.info("AIの出力内容を以下のテキストエリアに貼り付け、対応するシートとセルを指定してExcelファイルをダウンロードしてください。")
+
+    # Excelシートとセル情報の定義
+    excel_mappings = {
+        "プランＡ": {
+            "特別な教育的ニーズ": "D12",
+            "合理的配慮の実施内容": "D15",
+            "目標・機関名": "D18",
+            "支援内容": "E18"
+        },
+        "プランＢ(実態)": {
+            "指導方針": "C5",
+            "1健康の保持": "D8",
+            "2心理的な安定": "D10",
+            "3人間関係の形成": "D12",
+            "4環境の把握": "D14",
+            "5身体の動き": "D16",
+            "6コミュニケーション": "D18",
+            "7その他": "D20",
+        }
+    }
+
+    # 各項目と対応するテキストエリア、シート、セル
+    ai_output_inputs = {}
+    for sheet_name, cells in excel_mappings.items():
+        st.markdown(f"#### シート: {sheet_name}")
+        for label, cell_address in cells.items():
+            key = f"{sheet_name}_{label}"
+            ai_output_inputs[key] = st.text_area(f"「{label}」の内容をここに貼り付け（セル: {cell_address}）", key=key, height=150)
+
+    if st.button("Excelに書き出してダウンロード", type="primary", use_container_width=True):
+        try:
+            # プロジェクトと同じ階層にあるプラン.xlsxを読み込む
+            # st.cache_dataやst.cache_resourceはファイル読み込みには適さないため、直接読み込む
+            workbook = load_workbook("プラン.xlsx")
+            
+            # 各シートにデータを書き込む
+            for sheet_name, cells in excel_mappings.items():
+                if sheet_name in workbook.sheetnames:
+                    sheet = workbook[sheet_name]
+                    for label, cell_address in cells.items():
+                        key = f"{sheet_name}_{label}"
+                        content = ai_output_inputs.get(key, "")
+                        
+                        # セルに内容を書き込み
+                        sheet[cell_address] = content
+                        
+                        # 結合セルに対応（D12~H12など）
+                        if sheet_name == "プランＡ":
+                            if label == "特別な教育的ニーズ":
+                                sheet.merge_cells('D12:H12')
+                                sheet['D12'].alignment = Alignment(wrap_text=True, vertical='top')
+                            elif label == "合理的配慮の実施内容":
+                                sheet.merge_cells('D15:H15')
+                                sheet['D15'].alignment = Alignment(wrap_text=True, vertical='top')
+                            elif label == "支援内容": # E18はF18と結合
+                                sheet.merge_cells('E18:F18')
+                                sheet['E18'].alignment = Alignment(wrap_text=True, vertical='top')
+                        elif sheet_name == "プランＢ(実態)":
+                            if label == "指導方針":
+                                sheet.merge_cells('C5:F5')
+                                sheet['C5'].alignment = Alignment(wrap_text=True, vertical='top')
+                            elif label.startswith("1") or label.startswith("2") or label.startswith("3") or \
+                                 label.startswith("4") or label.startswith("5") or label.startswith("6") or \
+                                 label.startswith("7"):
+                                # 指導に結びつく実態のD列はF列まで結合
+                                # 例: "1健康の保持": "D8" -> D8:F8
+                                col_start = cell_address[0] # D
+                                row_num = cell_address[1:] # 8
+                                sheet.merge_cells(f'{col_start}{row_num}:F{row_num}')
+                                sheet[cell_address].alignment = Alignment(wrap_text=True, vertical='top')
+
+                        # テキストの折り返しと上部揃えを設定 (結合セルも考慮)
+                        sheet[cell_address].alignment = Alignment(wrap_text=True, vertical='top')
+                else:
+                    st.warning(f"Excelファイルにシート「{sheet_name}」が見つかりませんでした。")
+
+            # 変更をBytesIOに保存してダウンロード可能にする
+            excel_file = BytesIO()
+            workbook.save(excel_file)
+            excel_file.seek(0) # ファイルの先頭に戻る
+
+            st.download_button(
+                label="ダウンロード「プラン.xlsx」",
+                data=excel_file,
+                file_name="プラン_更新版.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                type="primary"
+            )
+            st.success("Excelファイルが正常に更新され、ダウンロード準備ができました！")
+
+        except FileNotFoundError:
+            st.error("エラー: 'プラン.xlsx' ファイルが見つかりませんでした。WEBアプリと同じ階層に配置されていることを確認してください。")
+        except Exception as e:
+            st.error(f"Excelファイルの書き込み中にエラーが発生しました: {e}")
+
 st.warning("""
 **【利用上の注意】**
 AIが生成する内容は、入力された情報に基づく提案であり、必ずしも正確性や適切性を保証するものではありません。自分の判断と合わせてご活用ください。
