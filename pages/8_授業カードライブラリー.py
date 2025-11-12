@@ -550,8 +550,9 @@ if 'selected_hashtags' not in st.session_state:
     st.session_state.selected_hashtags = []
 if 'selected_subject' not in st.session_state:  # 教科フィルター
     st.session_state.selected_subject = "全て"
-if 'selected_unit' not in st.session_state:  # 単元フィルターを追加
-    st.session_state.selected_unit = "全て"
+# 単元フィルターを削除
+# if 'selected_unit' not in st.session_state:  # 単元フィルターを追加
+#     st.session_state.selected_unit = "全て"
 if 'lesson_data' not in st.session_state:
     st.session_state.lesson_data = lesson_data_raw  # アプリ内でデータを更新できるようにセッションステートに保持
 if 'show_all_flow' not in st.session_state:  # 授業の流れ全体表示フラグ
@@ -810,16 +811,19 @@ if st.session_state.current_lesson_id is None:
     st.markdown("<h1>🃏 授業カードライブラリー</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 1.1em; color: #555;'>先生方の実践授業アイデアを検索し、日々の指導に役立てましょう！</p>", unsafe_allow_html=True)
 
-    # Search and Filter Section
-    search_col, tag_col = st.columns([0.6, 0.4])
+    # カテゴリーで絞り込みのセクション
+    st.markdown("---")  # 区切り線
+    st.subheader("カテゴリーで絞り込み")
+
+    # キーワード検索とハッシュタグ検索を同じ行に配置
+    search_col, tag_col = st.columns(2)
     with search_col:
-        # キーワード検索のスタイル修正: label_visibility="visible" を追加
         st.session_state.search_query = st.text_input(
             "キーワードで検索",
             st.session_state.search_query,
             placeholder="例: 買い物、生活単元、小学部",
             key="search_input",
-            label_visibility="visible"  # これでラベルが常に見えるようになる
+            label_visibility="visible"
         )
 
     all_hashtags = sorted(list(set(tag for lesson in st.session_state.lesson_data for tag in lesson['hashtags'] if tag)))
@@ -830,14 +834,10 @@ if st.session_state.current_lesson_id is None:
             options=all_hashtags,
             default=st.session_state.selected_hashtags,
             placeholder="選択してください",
-            label_visibility="visible"  # これでラベルが常に見えるようになる
+            label_visibility="visible"
         )
 
-# カテゴリーで絞り込みのセクション (★ここから追加)
-    st.markdown("---")  # 区切り線
-    st.subheader("カテゴリーで絞り込み")
-
-    col_subject, col_unit = st.columns(2)  # 2カラムに分割して表示
+    col_subject, col_filler = st.columns([0.5, 0.5])  # 2カラムに分割して表示し、右側は空白に
 
     with col_subject:
         all_subjects_raw = sorted(list(set(lesson['subject'] for lesson in st.session_state.lesson_data if 'subject' in lesson and lesson['subject'])))
@@ -846,7 +846,7 @@ if st.session_state.current_lesson_id is None:
         # on_changeコールバック関数を定義
         def update_subject_selection():
             st.session_state.selected_subject = st.session_state.main_page_subject_filter_v4  # selectboxのkeyで直接値を取得
-            st.session_state.selected_unit = "全て"  # 教科が変わったら単元フィルターをリセット
+            # 単元フィルターを削除したため、リセット処理は不要
 
         # selected_subject が有効なオプションに含まれていない場合、"全て"にリセット
         if st.session_state.selected_subject not in all_subjects:
@@ -866,37 +866,9 @@ if st.session_state.current_lesson_id is None:
             label_visibility="visible"
         )
 
-    with col_unit:
-        # 選択された教科に基づいて単元をフィルタリング
-        if st.session_state.selected_subject == "全て":
-            available_units_raw = sorted(list(set(lesson['unit_name'] for lesson in st.session_state.lesson_data if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし')))
-        else:
-            available_units_raw = sorted(list(set(
-                lesson['unit_name'] for lesson in st.session_state.lesson_data
-                if 'unit_name' in lesson and lesson['unit_name'] and lesson['unit_name'] != '単元なし' and lesson.get('subject') == st.session_state.selected_subject
-            )))
-
-        all_units = ["全て"] + available_units_raw
-
-        def update_unit_selection():
-            st.session_state.selected_unit = st.session_state.main_page_unit_filter_v4
-
-        if st.session_state.selected_unit not in all_units:
-            st.session_state.selected_unit = "全て"
-
-        try:
-            default_unit_index = all_units.index(st.session_state.selected_unit)
-        except ValueError:
-            default_unit_index = 0
-
-        st.selectbox(
-            "単元を選択",
-            options=all_units,
-            index=default_unit_index,
-            key="main_page_unit_filter_v4",
-            on_change=update_unit_selection,
-            label_visibility="visible"
-        )
+    with col_filler:
+        # 単元選択フィルターは削除されたため、ここには何も表示しないか、空のst.empty()を置く
+        st.empty()
 
 
     st.markdown("---")  # 区切り線
@@ -911,7 +883,6 @@ if st.session_state.current_lesson_id is None:
         match_search = True
         match_tags = True
         match_subject = True
-        match_unit = True  # 単元フィルターを追加 (★ここを追加)
 
         # Keyword search のロジックを修正
         if st.session_state.search_query:  # 検索クエリがある場合のみ検索を実行
@@ -947,12 +918,12 @@ if st.session_state.current_lesson_id is None:
             if lesson.get('subject') != st.session_state.selected_subject:
                 match_subject = False
 
-        # Unit filter (新規追加) (★ここを追加)
-        if st.session_state.selected_unit != "全て":
-            if lesson.get('unit_name') != st.session_state.selected_unit:
-                match_unit = False
+        # 単元フィルターを削除
+        # if st.session_state.selected_unit != "全て":
+        #     if lesson.get('unit_name') != st.session_state.selected_unit:
+        #         match_unit = False
 
-        if match_search and match_tags and match_subject and match_unit:  # ★ここを修正
+        if match_search and match_tags and match_subject:  # ★ここを修正
             filtered_lessons.append(lesson)
 
     # --- ★ここからページネーション処理の追加★ --- (★ここから追加)
@@ -1041,37 +1012,36 @@ if st.session_state.current_lesson_id is None:
     st.markdown("---")
     st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
 
-    col_prev, *col_pages, col_next = st.columns([1] * (total_pages + 2))  # 前ページ、ページ番号、次ページ用のカラム
+    # ページネーションボタンの表示ロジックを改善
+    if total_pages > 1:
+        cols_for_pagination = st.columns(total_pages + 2) # 前へ、ページ番号(1-total_pages)、次へ
 
-    # 前ページボタン
-    with col_prev:
-        if st.session_state.current_page > 1:
-            if st.button("⏪ 前ページ", key="prev_page_bottom"):
-                st.session_state.current_page -= 1
-                st.rerun()
-        else:
-            st.empty()  # 表示を合わせるため空のウィジェットを配置
+        with cols_for_pagination[0]:
+            if st.session_state.current_page > 1:
+                if st.button("⏪ 前ページ", key="prev_page_bottom"):
+                    st.session_state.current_page -= 1
+                    st.rerun()
+            else:
+                st.empty() # 空のスペースで位置調整
 
-    # ページ番号ボタン
-    for i in range(total_pages):
-        page_num = i + 1
-        with col_pages[i]:
-            if st.button(
-                str(page_num),
-                key="page_btn_{}_bottom".format(page_num),
-                type="primary" if st.session_state.current_page == page_num else "secondary"
-            ):
-                st.session_state.current_page = page_num
-                st.rerun()
+        for i in range(total_pages):
+            page_num = i + 1
+            with cols_for_pagination[i + 1]: # +1 は「前ページ」ボタンの分
+                if st.button(
+                    str(page_num),
+                    key=f"page_btn_{page_num}_bottom",
+                    type="primary" if st.session_state.current_page == page_num else "secondary"
+                ):
+                    st.session_state.current_page = page_num
+                    st.rerun()
 
-    # 次ページボタン
-    with col_next:
-        if st.session_state.current_page < total_pages:
-            if st.button("次ページ ⏩", key="next_page_bottom"):
-                st.session_state.current_page += 1
-                st.rerun()
-        else:
-            st.empty()  # 表示を合わせるため空のウィジェットを配置
+        with cols_for_pagination[total_pages + 1]: # +1 は「前ページ」ボタンの分
+            if st.session_state.current_page < total_pages:
+                if st.button("次ページ ⏩", key="next_page_bottom"):
+                    st.session_state.current_page += 1
+                    st.rerun()
+            else:
+                st.empty() # 空のスペースで位置調整
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
@@ -1160,6 +1130,23 @@ else:  # 詳細ページ
                     font-size: 0.85em;
                     color: #666;
                 }
+                .unit-lesson-list {
+                    list-style-type: decimal;
+                    padding-left: 20px;
+                }
+                .unit-lesson-list li {
+                    margin-bottom: 8px;
+                    font-size: 1.05em;
+                }
+                .unit-lesson-list li a {
+                    text-decoration: none;
+                    color: #333;
+                    transition: color 0.2s;
+                }
+                .unit-lesson-list li a:hover {
+                    color: #8A2BE2;
+                    text-decoration: underline;
+                }
             </style>
         """
         st.markdown(detail_css, unsafe_allow_html=True)
@@ -1226,21 +1213,24 @@ else:  # 詳細ページ
         st.markdown(unit_name_html, unsafe_allow_html=True)
 
 
-        # --- 単元の授業の流れ (新規追加または既存セクションを拡張) --- (★ここから追加)
+        # --- 単元の授業の流れ (新規追加または既存セクションを拡張) ---
         if selected_lesson.get('unit_name') and selected_lesson.get('unit_name') != '単元なし':
             unit_name_to_search = selected_lesson['unit_name']
+            target_grade_to_match = selected_lesson['target_grade'] # 学年も一致させる
+
             all_lessons_in_unit = [
                 lesson for lesson in st.session_state.lesson_data
-                if lesson.get('unit_name') == unit_name_to_search
+                if lesson.get('unit_name') == unit_name_to_search and
+                   lesson.get('target_grade') == target_grade_to_match # 学年も一致
             ]
 
             # 単元内での順番 (unit_order) でソート
             sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
 
             if sorted_lessons_in_unit:
-                unit_flow_header_html = "<h3><span class='header-icon'>📚</span>「{}」の授業の流れ</h3>".format(unit_name_to_search)
+                unit_flow_header_html = "<h3><span class='header-icon'>📚</span>「{} ({}学年)」の授業の流れ</h3>".format(unit_name_to_search, target_grade_to_match)
                 st.markdown(unit_flow_header_html, unsafe_allow_html=True)
-                st.markdown("<ol class='flow-list'>", unsafe_allow_html=True)  # 番号付きリスト
+                st.markdown("<ol class='unit-lesson-list'>", unsafe_allow_html=True)  # 番号付きリストにクラスを追加
 
                 for lesson_in_unit in sorted_lessons_in_unit:
                     # unit_lesson_title が存在すればそれを使用、なければ unit_name を使用
@@ -1251,24 +1241,15 @@ else:  # 詳細ページ
                         list_item_html = "<li style='font-weight: bold; color: #8A2BE2;'>{} 【現在の授業】</li>".format(display_title)
                         st.markdown(list_item_html, unsafe_allow_html=True)
                     else:
-                        # 他の授業カードへのリンク（クリックで詳細に飛ぶ）
-                        # Streamlitのボタンを直接使って、非表示のボタンで遷移をトリガーする
-                        link_html = """
+                        # Streamlitのボタンを直接使って、遷移をトリガーする
+                        # クリック可能な外見を与えるために、HTMLでラップする
+                        st.markdown(f"""
                             <li>
-                                <a href="#" onclick="document.querySelector('button[data-testid="stButton_unit_flow_link_direct_{}"]').click(); return false;" style="text-decoration: none; color: inherit;">
-                                    {}
-                                </a>
+                                <div style="display:inline-block;">
+                                    {st.button(display_title, key=f"unit_flow_link_direct_{lesson_in_unit['id']}", on_click=set_detail_page, args=(lesson_in_unit['id'],), help=f"「{display_title}」の詳細を見る", type="secondary")}
+                                </div>
                             </li>
-                        """.format(lesson_in_unit['id'], display_title)
-                        st.markdown(link_html, unsafe_allow_html=True)
-                        # 実際の遷移を処理する非表示のボタン（display:noneで完全に隠す）
-                        st.button(
-                            "隠しボタン",  # ボタンのテキストは表示されないので何でもOK
-                            key="unit_flow_link_direct_{}".format(lesson_in_unit['id']),
-                            on_click=set_detail_page,
-                            args=(lesson_in_unit['id'],),
-                            help="この授業の詳細を表示します",
-                        )
+                        """, unsafe_allow_html=True)
 
                 st.markdown("</ol>", unsafe_allow_html=True)
 
@@ -1402,17 +1383,29 @@ global_css = r"""
     }
     /* Secondary buttons (e.g., related lessons) */
     /* unit_flow_link_hidden_btn_ の data-testid をターゲットに */
-    button[data-testid^="stButton_unit_flow_link_direct_"] { /* ★ここを修正 */
-        background: none !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-        display: none !important; /* 見えないように */
-        height: 0 !important; /* 高さを0にする */
-        width: 0 !important; /* 幅を0にする */
-        overflow: hidden !important; /* 内容を隠す */
+    /* 詳細ページ内の「同じ単元の授業」の個々の授業タイトルボタンのスタイル */
+    button[data-testid^="stButton_unit_flow_link_direct_"] {
+        background: #f0f0f0 !important; /* 目立たない背景色 */
+        color: #333 !important;
+        border: 1px solid #ccc !important;
+        border-radius: 15px !important;
+        padding: 8px 15px !important;
+        font-size: 0.95em !important;
+        font-weight: normal !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        transition: all 0.2s ease !important;
+        width: auto !important; /* 幅を自動調整 */
+        margin-right: 10px; /* ボタン間の余白 */
+        margin-bottom: 10px; /* 下方向の余白 */
     }
+    button[data-testid^="stButton_unit_flow_link_direct_"]:hover {
+        background-color: #e0e0e0 !important;
+        border-color: #999 !important;
+        color: #000 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.1) !important;
+    }
+
 
     /* Sidebar specific styles */
     .stSidebar .stSelectbox, .stSidebar .stMultiSelect, .stSidebar .stTextInput {
