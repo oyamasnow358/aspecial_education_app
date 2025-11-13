@@ -28,7 +28,7 @@ def load_css():
 
         /* アプリ全体のコンテナの最大幅を広げ、中央寄せを維持 */
         [data-testid="stAppViewContainer"] {
-            max-width: 600px; /* ここを調整してより広く */
+            max-width: 1200px; /* ここを調整してより広く */
             margin: auto; /* 中央寄せ */
             padding-left: 20px;
             padding-right: 20px;
