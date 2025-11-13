@@ -144,13 +144,13 @@ def load_css():
             }
         }
         /* タブレット (中間の画面) では2列 */
-        @media (min-width: 508px) and (max-width: 1199px) {
+        @media (min-width: 508px) and (max-width: 599px) {
             .lesson-card-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
         /* スマートフォン (狭い画面) では1列 */
-        @media (max-width: 767px) {
+        @media (max-width: 567px) {
             .lesson-card-grid {
                 grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             }
