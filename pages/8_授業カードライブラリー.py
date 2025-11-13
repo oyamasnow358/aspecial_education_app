@@ -364,7 +364,7 @@ def load_css():
         .download-button-wrapper a > button .icon {
             color: white; /* ダウンロードアイコンの色も白に */
         }
-        .card-subject-unit {
+                .card-subject-unit {
             font-size: 0.9em;
             color: #4A90E2; /* メインカラー */
             font-weight: 600;
@@ -382,7 +382,7 @@ def load_css():
             font-size: 1.1em;
             color: #4A90E2;
         }
-        .flow-content-wrapper {
+                .flow-content-wrapper {
             margin-top: 20px; /* ボタンとコンテンツの間に余白を持たせる */
         }
          
@@ -487,12 +487,16 @@ try:
             'detail_pdf_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_ppt_url': lambda x: str(x) if pd.notna(x) else '',
             'detail_excel_url': lambda x: str(x) if pd.notna(x) else '',
+            'target_grade': lambda x: str(x) if pd.notna(x) else '', # target_gradeをstringとして読み込む
         }
     )
 
     # 新規カラムのデフォルト値設定（もしCSVにカラムがない場合）
     if 'unit_order' not in lesson_data_df.columns:
         lesson_data_df['unit_order'] = 9999
+    if 'target_grade' not in lesson_data_df.columns: # target_gradeのデフォルト値設定
+        lesson_data_df['target_grade'] = '不明'
+
 
     # === ここが重要な修正点です ===
     # 'unit_lesson_title' が存在しない、または全てNaN/空の場合、'unit_name' から値を設定
@@ -528,6 +532,7 @@ try:
     lesson_data = lesson_data_df.to_dict(orient='records')
     for lesson in lesson_data:  # FIX: KeyError対策としてsetdefaultを追加
         lesson.setdefault('unit_lesson_title', "")  # FIX: KeyError対策としてsetdefaultを追加
+        lesson.setdefault('target_grade', '不明') # target_gradeのsetdefault
 
     st.session_state.lesson_data = lesson_data  # FIX: st.session_state.lesson_dataをここで初期化
 
@@ -710,6 +715,13 @@ with st.sidebar:
                 else:
                     # 'unit_lesson_title' カラムがない場合、'unit_name' から設定
                     new_data_df['unit_lesson_title'] = new_data_df.get('unit_name', '単元内授業')  # デフォルトでunit_nameを使用
+                
+                # target_gradeの処理
+                if 'target_grade' in new_data_df.columns:
+                    new_data_df['target_grade'] = process_string_column(new_data_df, 'target_grade', '不明')
+                else:
+                    new_data_df['target_grade'] = '不明'
+
 
                 # lesson_dict の構築部分で新しいカラムを追加 (★ここを削除/修正)
                 # この部分はループの外に出すべきではないため、後続のループ内で処理されるようにする。
@@ -800,7 +812,7 @@ with st.sidebar:
             st.exception(e)  # デバッグのために例外の詳細を表示
 
 
-        st.markdown("---")
+    st.markdown("---")
 
 
 # --- Main Page Logic ---
@@ -948,11 +960,13 @@ if st.session_state.current_lesson_id is None:
     # --- ▲ここまでページネーション処理の追加▲ ---
 
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
-    if displayed_lessons:
-        for lesson in displayed_lessons:
+    if displayed_lessons:  # filtered_lessons ではなく displayed_lessons をループする (★ここを修正)
+        for lesson in displayed_lessons:  # ここを `displayed_lessons` に変更 (★ここを修正)
+            # 教科と単元名が空文字列や'単元なし'の場合は表示しない
             display_subject = lesson['subject'] if lesson['subject'] and lesson['subject'] != 'その他' else ''
             display_unit = lesson['unit_name'] if lesson['unit_name'] and lesson['unit_name'] != '単元なし' else ''
 
+            # 教科と単元名を組み合わせるHTMLを事前に作成
             subject_unit_display_html = ""
             if display_subject and display_unit:
                 subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{} / {}</span>'.format(display_subject, display_unit)
@@ -961,37 +975,50 @@ if st.session_state.current_lesson_id is None:
             elif display_unit:
                 subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{}</span>'.format(display_unit)
 
+            # タグHTMLを事前に作成しておき、f文字列内の複雑なネストを避ける
             tags_html = "".join('<span class="tag-badge">#{}</span>'.format(tag) for tag in lesson.get('hashtags', []) if tag)
 
-            # 各カードをst.container()で囲み、内部でHTMLとStreamlitボタンを配置
-            with st.container(): # ここでコンテナを作成
-                st.markdown(f"""
-                    <div class="lesson-card">
-                     <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['unit_name']}">
-                     <div class="lesson-card-content">
-                         <div>
-                             {subject_unit_display_html}
-                             <div class="lesson-card-title">{lesson['unit_name']}</div> 
-                             <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
-                             <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
-                             <div class="lesson-card-meta">
-                                <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
-                                <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
-                                <span><span class="icon">⏱</span>{lesson['duration']}</span>
-                             </div>
-                         </div>
-                         <div class="lesson-card-tags">
-                             {tags_html}
-                         </div>
+            # f-stringの内部にHTMLエスケープやバックフラッシュが含まれないように修正
+            lesson_card_html = """
+            <div class="lesson-card">
+             <img class="lesson-card-image" src="{}" alt="{}">
+             <div class="lesson-card-content">
+                 <div>
+                     {}
+                     <div class="lesson-card-title">{}</div> 
+                     <div class="lesson-card-catchcopy">{}</div>
+                     <div class="lesson-card-goal">🎯 ねらい: {}</div>
+                     <div class="lesson-card-meta">
+                <span><span class="icon">🎓</span>{}</span>
+                <span><span class="icon">🧩</span>{}</span>
+                         <span><span class="icon">⏱</span>{}</span>
                      </div>
-                    </div>
-                """, unsafe_allow_html=True)
-                # ボタンはst.markdownの外で、通常のStreamlitウィジェットとして配置
-                st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))
+                 </div>
+                 <div class="lesson-card-tags">
+                     {}
+                 </div>
+                 {}
+             </div>
+            </div>
+             """.format(
+                lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image',
+                lesson['unit_name'],
+                subject_unit_display_html,
+                lesson['unit_name'],
+                lesson['catch_copy'],
+                lesson['goal'],
+                lesson['target_grade'],
+                lesson['disability_type'],
+                lesson['duration'],
+                tags_html,
+                st.button("👇この授業の詳細を見る", key="detail_btn_{}".format(lesson['id']), on_click=set_detail_page, args=(lesson['id'],))
+            )
+            st.markdown(lesson_card_html, unsafe_allow_html=True)
+# ... (既存の授業カード表示コードここまで) ...
 
     else:
         st.info("条件に合う授業カードは見つかりませんでした。")
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)  # lesson-card-grid の閉じタグ
 
     # --- ★ここからページネーションUIの追加★ --- (★ここから追加)
     st.markdown("---")
@@ -999,9 +1026,9 @@ if st.session_state.current_lesson_id is None:
 
     # ページネーションボタンの表示ロジックを改善
     if total_pages > 1:
-        # st.columns を使って、ボタンを横並びにする
-        # 各ボタンの幅を均等にするために、total_pages + 2 のカラムを作成
-        cols_for_pagination = st.columns(total_pages + 2) 
+        # Streamlitの内部CSSクラスを直接指定してボタンの配置を調整
+        # st.columnsでボタンを囲むことで、横並びにする
+        cols_for_pagination = st.columns(total_pages + 2) # 前へ、ページ番号(1-total_pages)、次へ
 
         with cols_for_pagination[0]:
             if st.session_state.current_page > 1:
@@ -1125,14 +1152,23 @@ else:  # 詳細ページ
                     margin-bottom: 8px;
                     font-size: 1.05em;
                 }
-                .unit-lesson-list li a {
-                    text-decoration: none;
-                    color: #333;
-                    transition: color 0.2s;
+                /* Streamlitボタンをリストアイテム内で自然に見せるための調整 */
+                .unit-lesson-list li .stButton > button {
+                    background-color: #f0f2f6 !important; /* 背景色を控えめに */
+                    color: #333 !important; /* テキスト色を標準に */
+                    border: 1px solid #e0e0e0 !important; /* 軽いボーダー */
+                    border-radius: 8px !important;
+                    padding: 5px 10px !important;
+                    font-size: 1em !important;
+                    width: auto !important; /* 幅をコンテンツに合わせる */
+                    box-shadow: none !important; /* 影をなくす */
+                    transition: all 0.2s ease !important;
                 }
-                .unit-lesson-list li a:hover {
-                    color: #8A2BE2;
-                    text-decoration: underline;
+                .unit-lesson-list li .stButton > button:hover {
+                    background-color: #e6e6fa !important; /* ホバーで少し紫色に */
+                    color: #8A2BE2 !important; /* ホバーで紫のテキスト */
+                    border-color: #ccacee !important;
+                    transform: translateY(-1px) !important;
                 }
             </style>
         """
@@ -1229,14 +1265,11 @@ else:  # 詳細ページ
                         st.markdown(list_item_html, unsafe_allow_html=True)
                     else:
                         # Streamlitのボタンを直接使って、遷移をトリガーする
-                        # クリック可能な外見を与えるために、HTMLでラップする
-                        st.markdown(f"""
-                            <li>
-                                <div style="display:inline-block;">
-                                    {st.button(display_title, key=f"unit_flow_link_direct_{lesson_in_unit['id']}", on_click=set_detail_page, args=(lesson_in_unit['id'],), help=f"「{display_title}」の詳細を見る", type="secondary")}
-                                </div>
-                            </li>
-                        """, unsafe_allow_html=True)
+                        # CSSでスタイルを適用するため、liタグで囲む
+                        st.markdown(f"<li>", unsafe_allow_html=True)
+                        st.button(display_title, key=f"unit_flow_link_direct_{lesson_in_unit['id']}", on_click=set_detail_page, args=(lesson_in_unit['id'],), help=f"「{display_title}」の詳細を見る", type="secondary")
+                        st.markdown(f"</li>", unsafe_allow_html=True)
+                        
 
                 st.markdown("</ol>", unsafe_allow_html=True)
 
@@ -1371,7 +1404,7 @@ global_css = r"""
     /* Secondary buttons (e.g., related lessons) */
     /* unit_flow_link_hidden_btn_ の data-testid をターゲットに */
     /* 詳細ページ内の「同じ単元の授業」の個々の授業タイトルボタンのスタイル */
-    button[data-testid^="stButton_unit_flow_link_direct_"] {
+    .unit-lesson-list li .stButton > button {
         background: #f0f0f0 !important; /* 目立たない背景色 */
         color: #333 !important;
         border: 1px solid #ccc !important;
@@ -1384,8 +1417,9 @@ global_css = r"""
         width: auto !important; /* 幅を自動調整 */
         margin-right: 10px; /* ボタン間の余白 */
         margin-bottom: 10px; /* 下方向の余白 */
+        display: inline-block; /* リストアイテム内で横並びにするため */
     }
-    button[data-testid^="stButton_unit_flow_link_direct_"]:hover {
+    .unit-lesson-list li .stButton > button:hover {
         background-color: #e0e0e0 !important;
         border-color: #999 !important;
         color: #000 !important;
@@ -1498,34 +1532,35 @@ global_css = r"""
         margin-bottom: 5px;
         white-space: nowrap;
     }
-    /* lesson-cardクラス内のstButtonの子要素をターゲットにして、ボタンをカードのフッターに配置 */
-    .lesson-card > div > div > [data-testid="stVerticalBlock"] > div > [data-testid^="stButton_detail_btn_"] {
+    .lesson-card .stButton > button {
         width: 100%;
         margin-top: auto; /* ボタンをカードの下部に固定 */
-        display: block; /* ボタンをブロック要素にする */
-    }
+    } 
     /* --- ページネーションボタンのスタイル調整 --- */
-    /* Streamlit 1.25.0 以降では st.columns の HTML 構造が変わる可能性があるため、
-       より汎用的なセレクタ `[data-testid="stColumn"] button` を使用する */
-    .st-emotion-cache-1yr0e9g { /* st.columnsの親要素 */
-        justify-content: center; /* ページネーションボタンを中央に寄せる */
+    /* Streamlitの内部コンテナのdata-testidを利用してセンタリングとギャップ調整 */
+    div[data-testid="stColumns"] > div > div > .stButton { /* st.columns内のボタンを対象 */
+        display: flex;
+        justify-content: center; /* ボタンを中央に寄せる */
+    }
+    div[data-testid="stColumns"] { /* st.columnsの親要素 */
         gap: 10px; /* ボタン間のスペースを調整 */
     }
-    [data-testid="stColumn"] button { /* 各カラム内のボタン */
+    
+    .st-emotion-cache-1yr0e9g button { /* st.columns内のbutton要素 */
         min-width: 40px; /* ページ番号ボタンの最小幅 */
         height: 40px; /* ページ番号ボタンの高さ */
         padding: 0 10px;
         font-size: 1.1em;
     }
-    [data-testid^="stButton_page_btn_"] button { /* ページ番号ボタン */
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"] {
         border-radius: 50% !important; /* ページ番号ボタンを丸くする */
     }
-    [data-testid^="stButton_page_btn_"] button[kind="primary"] {
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"][kind="primary"] {
         background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
         border-color: #8A2BE2 !important;
     }
-    [data-testid^="stButton_prev_page"] button,
-    [data-testid^="stButton_next_page"] button {
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_prev_page"],
+    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_next_page"] {
         border-radius: 20px !important; /* 前次ページボタンの角丸 */
     }
     /* Detail Page Styles */
