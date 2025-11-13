@@ -948,13 +948,11 @@ if st.session_state.current_lesson_id is None:
     # --- ▲ここまでページネーション処理の追加▲ ---
 
     st.markdown("<div class='lesson-card-grid'>", unsafe_allow_html=True)
-    if displayed_lessons:  # filtered_lessons ではなく displayed_lessons をループする (★ここを修正)
-        for lesson in displayed_lessons:  # ここを `displayed_lessons` に変更 (★ここを修正)
-            # 教科と単元名が空文字列や'単元なし'の場合は表示しない
+    if displayed_lessons:
+        for lesson in displayed_lessons:
             display_subject = lesson['subject'] if lesson['subject'] and lesson['subject'] != 'その他' else ''
             display_unit = lesson['unit_name'] if lesson['unit_name'] and lesson['unit_name'] != '単元なし' else ''
 
-            # 教科と単元名を組み合わせるHTMLを事前に作成
             subject_unit_display_html = ""
             if display_subject and display_unit:
                 subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{} / {}</span>'.format(display_subject, display_unit)
@@ -963,11 +961,10 @@ if st.session_state.current_lesson_id is None:
             elif display_unit:
                 subject_unit_display_html = '<span class="card-subject-unit"><span class="icon">📖</span>{}</span>'.format(display_unit)
 
-            # タグHTMLを事前に作成しておき、f文字列内の複雑なネストを避ける
             tags_html = "".join('<span class="tag-badge">#{}</span>'.format(tag) for tag in lesson.get('hashtags', []) if tag)
-            
+
             # 各カードをst.container()で囲み、内部でHTMLとStreamlitボタンを配置
-            with st.container():
+            with st.container(): # ここでコンテナを作成
                 st.markdown(f"""
                     <div class="lesson-card">
                      <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['unit_name']}">
@@ -986,15 +983,15 @@ if st.session_state.current_lesson_id is None:
                          <div class="lesson-card-tags">
                              {tags_html}
                          </div>
-                         </div>
                      </div>
+                    </div>
                 """, unsafe_allow_html=True)
                 # ボタンはst.markdownの外で、通常のStreamlitウィジェットとして配置
                 st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))
 
     else:
         st.info("条件に合う授業カードは見つかりませんでした。")
-    st.markdown("</div>", unsafe_allow_html=True)  # lesson-card-grid の閉じタグ
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # --- ★ここからページネーションUIの追加★ --- (★ここから追加)
     st.markdown("---")
