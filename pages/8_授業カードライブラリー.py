@@ -43,17 +43,44 @@ def load_css():
             padding-right: 20px;
         }
 
-        /* サイドバーのスタイル */
+        /* サイドバーの背景を少し透過 */
         [data-testid="stSidebar"] {
-            background-color: #ffffff;
-            border-right: 1px solid #e0e0e0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-            padding-top: 20px;
+            background-color: rgba(240, 242, 246, 0.9);
         }
-        [data-testid="stSidebar > div:first-child"] {
-            padding-left: 20px;
-            padding-right: 20px;
+                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+        [data-testid="stSidebarNavCollapseButton"] {
+            position: relative !important;
+            width: 2rem !important;
+            height: 2rem !important;
         }
+        /* 元のアイコンを完全に非表示にする */
+        [data-testid="stSidebarNavCollapseButton"] * {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        /* カスタムアイコン「«」を疑似要素として追加 */
+        [data-testid="stSidebarNavCollapseButton"]::before {
+            content: '«' !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            color: #31333F !important;
+            transition: background-color 0.2s, color 0.2s !important;
+            border-radius: 0.5rem;
+        }
+        [data-testid="stSidebarNavCollapseButton"]:hover::before {
+            background-color: #F0F2F6 !important;
+            color: #8A2BE2 !important;
+        }
+        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
+
 
         /* ヘッダーのスタイル */
         [data-testid="stHeader"] {
