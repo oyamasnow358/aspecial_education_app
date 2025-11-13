@@ -410,8 +410,8 @@ def load_css():
         /* --- ページネーションボタンのスタイル調整 --- */
         /* Streamlitの内部コンテナのdata-testidを利用してセンタリングとギャップ調整 */
         .pagination-container {
-            display: flex;
-            justify-content: center;
+            display: flex; /* Flexboxを有効にする */
+            justify-content: center; /* 中央寄せ */
             align-items: center;
             gap: 10px; /* ボタン間のスペースを調整 */
             margin-top: 20px;
@@ -428,13 +428,15 @@ def load_css():
             background-color: #f0f2f6 !important; /* 通常のページ番号ボタンの背景色 */
             color: #555 !important; /* 通常のページ番号ボタンのテキスト色 */
             border: 1px solid #ddd !important;
+            margin: 0 !important; /* ボタンが個別に持つmarginをリセット */
         }
         .pagination-container .stButton > button:hover {
             background-color: #e0e0e0 !important;
             border-color: #bbb !important;
             transform: translateY(-1px) !important;
         }
-        .pagination-container .stButton > button[kind="primary"] {
+        /* アクティブなページ番号ボタンのスタイル */
+        .pagination-container .stButton > button[data-testid="stPageLinkButton-primary"] {
             background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
             border-color: #8A2BE2 !important;
             color: white !important;
@@ -446,6 +448,13 @@ def load_css():
             color: #333;
             margin: 0 10px;
             white-space: nowrap; /* 折り返しを防ぐ */
+        }
+        .pagination-container .stMarkdown > div { /* 省略記号 (st.markdown("<span>...</span>") ) のコンテナをターゲット */
+            display: flex; /* flexアイテムとして扱われるようにする */
+            align-items: center; /* 垂直方向中央揃え */
+            height: 40px; /* ボタンの高さに合わせる */
+            font-size: 1.2em; /* フォントサイズ調整 */
+            color: #777;
         }
     </style>
     """
@@ -1090,7 +1099,9 @@ if st.session_state.current_lesson_id is None:
             st.markdown("<span>...</span>", unsafe_allow_html=True) # 省略記号
 
     for i in range(page_range_start, page_range_end + 1):
-        st.button(str(i), key=f"page_{i}", on_click=set_page, args=(i,), type="primary" if i == st.session_state.current_page else "secondary")
+        # 現在のページをハイライト
+        is_current = (i == st.session_state.current_page)
+        st.button(str(i), key=f"page_{i}", on_click=set_page, args=(i,), type="primary" if is_current else "secondary")
 
     # 最後のページへのジャンプボタン（最後のページが表示範囲外の場合）
     if page_range_end < total_pages:
