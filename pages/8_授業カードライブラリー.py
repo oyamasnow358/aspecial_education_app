@@ -107,10 +107,32 @@ def load_css():
         /* Card grid specific styles */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); /* カードサイズを調整 */
+            /* PC画面では3列、タブレットでは2列、スマホでは1列に調整 */
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); /* デフォルトは330px以上で自動調整 */
             gap: 30px; /* カード間の余白 */
             padding: 25px 0;
         }
+
+        /* PC (広い画面) では3列 */
+        @media (min-width: 1200px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        /* タブレット (中間の画面) では2列 */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        /* スマートフォン (狭い画面) では1列 (minmaxで自動調整されるため、特に指定不要) */
+        @media (max-width: 767px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+
         .lesson-card {
             background-color: #ffffff;
             border: none;
@@ -436,7 +458,9 @@ def load_css():
             transform: translateY(-1px) !important;
         }
         /* アクティブなページ番号ボタンのスタイル */
-        .pagination-container .stButton > button[data-testid="stPageLinkButton-primary"] {
+        /* Streamlitのプライマリボタンのdata-testidをターゲットにする */
+        .pagination-container .stButton > button[data-testid*="stPageLinkButton-primary"],
+        .pagination-container .stButton > button[aria-selected="true"] { /* 現在のページボタンの識別を強化 */
             background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
             border-color: #8A2BE2 !important;
             color: white !important;
