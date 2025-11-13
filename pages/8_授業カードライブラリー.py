@@ -25,7 +25,24 @@ def load_css():
             background-color: #f0f2f6;
             color: #333;
         }
-
+        /* PC (広い画面) では3列 */
+        @media (min-width: 500px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        /* タブレット (中間の画面) では2列 */
+        @media (min-width: 708px) and (max-width: 599px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        /* スマートフォン (狭い画面) では1列 */
+        @media (max-width: 567px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
         /* アプリ全体のコンテナの最大幅を広げ、中央寄せを維持 */
         [data-testid="stAppViewContainer"] {
             max-width: 1200px; /* ここを調整してより広く */
@@ -130,24 +147,7 @@ def load_css():
             padding: 25px 0;
         }
 
-        /* PC (広い画面) では3列 */
-        @media (min-width: 500px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        /* タブレット (中間の画面) では2列 */
-        @media (min-width: 708px) and (max-width: 599px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        /* スマートフォン (狭い画面) では1列 */
-        @media (max-width: 567px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            }
-        }
+        
 
         /* 個々の授業カードのスタイル */
         .lesson-card {
