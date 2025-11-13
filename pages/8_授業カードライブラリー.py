@@ -436,8 +436,7 @@ def load_css():
             box-shadow: 0 8px 15px rgba(74,144,226,0.2) !important;
         }
 
-        /* --- ページネーションボタンのスタイル調整 --- */
-        /* Streamlitの内部コンテナのdata-testidを利用してセンタリングとギャップ調整 */
+        /* --- ページネーションボタンのスタイル調整 (修正版) --- */
         .pagination-container {
             display: flex; /* Flexboxを有効にする */
             justify-content: center; /* 中央寄せ */
@@ -465,8 +464,8 @@ def load_css():
             transform: translateY(-1px) !important;
         }
         /* アクティブなページ番号ボタンのスタイル */
-        .pagination-container .stButton > button[data-testid*="stPageLinkButton-primary"],
-        .pagination-container .stButton > button[aria-selected="true"] { /* 現在のページボタンの識別を強化 */
+        .pagination-container .stButton > button[data-testid*="stPageLinkButton-primary"], /* page_linkのプライマリボタンをターゲット */
+        .pagination-container .stButton > button[type="primary"] { /* st.buttonのprimaryタイプをターゲット */
             background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
             border-color: #8A2BE2 !important;
             color: white !important;
