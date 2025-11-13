@@ -467,6 +467,7 @@ def load_css():
             transform: translateY(-1px) !important;
         }
         /* アクティブなページ番号ボタンのスタイル */
+        /* st.buttonのtype="primary"はデータ属性 `data-testid*="stPageLinkButton-primary"` を持つことが多い */
         .pagination-container .stButton > button[data-testid*="stPageLinkButton-primary"], /* page_linkのプライマリボタンをターゲット */
         .pagination-container .stButton > button[type="primary"] { /* st.buttonのprimaryタイプをターゲット */
             background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
