@@ -132,7 +132,7 @@ def load_css():
         /* 授業カードグリッドのスタイル */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); /* デフォルトは330px以上で自動調整 */
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); /* デフォルトは330px以上で自動調整 */
             gap: 30px;
             padding: 25px 0;
         }
@@ -144,7 +144,7 @@ def load_css():
             }
         }
         /* タブレット (中間の画面) では2列 */
-        @media (min-width: 508px) and (max-width: 599px) {
+        @media (min-width: 708px) and (max-width: 599px) {
             .lesson-card-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
