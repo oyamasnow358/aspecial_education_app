@@ -457,6 +457,9 @@ def load_css():
             color: #555 !important; /* 通常のページ番号ボタンのテキスト色 */
             border: 1px solid #ddd !important;
             margin: 0 !important; /* ボタンが個別に持つmarginをリセット */
+            display: inline-flex !important; /* ボタンを横並びに */
+            justify-content: center; /* テキストを中央寄せ */
+            align-items: center; /* 垂直方向中央寄せ */
         }
         .pagination-container .stButton > button:hover {
             background-color: #eef !important; /* ホバー時の背景色を薄い青に */
