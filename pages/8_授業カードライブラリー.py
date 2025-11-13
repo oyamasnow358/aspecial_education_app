@@ -406,6 +406,36 @@ def load_css():
             transform: translateY(-3px) !important;
             box-shadow: 0 8px 15px rgba(74,144,226,0.2) !important;
         }
+
+        /* --- ページネーションボタンのスタイル調整 --- */
+        /* Streamlitの内部コンテナのdata-testidを利用してセンタリングとギャップ調整 */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* ボタン間のスペースを調整 */
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .pagination-container .stButton > button {
+            min-width: 40px; /* ページ番号ボタンの最小幅 */
+            height: 40px; /* ページ番号ボタンの高さ */
+            padding: 0 10px;
+            font-size: 1.1em;
+            border-radius: 20px !important; /* 全てのボタンを角丸に */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+        }
+        .pagination-container .stButton > button[kind="primary"] {
+            background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
+            border-color: #8A2BE2 !important;
+        }
+        .pagination-info {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin: 0 10px;
+        }
+
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -1020,47 +1050,34 @@ if st.session_state.current_lesson_id is None:
         st.info("条件に合う授業カードは見つかりませんでした。")
     st.markdown("</div>", unsafe_allow_html=True)  # lesson-card-grid の閉じタグ
 
-    # --- ★ここからページネーションUIの追加★ --- (★ここから追加)
+    # --- ★ここからページネーションUIの追加（修正版）★ ---
     st.markdown("---")
-    st.markdown("<div style='text-align: center; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    st.markdown("<div class='pagination-container'>", unsafe_allow_html=True)
 
-    # ページネーションボタンの表示ロジックを改善
-    if total_pages > 1:
-        # Streamlitの内部CSSクラスを直接指定してボタンの配置を調整
-        # st.columnsでボタンを囲むことで、横並びにする
-        cols_for_pagination = st.columns(total_pages + 2) # 前へ、ページ番号(1-total_pages)、次へ
+    # 前ページボタン
+    if st.session_state.current_page > 1:
+        if st.button("⏪ 前ページ", key="prev_page_bottom"):
+            st.session_state.current_page -= 1
+            st.rerun()
+    else:
+        # ボタンがない場合もスペースを確保したいが、Streamlitのbuttonが空で表示されないため、
+        # CSSでflex-gapを設定しているので、何も表示しないのが最もシンプル
+        pass 
 
-        with cols_for_pagination[0]:
-            if st.session_state.current_page > 1:
-                if st.button("⏪ 前ページ", key="prev_page_bottom"):
-                    st.session_state.current_page -= 1
-                    st.rerun()
-            else:
-                st.empty() # 空のスペースで位置調整
+    # 現在のページと総ページ数を表示
+    st.markdown(f"<span class='pagination-info'>ページ {st.session_state.current_page} / {total_pages}</span>", unsafe_allow_html=True)
 
-        for i in range(total_pages):
-            page_num = i + 1
-            with cols_for_pagination[i + 1]: # +1 は「前ページ」ボタンの分
-                if st.button(
-                    str(page_num),
-                    key=f"page_btn_{page_num}_bottom",
-                    type="primary" if st.session_state.current_page == page_num else "secondary"
-                ):
-                    st.session_state.current_page = page_num
-                    st.rerun()
-
-        with cols_for_pagination[total_pages + 1]: # +1 は「前ページ」ボタンの分
-            if st.session_state.current_page < total_pages:
-                if st.button("次ページ ⏩", key="next_page_bottom"):
-                    st.session_state.current_page += 1
-                    st.rerun()
-            else:
-                st.empty() # 空のスペースで位置調整
+    # 次ページボタン
+    if st.session_state.current_page < total_pages:
+        if st.button("次ページ ⏩", key="next_page_bottom"):
+            st.session_state.current_page += 1
+            st.rerun()
+    else:
+        pass
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
-    # --- ▲ここまでページネーションUIの追加▲ ---
-
+    # --- ▲ここまでページネーションUIの追加（修正版）▲ ---
 
 
 else:  # 詳細ページ
@@ -1536,82 +1553,6 @@ global_css = r"""
         width: 100%;
         margin-top: auto; /* ボタンをカードの下部に固定 */
     } 
-    /* --- ページネーションボタンのスタイル調整 --- */
-    /* Streamlitの内部コンテナのdata-testidを利用してセンタリングとギャップ調整 */
-    div[data-testid="stColumns"] > div > div > .stButton { /* st.columns内のボタンを対象 */
-        display: flex;
-        justify-content: center; /* ボタンを中央に寄せる */
-    }
-    div[data-testid="stColumns"] { /* st.columnsの親要素 */
-        gap: 10px; /* ボタン間のスペースを調整 */
-    }
-    
-    .st-emotion-cache-1yr0e9g button { /* st.columns内のbutton要素 */
-        min-width: 40px; /* ページ番号ボタンの最小幅 */
-        height: 40px; /* ページ番号ボタンの高さ */
-        padding: 0 10px;
-        font-size: 1.1em;
-    }
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"] {
-        border-radius: 50% !important; /* ページ番号ボタンを丸くする */
-    }
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"][kind="primary"] {
-        background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
-        border-color: #8A2BE2 !important;
-    }
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_prev_page"],
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_next_page"] {
-        border-radius: 20px !important; /* 前次ページボタンの角丸 */
-    }
-    /* Detail Page Styles */
-    .detail-section {
-        background-color: white;
-        border-radius: 12px;
-        padding: 25px 30px;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        border: 1px solid #e0e0e0;
-    }
-    .detail-section h3 {
-        color: #8A2BE2;
-        font-size: 1.6em;
-        margin-bottom: 15px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #f0e6fa;
-        display: flex;
-        align-items: center;
-    }
-    .detail-section h3 .header-icon {
-        margin-right: 10px;
-        font-size: 1.2em;
-        color: #FF6347; /* 目を引くアイコンカラー */
-    }
-    .detail-section ul {
-        list-style-type: disc;
-        margin-left: 25px;
-        padding-left: 0;
-    }
-    .detail-section li {
-        margin-bottom: 8px;
-        line-height: 1.6;
-        font-size: 1.05em;
-    }
-    .stImage > img {
-        border-radius: 12px;
-        margin-bottom: 20px;
-        /* height: auto;  高さを自動調整し、幅いっぱいに表示されるように */
-        /* object-fit: contain; /* 必要に応じて、画像全体が見えるように調整 */
-        max-height: 500px; /* 例えば、最大高さを設定して大きくなりすぎないように制御 */
-    }
-
-    /* Streamlit specific adjustments */
-    .css-1d391kg.e16z5j6o2 { /* main content area */
-        padding-top: 30px;
-        padding-bottom: 30px;
-    }
-    .css-1lcbmhc.e16z5j6o3, .css-1lcbmhc.e1fb7f71 { /* sidebar width */
-        width: 350px;
-    }
 </style>
 """
 st.markdown(global_css, unsafe_allow_html=True)
