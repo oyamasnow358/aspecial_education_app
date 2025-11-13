@@ -364,7 +364,7 @@ def load_css():
         .download-button-wrapper a > button .icon {
             color: white; /* ダウンロードアイコンの色も白に */
         }
-                .card-subject-unit {
+        .card-subject-unit {
             font-size: 0.9em;
             color: #4A90E2; /* メインカラー */
             font-weight: 600;
@@ -382,7 +382,7 @@ def load_css():
             font-size: 1.1em;
             color: #4A90E2;
         }
-                .flow-content-wrapper {
+        .flow-content-wrapper {
             margin-top: 20px; /* ボタンとコンテンツの間に余白を持たせる */
         }
          
@@ -965,44 +965,32 @@ if st.session_state.current_lesson_id is None:
 
             # タグHTMLを事前に作成しておき、f文字列内の複雑なネストを避ける
             tags_html = "".join('<span class="tag-badge">#{}</span>'.format(tag) for tag in lesson.get('hashtags', []) if tag)
-
-            # f-stringの内部にHTMLエスケープやバックフラッシュが含まれないように修正
-            lesson_card_html = """
-            <div class="lesson-card">
-             <img class="lesson-card-image" src="{}" alt="{}">
-             <div class="lesson-card-content">
-                 <div>
-                     {}
-                     <div class="lesson-card-title">{}</div> 
-                     <div class="lesson-card-catchcopy">{}</div>
-                     <div class="lesson-card-goal">🎯 ねらい: {}</div>
-                     <div class="lesson-card-meta">
-                <span><span class="icon">🎓</span>{}</span>
-                <span><span class="icon">🧩</span>{}</span>
-                         <span><span class="icon">⏱</span>{}</span>
+            
+            # 各カードをst.container()で囲み、内部でHTMLとStreamlitボタンを配置
+            with st.container():
+                st.markdown(f"""
+                    <div class="lesson-card">
+                     <img class="lesson-card-image" src="{lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image'}" alt="{lesson['unit_name']}">
+                     <div class="lesson-card-content">
+                         <div>
+                             {subject_unit_display_html}
+                             <div class="lesson-card-title">{lesson['unit_name']}</div> 
+                             <div class="lesson-card-catchcopy">{lesson['catch_copy']}</div>
+                             <div class="lesson-card-goal">🎯 ねらい: {lesson['goal']}</div>
+                             <div class="lesson-card-meta">
+                                <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
+                                <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
+                                <span><span class="icon">⏱</span>{lesson['duration']}</span>
+                             </div>
+                         </div>
+                         <div class="lesson-card-tags">
+                             {tags_html}
+                         </div>
+                         </div>
                      </div>
-                 </div>
-                 <div class="lesson-card-tags">
-                     {}
-                 </div>
-                 {}
-             </div>
-            </div>
-             """.format(
-                lesson['image'] if lesson['image'] else 'https://via.placeholder.com/400x200?text=No+Image',
-                lesson['unit_name'],
-                subject_unit_display_html,
-                lesson['unit_name'],
-                lesson['catch_copy'],
-                lesson['goal'],
-                lesson['target_grade'],
-                lesson['disability_type'],
-                lesson['duration'],
-                tags_html,
-                st.button("👇この授業の詳細を見る", key="detail_btn_{}".format(lesson['id']), on_click=set_detail_page, args=(lesson['id'],))
-            )
-            st.markdown(lesson_card_html, unsafe_allow_html=True)
-# ... (既存の授業カード表示コードここまで) ...
+                """, unsafe_allow_html=True)
+                # ボタンはst.markdownの外で、通常のStreamlitウィジェットとして配置
+                st.button("👇この授業の詳細を見る", key=f"detail_btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))
 
     else:
         st.info("条件に合う授業カードは見つかりませんでした。")
@@ -1014,7 +1002,9 @@ if st.session_state.current_lesson_id is None:
 
     # ページネーションボタンの表示ロジックを改善
     if total_pages > 1:
-        cols_for_pagination = st.columns(total_pages + 2) # 前へ、ページ番号(1-total_pages)、次へ
+        # st.columns を使って、ボタンを横並びにする
+        # 各ボタンの幅を均等にするために、total_pages + 2 のカラムを作成
+        cols_for_pagination = st.columns(total_pages + 2) 
 
         with cols_for_pagination[0]:
             if st.session_state.current_page > 1:
@@ -1511,30 +1501,34 @@ global_css = r"""
         margin-bottom: 5px;
         white-space: nowrap;
     }
-    .lesson-card .stButton > button {
+    /* lesson-cardクラス内のstButtonの子要素をターゲットにして、ボタンをカードのフッターに配置 */
+    .lesson-card > div > div > [data-testid="stVerticalBlock"] > div > [data-testid^="stButton_detail_btn_"] {
         width: 100%;
         margin-top: auto; /* ボタンをカードの下部に固定 */
-    } 
+        display: block; /* ボタンをブロック要素にする */
+    }
     /* --- ページネーションボタンのスタイル調整 --- */
+    /* Streamlit 1.25.0 以降では st.columns の HTML 構造が変わる可能性があるため、
+       より汎用的なセレクタ `[data-testid="stColumn"] button` を使用する */
     .st-emotion-cache-1yr0e9g { /* st.columnsの親要素 */
         justify-content: center; /* ページネーションボタンを中央に寄せる */
         gap: 10px; /* ボタン間のスペースを調整 */
     }
-    .st-emotion-cache-1yr0e9g button {
+    [data-testid="stColumn"] button { /* 各カラム内のボタン */
         min-width: 40px; /* ページ番号ボタンの最小幅 */
         height: 40px; /* ページ番号ボタンの高さ */
         padding: 0 10px;
         font-size: 1.1em;
     }
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"] {
+    [data-testid^="stButton_page_btn_"] button { /* ページ番号ボタン */
         border-radius: 50% !important; /* ページ番号ボタンを丸くする */
     }
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_page_btn_"][kind="primary"] {
+    [data-testid^="stButton_page_btn_"] button[kind="primary"] {
         background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
         border-color: #8A2BE2 !important;
     }
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_prev_page"],
-    .st-emotion-cache-1yr0e9g button[data-testid^="stButton_next_page"] {
+    [data-testid^="stButton_prev_page"] button,
+    [data-testid^="stButton_next_page"] button {
         border-radius: 20px !important; /* 前次ページボタンの角丸 */
     }
     /* Detail Page Styles */
