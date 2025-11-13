@@ -2,8 +2,6 @@ import streamlit as st
 import json
 from pathlib import Path
 
-# (load_css 関数はそのまま)
-
 # --- ▼ 外部JSONデータを読み込む関数 (この部分を丸ごと置き換える) ▼ ---
 @st.cache_data
 def load_guidance_data():
@@ -69,7 +67,18 @@ def load_css():
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            /* メインコンテンツのみに最大幅を適用し中央寄せ */
+            max-width: 1500px; /* 必要に応じて調整 */
+            margin: auto;
         }
+        
+        /* stAppViewContainer 自体はフル幅を使用 */
+        [data-testid="stAppViewContainer"] {
+            /* 最大幅とマージンを削除 */
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
 
         /* サイドバーの背景を少し透過 */
         [data-testid="stSidebar"] {
