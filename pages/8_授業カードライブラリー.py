@@ -413,29 +413,40 @@ def load_css():
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px; /* ボタン間のスペースを調整 */
+            gap: 10px; /* ボタン間のスペースを調整 */
             margin-top: 20px;
             margin-bottom: 20px;
+            flex-wrap: wrap; /* ボタンが多すぎる場合に折り返す */
         }
         .pagination-container .stButton > button {
             min-width: 40px; /* ページ番号ボタンの最小幅 */
             height: 40px; /* ページ番号ボタンの高さ */
             padding: 0 10px;
-            font-size: 1.1em;
+            font-size: 1.0em; /* ページ番号ボタンのフォントサイズ */
             border-radius: 20px !important; /* 全てのボタンを角丸に */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            background-color: #f0f2f6 !important; /* 通常のページ番号ボタンの背景色 */
+            color: #555 !important; /* 通常のページ番号ボタンのテキスト色 */
+            border: 1px solid #ddd !important;
+        }
+        .pagination-container .stButton > button:hover {
+            background-color: #e0e0e0 !important;
+            border-color: #bbb !important;
+            transform: translateY(-1px) !important;
         }
         .pagination-container .stButton > button[kind="primary"] {
             background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
             border-color: #8A2BE2 !important;
+            color: white !important;
+            font-weight: bold !important;
         }
         .pagination-info {
             font-size: 1.2em;
             font-weight: bold;
             color: #333;
             margin: 0 10px;
+            white-space: nowrap; /* 折り返しを防ぐ */
         }
-
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -610,6 +621,10 @@ def toggle_all_flow_display():
     """授業の流れ全体の表示を切り替える関数"""
     st.session_state.show_all_flow = not st.session_state.show_all_flow
 
+# ページをセットする関数
+def set_page(page_num):
+    st.session_state.current_page = page_num
+    st.rerun()
 
 # 授業カードのヘッダーカラム定義 (★ここを修正/追加)
 LESSON_CARD_COLUMNS = [
@@ -1056,24 +1071,36 @@ if st.session_state.current_lesson_id is None:
 
     # 前ページボタン
     if st.session_state.current_page > 1:
-        if st.button("⏪ 前ページ", key="prev_page_bottom"):
-            st.session_state.current_page -= 1
-            st.rerun()
-    else:
-        # ボタンがない場合もスペースを確保したいが、Streamlitのbuttonが空で表示されないため、
-        # CSSでflex-gapを設定しているので、何も表示しないのが最もシンプル
-        pass 
+        st.button("⏪ 前ページ", key="prev_page_bottom", on_click=set_page, args=(st.session_state.current_page - 1,))
+    
+    # ページ番号ボタン
+    # 常に表示するページ数の範囲を調整（例: 現在のページを中心に前後2ページずつ、最大5ページ）
+    max_pages_to_show = 5
+    page_range_start = max(1, st.session_state.current_page - (max_pages_to_show // 2))
+    page_range_end = min(total_pages, page_range_start + max_pages_to_show - 1)
+    
+    # page_range_end が max_pages_to_show より少ない場合、page_range_start を再調整
+    if (page_range_end - page_range_start + 1) < max_pages_to_show and total_pages > max_pages_to_show:
+        page_range_start = max(1, page_range_end - max_pages_to_show + 1)
 
-    # 現在のページと総ページ数を表示
-    st.markdown(f"<span class='pagination-info'>ページ {st.session_state.current_page} / {total_pages}</span>", unsafe_allow_html=True)
+    # 最初のページへのジャンプボタン（1ページ目が表示範囲外の場合）
+    if page_range_start > 1:
+        st.button("1", key="page_1", on_click=set_page, args=(1,), type="secondary" if st.session_state.current_page != 1 else "primary")
+        if page_range_start > 2:
+            st.markdown("<span>...</span>", unsafe_allow_html=True) # 省略記号
+
+    for i in range(page_range_start, page_range_end + 1):
+        st.button(str(i), key=f"page_{i}", on_click=set_page, args=(i,), type="primary" if i == st.session_state.current_page else "secondary")
+
+    # 最後のページへのジャンプボタン（最後のページが表示範囲外の場合）
+    if page_range_end < total_pages:
+        if page_range_end < total_pages - 1:
+            st.markdown("<span>...</span>", unsafe_allow_html=True) # 省略記号
+        st.button(str(total_pages), key=f"page_{total_pages}", on_click=set_page, args=(total_pages,), type="secondary" if st.session_state.current_page != total_pages else "primary")
 
     # 次ページボタン
     if st.session_state.current_page < total_pages:
-        if st.button("次ページ ⏩", key="next_page_bottom"):
-            st.session_state.current_page += 1
-            st.rerun()
-    else:
-        pass
+        st.button("次ページ ⏩", key="next_page_bottom", on_click=set_page, args=(st.session_state.current_page + 1,))
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
