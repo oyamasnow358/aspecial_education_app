@@ -138,13 +138,13 @@ def load_css():
         }
 
         /* PC (広い画面) では3列 */
-        @media (min-width: 1200px) {
+        @media (min-width: 500px) {
             .lesson-card-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
         /* タブレット (中間の画面) では2列 */
-        @media (min-width: 768px) and (max-width: 1199px) {
+        @media (min-width: 508px) and (max-width: 1199px) {
             .lesson-card-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
