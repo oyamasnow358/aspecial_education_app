@@ -24,16 +24,24 @@ def load_css():
             font-family: 'Noto Sans JP', sans-serif;
             background-color: #f0f2f6; /* 全体の背景色を調整 */
         }
+        /* 全体コンテナの最大幅を広げ、中央寄せを維持 */
+        [data-testid="stAppViewContainer"] {
+            max-width: 1400px; /* ここを調整してより広く */
+            margin: auto; /* 中央寄せ */
+        }
         [data-testid="stAppViewContainer"] > .main {
             background-color: #f0f2f6; /* メインコンテンツの背景色も合わせる */
             background-image: none; /* 背景画像を削除するか、控えめに */
             padding-top: 30px; /* 全体的な上部パディング */
             padding-bottom: 30px;
+            padding-left: 20px; /* 左右のパディングを調整 */
+            padding-right: 20px;
         }
         [data-testid="stSidebar"] {
             background-color: #ffffff; /* サイドバーの背景を白に */
             border-right: 1px solid #e0e0e0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            padding-top: 20px; /* サイドバー上部のパディングを調整 */
         }
         [data-testid="stHeader"] { /* Streamlitヘッダーの背景色を調整 */
             background-color: #ffffff;
@@ -107,26 +115,25 @@ def load_css():
         /* Card grid specific styles */
         .lesson-card-grid {
             display: grid;
-            /* PC画面では3列、タブレットでは2列、スマホでは1列に調整 */
             grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); /* デフォルトは330px以上で自動調整 */
             gap: 30px; /* カード間の余白 */
             padding: 25px 0;
         }
 
         /* PC (広い画面) では3列 */
-        @media (min-width: 1200px) {
+        @media (min-width: 1200px) { /* 1200px以上で3列 */
             .lesson-card-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
         /* タブレット (中間の画面) では2列 */
-        @media (min-width: 768px) and (max-width: 1199px) {
+        @media (min-width: 768px) and (max-width: 1199px) { /* 768pxから1199pxで2列 */
             .lesson-card-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
         /* スマートフォン (狭い画面) では1列 (minmaxで自動調整されるため、特に指定不要) */
-        @media (max-width: 767px) {
+        @media (max-width: 767px) { /* 767px以下で1列 */
             .lesson-card-grid {
                 grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             }
@@ -435,37 +442,52 @@ def load_css():
             display: flex; /* Flexboxを有効にする */
             justify-content: center; /* 中央寄せ */
             align-items: center;
-            gap: 10px; /* ボタン間のスペースを調整 */
-            margin-top: 20px;
-            margin-bottom: 20px;
+            gap: 8px; /* ボタン間のスペースを調整 (少し狭く) */
+            margin-top: 25px; /* 上下の余白 */
+            margin-bottom: 25px;
             flex-wrap: wrap; /* ボタンが多すぎる場合に折り返す */
         }
         .pagination-container .stButton > button {
-            min-width: 40px; /* ページ番号ボタンの最小幅 */
-            height: 40px; /* ページ番号ボタンの高さ */
-            padding: 0 10px;
+            min-width: 42px; /* ページ番号ボタンの最小幅 */
+            height: 42px; /* ページ番号ボタンの高さ */
+            padding: 0 12px; /* 左右のパディングを調整 */
             font-size: 1.0em; /* ページ番号ボタンのフォントサイズ */
-            border-radius: 20px !important; /* 全てのボタンを角丸に */
+            border-radius: 21px !important; /* 全てのボタンを角丸に */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-            background-color: #f0f2f6 !important; /* 通常のページ番号ボタンの背景色 */
+            background-color: #ffffff !important; /* 通常のページ番号ボタンの背景色を白に */
             color: #555 !important; /* 通常のページ番号ボタンのテキスト色 */
             border: 1px solid #ddd !important;
             margin: 0 !important; /* ボタンが個別に持つmarginをリセット */
         }
         .pagination-container .stButton > button:hover {
-            background-color: #e0e0e0 !important;
-            border-color: #bbb !important;
+            background-color: #eef !important; /* ホバー時の背景色を薄い青に */
+            border-color: #cce !important;
             transform: translateY(-1px) !important;
         }
         /* アクティブなページ番号ボタンのスタイル */
-        /* Streamlitのプライマリボタンのdata-testidをターゲットにする */
         .pagination-container .stButton > button[data-testid*="stPageLinkButton-primary"],
         .pagination-container .stButton > button[aria-selected="true"] { /* 現在のページボタンの識別を強化 */
             background-color: #8A2BE2 !important; /* アクティブなページ番号の色 */
             border-color: #8A2BE2 !important;
             color: white !important;
             font-weight: bold !important;
+            box-shadow: 0 4px 10px rgba(138,43,226,0.2) !important;
         }
+        /* 前後ページボタンのスタイル */
+        .pagination-container .stButton > button[key*="prev_page"],
+        .pagination-container .stButton > button[key*="next_page"] {
+            background-color: #f0f2f6 !important; /* 背景色を標準に */
+            color: #4A90E2 !important; /* メインカラーのテキスト */
+            border: 1px solid #cceeff !important;
+            font-weight: bold !important;
+        }
+        .pagination-container .stButton > button[key*="prev_page"]:hover,
+        .pagination-container .stButton > button[key*="next_page"]:hover {
+            background-color: #e3f2fd !important;
+            border-color: #99ccff !important;
+        }
+
+
         .pagination-info {
             font-size: 1.2em;
             font-weight: bold;
@@ -473,12 +495,14 @@ def load_css():
             margin: 0 10px;
             white-space: nowrap; /* 折り返しを防ぐ */
         }
-        .pagination-container .stMarkdown > div { /* 省略記号 (st.markdown("<span>...</span>") ) のコンテナをターゲット */
+        /* 省略記号 (st.markdown("<span>...</span>") ) のコンテナをターゲット */
+        .pagination-container .stMarkdown > div { 
             display: flex; /* flexアイテムとして扱われるようにする */
             align-items: center; /* 垂直方向中央揃え */
-            height: 40px; /* ボタンの高さに合わせる */
+            height: 42px; /* ボタンの高さに合わせる */
             font-size: 1.2em; /* フォントサイズ調整 */
             color: #777;
+            padding: 0 5px; /* 省略記号の左右の余白 */
         }
     </style>
     """
@@ -1442,8 +1466,13 @@ global_css = r"""
         color: #333;
         background-color: #f0f2f6;
     }
+    /* stAppContainerの最大幅を広げ、中央寄せを維持 */
+    [data-testid="stAppViewContainer"] {
+        max-width: 1400px; /* ここを調整してより広く */
+        margin: auto; /* 中央寄せ */
+    }
     .stApp {
-        max-width: 1200px;
+        /* max-width: 1200px;  ↑で調整するためコメントアウト */
         margin: auto;
         padding: 20px;
     }
