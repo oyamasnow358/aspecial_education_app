@@ -173,18 +173,13 @@ def load_css():
         }
 
         /* 画面幅が約768px以上で3列 */
-        @media (min-width: 768px) {
+        @media (min-width: 576px) {
             .lesson-card-grid {
                 grid-template-columns: repeat(3, 1fr) !important; /* 3列に固定 */
             }
         }
 
-        /* 画面幅が約1024px以上で4列（さらに広い画面の場合） */
-        @media (min-width: 1024px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(4, 1fr) !important; /* 4列に固定 */
-            }
-        }
+       
 
         /* 個々の授業カードのスタイル (変更なし) */
         .lesson-card {
@@ -196,7 +191,7 @@ def load_css():
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            max-width: 100%;
+            max-width: 80%;
             min-height: 480px;
         }
         .lesson-card:hover {
