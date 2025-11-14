@@ -27,6 +27,7 @@ st.set_page_config(
 
 # カスタムCSSを読み込む関数
 # カスタムCSSを読み込む関数
+# カスタムCSSを読み込む関数
 def load_css():
     st.markdown(r"""
     <style>
@@ -38,24 +39,30 @@ def load_css():
             color: #333;
         }
 
-        /* アプリ全体のコンテナの最大幅を広げ、中央寄せを維持 */
-        [data-testid="stAppViewContainer"] {
-            max-width: 1200px; /* ここを調整してより広く */
-            margin: auto; /* 中央寄せ */
-            padding-left: 20px;
-            padding-right: 20px;
-        }
-
-        /* メインコンテンツの背景色とパディング */
+        /* --- Streamlitのメインコンテナの幅を強制的に広げる --- */
+        /* stAppViewContainerはアプリ全体のビューポート */
         [data-testid="stAppViewContainer"] > .main {
-            background-color: #f0f2f6;
-            padding-top: 30px;
-            padding-bottom: 30px;
-            padding-left: 20px;
-            padding-right: 20px;
+            max-width: 1300px; /* さらに広く */
+            padding-left: 30px;
+            padding-right: 30px;
+            margin: auto; /* 中央寄せ */
+        }
+        /* メインコンテンツブロック自体 (カラムの中身など) */
+        [data-testid="stAppViewBlockContainer"] {
+            max-width: 100% !important; /* 親要素の幅を全て使う */
+            padding: 0px !important; /* 余計なパディングをなくす */
+        }
+        /* 全体のVerticalBlockを広げる */
+        [data-testid="stVerticalBlock"] {
+            width: 100% !important;
+        }
+        /* 各カラム内のブロックを広げる (もしst.columnsを使っている場合) */
+        .st-emotion-cache-nahz7x { /* Streamlitの内部クラス名を指定 (バージョンで変わる可能性あり) */
+            width: 100% !important;
+            max-width: 100% !important;
         }
 
-        /* サイドバーのスタイル */
+        /* サイドバーのスタイル (変更なし) */
         [data-testid="stSidebar"] {
             background-color: #ffffff;
             border-right: 1px solid #e0e0e0;
@@ -67,8 +74,7 @@ def load_css():
             padding-right: 20px;
         }
 
-               
-        /* 見出しのスタイル */
+        /* 見出し、p, li, 戻るボタンのスタイル (変更なし) */
         h1, h2, h3, h4, h5, h6 { 
             font-family: 'Poppins', 'Noto Sans JP', sans-serif;
             color: #2c3e50; 
@@ -110,13 +116,12 @@ def load_css():
             color: #333;
         }
 
-        /* 戻るボタンのスタイル */
         .back-button-container {
             padding-bottom: 20px;
             margin-bottom: -50px;
         }
 
-        /* Streamlitウィジェットのスタイル */
+        /* Streamlitウィジェットのスタイル (変更なし) */
         .stTextInput>div>div>input, .stMultiSelect>div>div>div, .stSelectbox>div>div {
             border-radius: 12px;
             padding: 10px 15px;
@@ -137,34 +142,42 @@ def load_css():
         /* 授業カードグリッドのスタイル */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); /* デフォルトは最小230pxで自動調整 (1列でもOK) */
+            /* デフォルト (モバイルファースト): 1列 */
+            grid-template-columns: repeat(1, 1fr); 
             gap: 30px;
             padding: 25px 0;
+            width: 100%; /* 親の利用可能な幅を全て使う */
+            box-sizing: border-box; /* paddingとborderをwidthに含める */
         }
 
-        /* スマートフォン (狭い画面) では1列 (既にauto-fill minmaxで対応可能だが明示的に) */
-        @media (max-width: 575px) {
+        /* 画面幅が約576px以上で2列 */
+        @media (min-width: 576px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(1, 1fr); /* 1列に固定 */
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 最小300pxで自動調整 */
             }
         }
 
-        /* タブレット (中間の画面) では2列 */
-        @media (min-width: 576px) and (max-width: 991px) {
+        /* 画面幅が約768px以上で3列 */
+        @media (min-width: 768px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 最小280pxで自動調整 */
             }
         }
-        
-        /* PC (広い画面) では3列 */
+
+        /* 画面幅が約992px以上で4列 (もし希望するなら) */
         @media (min-width: 992px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 最小250pxで自動調整 */
             }
         }
-        
+        /* もしくはシンプルに3列に固定 */
+        @media (min-width: 992px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(3, 1fr); 
+            }
+        }
 
-        /* 個々の授業カードのスタイル */
+        /* 個々の授業カードのスタイル (変更なし) */
         .lesson-card {
             background-color: #ffffff;
             border: none;
@@ -174,6 +187,7 @@ def load_css():
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            max-width: 100%; /* カード自体の幅も親コンテナに合わせる */
         }
         .lesson-card:hover {
             transform: translateY(-10px);
@@ -206,9 +220,9 @@ def load_css():
             margin-bottom: 15px;
             line-height: 1.4;
             font-style: italic;
-            min-height: 3em; /* 高さのばらつきを抑える */
+            min-height: 3em; 
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* 2行で省略 */
+            -webkit-line-clamp: 2; 
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -219,9 +233,9 @@ def load_css():
             border-left: 4px solid #4a90e2;
             padding-left: 10px;
             line-height: 1.5;
-            min-height: 60px; /* 高さのばらつきを抑える */
+            min-height: 60px; 
             display: -webkit-box;
-            -webkit-line-clamp: 3; /* 3行で省略 */
+            -webkit-line-clamp: 3; 
             -webkit-box-orient: vertical;
             overflow: hidden;
             align-items: center;
@@ -269,14 +283,14 @@ def load_css():
             color: #1976d2;
         }
 
-        /* アイコンのスタイル */
+        /* アイコンのスタイル (変更なし) */
         .icon {
             margin-right: 8px;
             font-size: 1.2em;
             color: #8A2BE2;
         }
 
-        /* ボタンのスタイル */
+        /* ボタンのスタイル (変更なし) */
         .stButton>button {
             border: 2px solid #4a90e2;
             border-radius: 25px;
@@ -297,7 +311,7 @@ def load_css():
             box-shadow: 0 8px 15px rgba(138,43,226,0.2);
         }
         
-        /* 詳細ページ用スタイル */
+        /* 詳細ページ用スタイル (変更なし) */
         .detail-header {
             text-align: left;
             margin-bottom: 25px;
@@ -385,7 +399,7 @@ def load_css():
             border-left: 5px solid #1890ff;
         }
 
-        /* ダウンロードボタンのスタイル */
+        /* ダウンロードボタンのスタイル (変更なし) */
         .download-button-wrapper {
             margin-top: 20px;
             margin-bottom: 30px;
@@ -437,7 +451,7 @@ def load_css():
             margin-top: 20px;
         }
          
-        /* 詳細ページの「この授業の詳細を見る」ボタンのスタイル */
+        /* 詳細ページの「この授業の詳細を見る」ボタンのスタイル (変更なし) */
         .lesson-card .stButton > button {
             border: 2px solid #4a90e2 !important;
             border-radius: 25px !important;
@@ -458,15 +472,15 @@ def load_css():
             box-shadow: 0 8px 15px rgba(74,144,226,0.2) !important;
         }
 
-        /* ページネーションボタンのスタイル調整 (横並び、中央寄せ) */
+        /* ページネーションボタンのスタイル調整 (変更なし) */
         .pagination-container {
-            display: flex; /* Flexboxを有効にする */
-            justify-content: center; /* 中央寄せ */
+            display: flex; 
+            justify-content: center; 
             align-items: center;
-            gap: 8px; /* ボタン間のスペースを調整 */
+            gap: 8px; 
             margin-top: 25px;
             margin-bottom: 25px;
-            flex-wrap: wrap; /* ボタンが多すぎる場合に折り返す */
+            flex-wrap: wrap; 
         }
         .pagination-container .stButton > button {
             min-width: 42px;
@@ -488,7 +502,6 @@ def load_css():
             border-color: #cce !important;
             transform: translateY(-1px) !important;
         }
-        /* アクティブなページ番号ボタンのスタイル */
         .pagination-container .stButton > button[data-testid*="stPageLinkButton-primary"],
         .pagination-container .stButton > button[type="primary"] {
             background-color: #8A2BE2 !important;
@@ -497,7 +510,6 @@ def load_css():
             font-weight: bold !important;
             box-shadow: 0 4px 10px rgba(138,43,226,0.2) !important;
         }
-        /* 前後ページボタンのスタイル */
         .pagination-container .stButton > button[key*="prev_page"],
         .pagination-container .stButton > button[key*="next_page"] {
             background-color: #f0f2f6 !important;
@@ -511,7 +523,6 @@ def load_css():
             border-color: #99ccff !important;
         }
 
-        /* 省略記号 (st.markdown("<span>...</span>") ) のコンテナをターゲット */
         .pagination-container .stMarkdown > div { 
             display: flex;
             align-items: center;
@@ -521,7 +532,7 @@ def load_css():
             padding: 0 5px;
         }
 
-        /* 詳細ページ内の「単元の授業の流れ」のボタンのスタイル */
+        /* 詳細ページ内の「単元の授業の流れ」のボタンのスタイル (変更なし) */
         .unit-lesson-list li .stButton > button {
             background-color: #f0f2f6 !important;
             color: #333 !important;
