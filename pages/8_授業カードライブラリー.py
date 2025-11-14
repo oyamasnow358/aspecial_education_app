@@ -26,6 +26,7 @@ st.set_page_config(
 )
 
 # カスタムCSSを読み込む関数
+# カスタムCSSを読み込む関数
 def load_css():
     st.markdown(r"""
     <style>
@@ -36,24 +37,7 @@ def load_css():
             background-color: #f0f2f6;
             color: #333;
         }
-        /* PC (広い画面) では3列 */
-        @media (min-width: 500px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        /* タブレット (中間の画面) では2列 */
-        @media (min-width: 708px) and (max-width: 599px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        /* スマートフォン (狭い画面) では1列 */
-        @media (max-width: 567px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            }
-        }
+
         /* アプリ全体のコンテナの最大幅を広げ、中央寄せを維持 */
         [data-testid="stAppViewContainer"] {
             max-width: 1200px; /* ここを調整してより広く */
@@ -153,11 +137,31 @@ def load_css():
         /* 授業カードグリッドのスタイル */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); /* デフォルトは330px以上で自動調整 */
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); /* デフォルトは最小230pxで自動調整 (1列でもOK) */
             gap: 30px;
             padding: 25px 0;
         }
 
+        /* スマートフォン (狭い画面) では1列 (既にauto-fill minmaxで対応可能だが明示的に) */
+        @media (max-width: 575px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(1, 1fr); /* 1列に固定 */
+            }
+        }
+
+        /* タブレット (中間の画面) では2列 */
+        @media (min-width: 576px) and (max-width: 991px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* PC (広い画面) では3列 */
+        @media (min-width: 992px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
         
 
         /* 個々の授業カードのスタイル */
