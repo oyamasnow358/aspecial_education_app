@@ -21,12 +21,10 @@ def check_password(username, password):
 st.set_page_config(
     page_title="授業カードライブラリー",
     page_icon="🃏",
-    layout="wide",
+    layout="wide", # レイアウトを'wide'に設定
     initial_sidebar_state="expanded"
 )
 
-# カスタムCSSを読み込む関数
-# カスタムCSSを読み込む関数
 # カスタムCSSを読み込む関数
 def load_css():
     st.markdown(r"""
@@ -42,10 +40,10 @@ def load_css():
         /* --- Streamlitのメインコンテナの幅を強制的に広げる --- */
         /* stAppViewContainerはアプリ全体のビューポート */
         [data-testid="stAppViewContainer"] > .main {
-            max-width: 1300px; /* さらに広く */
-            padding-left: 30px;
-            padding-right: 30px;
-            margin: auto; /* 中央寄せ */
+            max-width: 1300px !important; /* さらに広く、!importantで強制 */
+            padding-left: 30px !important; /* !importantで強制 */
+            padding-right: 30px !important; /* !importantで強制 */
+            margin: auto !important; /* 中央寄せ、!importantで強制 */
         }
         /* メインコンテンツブロック自体 (カラムの中身など) */
         [data-testid="stAppViewBlockContainer"] {
@@ -54,12 +52,27 @@ def load_css():
         }
         /* 全体のVerticalBlockを広げる */
         [data-testid="stVerticalBlock"] {
-            width: 100% !important;
+            width: 100% !important; /* !importantで強制 */
         }
         /* 各カラム内のブロックを広げる (もしst.columnsを使っている場合) */
+        /* このセレクタはStreamlitのバージョンで変わりやすいため、注意 */
         .st-emotion-cache-nahz7x { /* Streamlitの内部クラス名を指定 (バージョンで変わる可能性あり) */
             width: 100% !important;
             max-width: 100% !important;
+        }
+
+        /* Streamlitのメインコンテンツエリアを直接ターゲットにする */
+        section.main {
+            max-width: 100% !important; 
+            width: 100% !important;
+            padding-left: 1rem !important; /* 必要に応じて調整 */
+            padding-right: 1rem !important; /* 必要に応じて調整 */
+        }
+        /* Streamlitの内部ブロックコンテナを直接ターゲットにする */
+        div.block-container { 
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
         }
 
         /* サイドバーのスタイル (変更なし) */
@@ -141,41 +154,43 @@ def load_css():
         
         /* 授業カードグリッドのスタイル */
         .lesson-card-grid {
-            display: grid;
-            /* デフォルト (モバイルファースト): 1列 */
-            grid-template-columns: repeat(1, 1fr); 
-            gap: 30px;
-            padding: 25px 0;
-            width: 100%; /* 親の利用可能な幅を全て使う */
-            box-sizing: border-box; /* paddingとborderをwidthに含める */
+            display: grid !important; /* 強制的にグリッド表示 */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; /* デフォルトでminmaxを使って柔軟に */
+            gap: 20px !important; /* gapを少し小さくして、カードが収まりやすくする */
+            padding: 15px 0 !important; /* パディングを調整 */
+            width: 100% !important;
+            max-width: 100% !important; /* 最大幅も100%に */
+            box-sizing: border-box !important;
+            justify-content: center !important; /* グリッドアイテムを中央寄せ */
         }
 
         /* 画面幅が約576px以上で2列 */
         @media (min-width: 576px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 最小300pxで自動調整 */
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; /* minmaxの値を調整 */
             }
         }
 
         /* 画面幅が約768px以上で3列 */
         @media (min-width: 768px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 最小280pxで自動調整 */
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important; /* minmaxの値を調整 */
             }
         }
 
         /* 画面幅が約992px以上で4列 (もし希望するなら) */
         @media (min-width: 992px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 最小250pxで自動調整 */
+                grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important; /* minmaxの値を調整 */
             }
         }
-        /* もしくはシンプルに3列に固定 */
-        @media (min-width: 992px) {
+        /* もしくはシンプルに3列に固定 (どちらか選ぶ) */
+        /* @media (min-width: 992px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(3, 1fr); 
+                grid-template-columns: repeat(3, 1fr) !important; 
             }
-        }
+        } */
+
 
         /* 個々の授業カードのスタイル (変更なし) */
         .lesson-card {
@@ -188,6 +203,7 @@ def load_css():
             flex-direction: column;
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
             max-width: 100%; /* カード自体の幅も親コンテナに合わせる */
+            min-height: 480px; /* カードの最小高さを設定し、デザイン崩れを防ぐ */
         }
         .lesson-card:hover {
             transform: translateY(-10px);
