@@ -540,7 +540,7 @@ def load_css():
 
 load_css()
 
-# Googleフォームへの外部リンク (これは既存のまま)
+# Googleフォームへの外部リンク
 google_form_css = r"""
     <style>
         .google-form-link-container {
@@ -591,15 +591,6 @@ with col_back:
 # lesson_cards.csv の読み込み
 LESSON_CARDS_CSV = "lesson_cards.csv"
 
-# 授業カードのヘッダーカラム定義 (グローバル変数として再定義)
-LESSON_CARD_COLUMNS = [
-    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type",
-    "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
-    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url",
-    "detail_ppt_url", "detail_excel_url",
-    "ict_use", "subject", "group_type", "unit_order", "unit_lesson_title"
-]
-
 def load_lesson_data():
     try:
         lesson_data_df = pd.read_csv(
@@ -645,20 +636,15 @@ def load_lesson_data():
         if 'id' not in lesson_data_df.columns:
             lesson_data_df['id'] = range(1, len(lesson_data_df) + 1)
         else:
-            # idカラムが数値型でない、またはNaNが含まれる場合に処理
             lesson_data_df['id'] = lesson_data_df['id'].apply(lambda x: x if pd.notna(x) and isinstance(x, (int, float)) else 0)
             lesson_data_df['id'] = lesson_data_df['id'].astype(int)
-            
-            # 重複IDの修正
             duplicated_ids = lesson_data_df[lesson_data_df.duplicated('id', keep='first')]['id'].unique()
             
             if len(duplicated_ids) > 0:
                 st.warning(f"以下のIDが重複しています: {', '.join(map(str, duplicated_ids))}")
                 next_id = lesson_data_df['id'].max() + 1
                 for dup_id in duplicated_ids:
-                    # 重複しているが、最初の出現ではない行を特定
                     mask = (lesson_data_df['id'] == dup_id) & (~lesson_data_df.index.isin(lesson_data_df[lesson_data_df['id'] == dup_id].index[:1]))
-                    # 新しいユニークなIDを割り当てる
                     lesson_data_df.loc[mask, 'id'] = range(next_id, next_id + mask.sum())
                     next_id += mask.sum()
                 st.success("重複IDを修正しました。")
@@ -682,8 +668,7 @@ def save_lesson_data(data):
     df_to_save = pd.DataFrame(data)
     # リスト形式のカラムをセミコロン/カンマ区切り文字列に戻す
     for col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'material_photos']:
-        if col in df_to_save.columns:
-            df_to_save[col] = df_to_save[col].apply(lambda x: ';'.join(x) if isinstance(x, list) else x)
+        df_to_save[col] = df_to_save[col].apply(lambda x: ';'.join(x) if isinstance(x, list) else x)
     if 'hashtags' in df_to_save.columns:
         df_to_save['hashtags'] = df_to_save['hashtags'].apply(lambda x: ','.join(x) if isinstance(x, list) else x)
 
@@ -733,6 +718,15 @@ def set_page(page_num):
     st.session_state.current_page = page_num
     st.rerun()
 
+# 授業カードのヘッダーカラム定義
+LESSON_CARD_COLUMNS = [
+    "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type",
+    "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
+    "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url",
+    "detail_ppt_url", "detail_excel_url",
+    "ict_use", "subject", "group_type", "unit_order", "unit_lesson_title"
+]
+
 # Excelテンプレートダウンロード関数
 def get_excel_template():
     template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
@@ -774,27 +768,6 @@ def get_csv_template():
     template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
     output = BytesIO()
     template_df.to_csv(output, index=False, encoding='utf-8-sig')
-    processed_data = output.getvalue()
-    return processed_data
-
-# 現在の授業カードデータをCSVとしてダウンロードするための関数
-def get_current_csv_data():
-    df_current = pd.DataFrame(st.session_state.lesson_data)
-    # リスト形式のカラムをセミコロン/カンマ区切り文字列に戻す
-    for col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'material_photos']:
-        if col in df_current.columns:
-            df_current[col] = df_current[col].apply(lambda x: ';'.join(x) if isinstance(x, list) else x)
-    if 'hashtags' in df_current.columns:
-        df_current['hashtags'] = df_current['hashtags'].apply(lambda x: ','.join(x) if isinstance(x, list) else x)
-    
-    # 全てのLESSON_CARD_COLUMNSが含まれることを確認し、順序を合わせる
-    for col in LESSON_CARD_COLUMNS:
-        if col not in df_current.columns:
-            df_current[col] = None
-    df_current = df_current[LESSON_CARD_COLUMNS]
-
-    output = BytesIO()
-    df_current.to_csv(output, index=False, encoding='utf-8-sig')
     processed_data = output.getvalue()
     return processed_data
 
@@ -847,17 +820,15 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Excelマクロファイルの読み込み中にエラーが発生しました: {e}")
 
-        csv_data_for_template_download = get_csv_template()
+        csv_data_for_download = get_csv_template()
         st.download_button(
             label="⬇️ CSVテンプレートをダウンロード",
-            data=csv_data_for_template_download,
+            data=csv_data_for_download,
             file_name="授業カードテンプレート.csv",
             mime="text/csv",
             help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
         )
 
-        st.markdown("---")
-        st.subheader("データアップロード")
         uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv", "xlsm"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。", key="admin_uploader")
 
         if uploaded_file is not None:
@@ -960,23 +931,10 @@ with st.sidebar:
                     st.session_state.lesson_data.extend(new_entries)
                     save_lesson_data(st.session_state.lesson_data) # CSVファイルに保存
                     st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
-                    st.rerun() # データを再読み込みして表示を更新
-
+                    st.experimental_rerun()
             except Exception as e:
                 st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
                 st.exception(e)
-        
-        st.markdown("---")
-        st.subheader("現在のデータダウンロード")
-        st.info("現在のすべての授業カードデータをCSVファイルとしてダウンロードします。")
-        current_csv_data = get_current_csv_data()
-        st.download_button(
-            label="⬇️ 現在のCSVデータをダウンロード",
-            data=current_csv_data,
-            file_name="lesson_cards_current.csv",
-            mime="text/csv",
-            help="現在システムに登録されているすべての授業カードデータをダウンロードします。"
-        )
 
         st.markdown("---")
 
@@ -1319,7 +1277,7 @@ else:  # 詳細ページ
             st.markdown(f"<p>{selected_lesson['materials']}</p>", unsafe_allow_html=True)
 
         if selected_lesson['points']:
-            st.markdown("<h3><span class='header-icon'>💡</span>指導のポイント</h3>", unsafe_allow_html=True)
+            st.markdown("<h3><span classt='header-icon'>💡</span>指導のポイント</h3>", unsafe_allow_html=True)
             st.markdown("<ul>", unsafe_allow_html=True)
             for point in selected_lesson['points']:
                 st.markdown(f"<li>{point}</li>", unsafe_allow_html=True)
