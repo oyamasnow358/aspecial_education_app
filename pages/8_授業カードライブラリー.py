@@ -5,12 +5,23 @@ import re
 import io
 from io import BytesIO
 import xlsxwriter
+import hashlib # パスワードのハッシュ化に使用
+
+# --- 管理者認証のための設定 ---
+ADMIN_USERNAME = st.secrets.get("ADMIN_USERNAME", "admin") # Streamlit Secretsから読み込むか、デフォルト値
+ADMIN_PASSWORD_HASH = st.secrets.get("ADMIN_PASSWORD_HASH", hashlib.sha256("password".encode()).hexdigest()) # パスワード'password'のSHA256ハッシュ
+
+def check_password(username, password):
+    """ユーザー名とパスワードが管理者と一致するか確認"""
+    if username == ADMIN_USERNAME:
+        return hashlib.sha256(password.encode()).hexdigest() == ADMIN_PASSWORD_HASH
+    return False
 
 # ページ設定
 st.set_page_config(
     page_title="授業カードライブラリー",
     page_icon="🃏",
-    layout="wide",  # レイアウトをwideに設定
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
@@ -18,7 +29,7 @@ st.set_page_config(
 def load_css():
     st.markdown(r"""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
+        @import url('https://fonts.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
         
         body {
             font-family: 'Noto Sans JP', sans-serif;
@@ -578,79 +589,102 @@ with col_back:
     st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
 
 # lesson_cards.csv の読み込み
-try:
-    lesson_data_df = pd.read_csv(
-        "lesson_cards.csv",
-        converters={
-            'introduction_flow': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
-            'activity_flow': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
-            'reflection_flow': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
-            'points': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
-            'hashtags': lambda x: [item.strip() for item in x.split(',') if item.strip()] if pd.notna(x) else [],
-            'material_photos': lambda x: [url.strip() for url in x.split(';') if url.strip()] if pd.notna(x) else [],
-            'unit_name': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '単元なし',
-            'unit_order': lambda x: int(x) if pd.notna(x) and str(x).isdigit() else 9999,
-            'unit_lesson_title': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'video_link': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'image': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'detail_word_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'detail_pdf_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'detail_ppt_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'detail_excel_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'target_grade': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
-            'ict_use': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'なし',
-            'subject': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'その他',
-            'group_type': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '全体',
-            'catch_copy': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'goal': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-            'disability_type': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
-            'duration': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
-            'materials': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
-        }
-    )
+LESSON_CARDS_CSV = "lesson_cards.csv"
 
-    # 必須カラムの確認とデフォルト値設定
-    # unit_lesson_titleのデフォルト値をunit_nameで補完
-    if 'unit_lesson_title' not in lesson_data_df.columns:
-        lesson_data_df['unit_lesson_title'] = lesson_data_df['unit_name']
-    else:
-        lesson_data_df['unit_lesson_title'] = lesson_data_df.apply(
-            lambda row: row['unit_name'] if str(row['unit_lesson_title']).strip() == '' else row['unit_lesson_title'],
-            axis=1
+def load_lesson_data():
+    try:
+        lesson_data_df = pd.read_csv(
+            LESSON_CARDS_CSV,
+            converters={
+                'introduction_flow': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
+                'activity_flow': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
+                'reflection_flow': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
+                'points': lambda x: [item.strip() for item in x.split(';') if item.strip()] if pd.notna(x) else [],
+                'hashtags': lambda x: [item.strip() for item in x.split(',') if item.strip()] if pd.notna(x) else [],
+                'material_photos': lambda x: [url.strip() for url in x.split(';') if url.strip()] if pd.notna(x) else [],
+                'unit_name': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '単元なし',
+                'unit_order': lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999,
+                'unit_lesson_title': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'video_link': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'image': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'detail_word_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'detail_pdf_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'detail_ppt_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'detail_excel_url': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'target_grade': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
+                'ict_use': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'なし',
+                'subject': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else 'その他',
+                'group_type': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '全体',
+                'catch_copy': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'goal': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'disability_type': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
+                'duration': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
+                'materials': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+            }
         )
-    
-    # idカラムのユニーク性を保証
-    if 'id' not in lesson_data_df.columns:
-        lesson_data_df['id'] = range(1, len(lesson_data_df) + 1)
-    else:
-        # 重複するIDがあれば新しいIDを割り振る
-        lesson_data_df['id'] = lesson_data_df['id'].apply(lambda x: x if pd.notna(x) and isinstance(x, (int, float)) else 0) # 非数値やNaNを0に
-        lesson_data_df['id'] = lesson_data_df['id'].astype(int) # int型に変換
-        # idが重複している行を特定
-        duplicated_ids = lesson_data_df[lesson_data_df.duplicated('id', keep='first')]['id'].unique()
+
+        # 必須カラムの確認とデフォルト値設定
+        if 'unit_lesson_title' not in lesson_data_df.columns:
+            lesson_data_df['unit_lesson_title'] = lesson_data_df['unit_name']
+        else:
+            lesson_data_df['unit_lesson_title'] = lesson_data_df.apply(
+                lambda row: row['unit_name'] if str(row['unit_lesson_title']).strip() == '' else row['unit_lesson_title'],
+                axis=1
+            )
         
-        if len(duplicated_ids) > 0:
-            st.warning(f"以下のIDが重複しています: {', '.join(map(str, duplicated_ids))}")
-            # 重複するIDを持つ行に新しいユニークなIDを割り振る
-            next_id = lesson_data_df['id'].max() + 1
-            for dup_id in duplicated_ids:
-                # 重複IDのうち、最初に見つかったものを除く全ての行に新しいIDを割り振る
-                mask = (lesson_data_df['id'] == dup_id) & (~lesson_data_df.index.isin(lesson_data_df[lesson_data_df['id'] == dup_id].index[:1]))
-                lesson_data_df.loc[mask, 'id'] = range(next_id, next_id + mask.sum())
-                next_id += mask.sum()
-            st.success("重複IDを修正しました。")
+        # idカラムのユニーク性を保証
+        if 'id' not in lesson_data_df.columns:
+            lesson_data_df['id'] = range(1, len(lesson_data_df) + 1)
+        else:
+            lesson_data_df['id'] = lesson_data_df['id'].apply(lambda x: x if pd.notna(x) and isinstance(x, (int, float)) else 0)
+            lesson_data_df['id'] = lesson_data_df['id'].astype(int)
+            duplicated_ids = lesson_data_df[lesson_data_df.duplicated('id', keep='first')]['id'].unique()
+            
+            if len(duplicated_ids) > 0:
+                st.warning(f"以下のIDが重複しています: {', '.join(map(str, duplicated_ids))}")
+                next_id = lesson_data_df['id'].max() + 1
+                for dup_id in duplicated_ids:
+                    mask = (lesson_data_df['id'] == dup_id) & (~lesson_data_df.index.isin(lesson_data_df[lesson_data_df['id'] == dup_id].index[:1]))
+                    lesson_data_df.loc[mask, 'id'] = range(next_id, next_id + mask.sum())
+                    next_id += mask.sum()
+                st.success("重複IDを修正しました。")
+        
+        return lesson_data_df.to_dict(orient='records')
+
+    except FileNotFoundError:
+        st.error(f"{LESSON_CARDS_CSV} ファイルが見つかりませんでした。pages フォルダと同じ階層に配置してください。")
+        return []
+    except Exception as e:
+        st.error(f"CSVファイルの読み込み中にエラーが発生しました: {e}")
+        st.exception(e)
+        return []
+
+# データをロードし、session_stateに保存
+if 'lesson_data' not in st.session_state:
+    st.session_state.lesson_data = load_lesson_data()
+
+# `lesson_cards.csv`にデータを保存する関数
+def save_lesson_data(data):
+    df_to_save = pd.DataFrame(data)
+    # リスト形式のカラムをセミコロン/カンマ区切り文字列に戻す
+    for col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'material_photos']:
+        df_to_save[col] = df_to_save[col].apply(lambda x: ';'.join(x) if isinstance(x, list) else x)
+    if 'hashtags' in df_to_save.columns:
+        df_to_save['hashtags'] = df_to_save['hashtags'].apply(lambda x: ','.join(x) if isinstance(x, list) else x)
+
+    # 必須カラムを維持し、並び順もテンプレートに合わせる
+    for col in LESSON_CARD_COLUMNS:
+        if col not in df_to_save.columns:
+            df_to_save[col] = None # 存在しないカラムはNoneで追加
     
+    df_to_save = df_to_save[LESSON_CARD_COLUMNS] # カラムの並びを固定
 
-    lesson_data_raw = lesson_data_df.to_dict(orient='records')
-    st.session_state.lesson_data = lesson_data_raw
-
-except FileNotFoundError:
-    st.error("lesson_cards.csv ファイルが見つかりませんでした。pages フォルダと同じ階層に配置してください。")
-    st.stop()
-except Exception as e:
-    st.error(f"CSVファイルの読み込み中にエラーが発生しました: {e}")
-    st.exception(e)
-    st.stop()
+    try:
+        df_to_save.to_csv(LESSON_CARDS_CSV, index=False, encoding='utf-8-sig')
+        st.success("授業カードデータが更新され、CSVファイルに保存されました。")
+    except Exception as e:
+        st.error(f"CSVファイルの保存中にエラーが発生しました: {e}")
+        st.exception(e)
 
 # st.session_stateの初期化
 if 'current_lesson_id' not in st.session_state:
@@ -665,6 +699,8 @@ if 'show_all_flow' not in st.session_state:
     st.session_state.show_all_flow = False
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 1
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
 
 # ヘルパー関数
 def set_detail_page(lesson_id):
@@ -723,6 +759,7 @@ def get_excel_template():
         worksheet.write_comment('V1', '例: 生活単元学習,国語,算数など (教科)')
         worksheet.write_comment('W1', '例: 全体,個別,小グループ  (学習集団の単位)')
         worksheet.write_comment('X1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)')
+        worksheet.write_comment('Y1', '単元内での授業の順序 (数値、小さいほど前)')
     processed_data = output.getvalue()
     return processed_data
 
@@ -739,137 +776,168 @@ with st.sidebar:
     st.header("📚 データ登録・管理")
     st.markdown("---")
 
-    st.subheader("ファイルテンプレート")
-    st.info("""
-    ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
-    """)
+    # --- 管理者ログインフォーム ---
+    if not st.session_state.authenticated:
+        st.subheader("管理者ログイン")
+        with st.form("login_form"):
+            username = st.text_input("ユーザー名")
+            password = st.text_input("パスワード", type="password")
+            login_button = st.form_submit_button("ログイン")
 
-    try:
-        with open("授業カード.xlsm", "rb") as f:
-            excel_macro_sample_data = f.read()
+            if login_button:
+                if check_password(username, password):
+                    st.session_state.authenticated = True
+                    st.success("ログインしました！")
+                    st.rerun()
+                else:
+                    st.error("ユーザー名またはパスワードが間違っています。")
+        st.markdown("---")
+    else:
+        st.success("管理者としてログイン中")
+        if st.button("ログアウト", key="logout_button"):
+            st.session_state.authenticated = False
+            st.rerun()
+        st.markdown("---")
+
+        # --- 管理者のみがアクセスできる機能 ---
+        st.subheader("ファイルテンプレート")
+        st.info("""
+        ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。
+        """)
+
+        try:
+            with open("授業カード.xlsm", "rb") as f:
+                excel_macro_sample_data = f.read()
+            st.download_button(
+                label="⬇️ 授業カード 入力用（見本付き）",
+                data=excel_macro_sample_data,
+                file_name="授業カード.xlsm",
+                mime="application/vnd.ms-excel.sheet.macroEnabled.12",
+                help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
+            )
+        except FileNotFoundError:
+            st.warning("⚠️ '授業カード.xlsm' ファイルが見つかりませんでした。同じ階層に配置してください。")
+        except Exception as e:
+            st.error(f"Excelマクロファイルの読み込み中にエラーが発生しました: {e}")
+
+        csv_data_for_download = get_csv_template()
         st.download_button(
-            label="⬇️ 授業カード 入力用（見本付き）",
-            data=excel_macro_sample_data,
-            file_name="授業カード.xlsm",
-            mime="application/vnd.ms-excel.sheet.macroEnabled.12",
+            label="⬇️ CSVテンプレートをダウンロード",
+            data=csv_data_for_download,
+            file_name="授業カードテンプレート.csv",
+            mime="text/csv",
             help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
         )
-    except FileNotFoundError:
-        st.warning("⚠️ '授業カード.xlsm' ファイルが見つかりませんでした。同じ階層に配置してください。")
-    except Exception as e:
-        st.error(f"Excelマクロファイルの読み込み中にエラーが発生しました: {e}")
 
-    csv_data_for_download = get_csv_template()
-    st.download_button(
-        label="⬇️ CSVテンプレートをダウンロード",
-        data=csv_data_for_download,
-        file_name="授業カードテンプレート.csv",
-        mime="text/csv",
-        help="テンプレートをダウンロードして、新しい授業カード情報を入力してください。"
-    )
+        uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv", "xlsm"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。", key="admin_uploader")
 
-    uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv"], help="入力済みのExcelまたはCSVファイルをアップロードして、データを追加します。")
+        if uploaded_file is not None:
+            try:
+                if uploaded_file.name.endswith('.xlsx') or uploaded_file.name.endswith('.xlsm'):
+                    # Excelファイルの場合、'自動集計'シートを優先的に読み込む
+                    try:
+                        new_data_df = pd.read_excel(uploaded_file, sheet_name='自動集計')
+                        st.info("「自動集計」シートからデータを読み込みました。")
+                    except ValueError:
+                        new_data_df = pd.read_excel(uploaded_file)
+                        st.info("デフォルトシートからデータを読み込みました。")
+                elif uploaded_file.name.endswith('.csv'):
+                    new_data_df = pd.read_csv(uploaded_file)
+                else:
+                    st.error("サポートされていないファイル形式です。Excel (.xlsx, .xlsm) または CSV (.csv) ファイルをアップロードしてください。")
+                    st.stop()
 
-    if uploaded_file is not None:
-        try:
-            if uploaded_file.name.endswith('.xlsx'):
-                new_data_df = pd.read_excel(uploaded_file)
-            elif uploaded_file.name.endswith('.csv'):
-                new_data_df = pd.read_csv(uploaded_file)
-            else:
-                st.error("サポートされていないファイル形式です。Excel (.xlsx) または CSV (.csv) ファイルをアップロードしてください。")
-                st.stop()
+                required_cols = ["unit_name", "goal"]
+                if not all(col in new_data_df.columns for col in required_cols):
+                    st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
+                    missing_cols = [col for col in required_cols if col not in new_data_df.columns]
+                    st.info(f"不足しているカラム: {', '.join(missing_cols)}")
+                else:
+                    def process_list_column(df, col_name, separator):
+                        if col_name in df.columns:
+                            return df[col_name].apply(lambda x: [item.strip() for item in str(x).split(separator) if item.strip()] if pd.notna(x) and str(x).strip() != '' else [])
+                        return [[]] * len(df)
 
-            required_cols = ["unit_name", "goal"]
-            if not all(col in new_data_df.columns for col in required_cols):
-                st.error(f"ファイルに以下の必須項目が含まれていません: {', '.join(required_cols)}")
-                missing_cols = [col for col in required_cols if col not in new_data_df.columns]
-                st.info(f"不足しているカラム: {', '.join(missing_cols)}")
-            else:
-                def process_list_column(df, col_name, separator):
-                    if col_name in df.columns:
-                        return df[col_name].apply(lambda x: [item.strip() for item in str(x).split(separator) if item.strip()] if pd.notna(x) and str(x).strip() != '' else [])
-                    return [[]] * len(df)
+                    def process_string_column_df(df, col_name, default_value):
+                        if col_name in df.columns:
+                            return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
+                        return [default_value] * len(df)
 
-                def process_string_column_df(df, col_name, default_value):
-                    if col_name in df.columns:
-                        return df[col_name].apply(lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else default_value)
-                    return [default_value] * len(df)
+                    # カラムが存在しない場合のデフォルト値設定
+                    for col in LESSON_CARD_COLUMNS:
+                        if col not in new_data_df.columns:
+                            if col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'hashtags', 'material_photos']:
+                                new_data_df[col] = [[]] * len(new_data_df)
+                            elif col == 'unit_order':
+                                new_data_df[col] = 9999
+                            elif col == 'ict_use':
+                                new_data_df[col] = 'なし'
+                            elif col == 'subject':
+                                new_data_df[col] = 'その他'
+                            elif col == 'group_type':
+                                new_data_df[col] = '全体'
+                            elif col == 'target_grade':
+                                new_data_df[col] = '不明'
+                            else:
+                                new_data_df[col] = ''
 
-                # カラムが存在しない場合のデフォルト値設定
-                for col in LESSON_CARD_COLUMNS:
-                    if col not in new_data_df.columns:
-                        if col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'hashtags', 'material_photos']:
-                            new_data_df[col] = [[]] * len(new_data_df)
-                        elif col == 'unit_order':
-                            new_data_df[col] = 9999
-                        elif col == 'ict_use':
-                            new_data_df[col] = 'なし'
-                        elif col == 'subject':
-                            new_data_df[col] = 'その他'
-                        elif col == 'group_type':
-                            new_data_df[col] = '全体'
-                        elif col == 'target_grade':
-                            new_data_df[col] = '不明'
-                        else:
-                            new_data_df[col] = ''
-
-                new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
-                new_data_df['unit_lesson_title'] = new_data_df.apply(
-                    lambda row: str(row['unit_lesson_title']).strip() if pd.notna(row['unit_lesson_title']) and str(row['unit_lesson_title']).strip() != '' else row['unit_name'],
-                    axis=1
-                )
-                
-                new_data_df['introduction_flow'] = process_list_column(new_data_df, 'introduction_flow', ';')
-                new_data_df['activity_flow'] = process_list_column(new_data_df, 'activity_flow', ';')
-                new_data_df['reflection_flow'] = process_list_column(new_data_df, 'reflection_flow', ';')
-                new_data_df['points'] = process_list_column(new_data_df, 'points', ';')
-                new_data_df['hashtags'] = process_list_column(new_data_df, 'hashtags', ',')
-                new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
-                
-                new_data_df['ict_use'] = process_string_column_df(new_data_df, 'ict_use', 'なし')
-                new_data_df['subject'] = process_string_column_df(new_data_df, 'subject', 'その他')
-                new_data_df['group_type'] = process_string_column_df(new_data_df, 'group_type', '全体')
-                new_data_df['unit_name'] = process_string_column_df(new_data_df, 'unit_name', '単元なし')
-                new_data_df['target_grade'] = process_string_column_df(new_data_df, 'target_grade', '不明')
-                new_data_df['image'] = process_string_column_df(new_data_df, 'image', '')
-                new_data_df['video_link'] = process_string_column_df(new_data_df, 'video_link', '')
-                new_data_df['detail_word_url'] = process_string_column_df(new_data_df, 'detail_word_url', '')
-                new_data_df['detail_pdf_url'] = process_string_column_df(new_data_df, 'detail_pdf_url', '')
-                new_data_df['detail_ppt_url'] = process_string_column_df(new_data_df, 'detail_ppt_url', '')
-                new_data_df['detail_excel_url'] = process_string_column_df(new_data_df, 'detail_excel_url', '')
-                new_data_df['catch_copy'] = process_string_column_df(new_data_df, 'catch_copy', '')
-                new_data_df['goal'] = process_string_column_df(new_data_df, 'goal', '')
-                new_data_df['disability_type'] = process_string_column_df(new_data_df, 'disability_type', '不明')
-                new_data_df['duration'] = process_string_column_df(new_data_df, 'duration', '不明')
-                new_data_df['materials'] = process_string_column_df(new_data_df, 'materials', '')
-
-
-                existing_ids = {d['id'] for d in st.session_state.lesson_data}
-                max_id = max(existing_ids) if existing_ids else 0
-
-                new_entries = []
-                for idx, row in new_data_df.iterrows():
-                    current_id = row.get('id')
-                    row_id = int(current_id) if pd.notna(current_id) and isinstance(current_id, (int, float)) else 0
-
-                    if row_id == 0 or row_id in existing_ids: # IDがないか、重複している場合
-                        max_id += 1
-                        row_id = max_id
+                    new_data_df['unit_order'] = new_data_df['unit_order'].apply(lambda x: int(x) if pd.notna(x) and str(x).strip().isdigit() else 9999)
+                    new_data_df['unit_lesson_title'] = new_data_df.apply(
+                        lambda row: str(row['unit_lesson_title']).strip() if pd.notna(row['unit_lesson_title']) and str(row['unit_lesson_title']).strip() != '' else row['unit_name'],
+                        axis=1
+                    )
                     
-                    lesson_dict = {col: row[col] for col in LESSON_CARD_COLUMNS if col in row}
-                    lesson_dict['id'] = row_id # 割り振られたIDをセット
-                    new_entries.append(lesson_dict)
-                    existing_ids.add(row_id)
+                    new_data_df['introduction_flow'] = process_list_column(new_data_df, 'introduction_flow', ';')
+                    new_data_df['activity_flow'] = process_list_column(new_data_df, 'activity_flow', ';')
+                    new_data_df['reflection_flow'] = process_list_column(new_data_df, 'reflection_flow', ';')
+                    new_data_df['points'] = process_list_column(new_data_df, 'points', ';')
+                    new_data_df['hashtags'] = process_list_column(new_data_df, 'hashtags', ',')
+                    new_data_df['material_photos'] = process_list_column(new_data_df, 'material_photos', ';')
+                    
+                    new_data_df['ict_use'] = process_string_column_df(new_data_df, 'ict_use', 'なし')
+                    new_data_df['subject'] = process_string_column_df(new_data_df, 'subject', 'その他')
+                    new_data_df['group_type'] = process_string_column_df(new_data_df, 'group_type', '全体')
+                    new_data_df['unit_name'] = process_string_column_df(new_data_df, 'unit_name', '単元なし')
+                    new_data_df['target_grade'] = process_string_column_df(new_data_df, 'target_grade', '不明')
+                    new_data_df['image'] = process_string_column_df(new_data_df, 'image', '')
+                    new_data_df['video_link'] = process_string_column_df(new_data_df, 'video_link', '')
+                    new_data_df['detail_word_url'] = process_string_column_df(new_data_df, 'detail_word_url', '')
+                    new_data_df['detail_pdf_url'] = process_string_column_df(new_data_df, 'detail_pdf_url', '')
+                    new_data_df['detail_ppt_url'] = process_string_column_df(new_data_df, 'detail_ppt_url', '')
+                    new_data_df['detail_excel_url'] = process_string_column_df(new_data_df, 'detail_excel_url', '')
+                    new_data_df['catch_copy'] = process_string_column_df(new_data_df, 'catch_copy', '')
+                    new_data_df['goal'] = process_string_column_df(new_data_df, 'goal', '')
+                    new_data_df['disability_type'] = process_string_column_df(new_data_df, 'disability_type', '不明')
+                    new_data_df['duration'] = process_string_column_df(new_data_df, 'duration', '不明')
+                    new_data_df['materials'] = process_string_column_df(new_data_df, 'materials', '')
 
-                st.session_state.lesson_data.extend(new_entries)
-                st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
-                st.experimental_rerun()
-        except Exception as e:
-            st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
-            st.exception(e)
+                    existing_ids = {d['id'] for d in st.session_state.lesson_data}
+                    max_id = max(existing_ids) if existing_ids else 0
 
-    st.markdown("---")
+                    new_entries = []
+                    for idx, row in new_data_df.iterrows():
+                        current_id = row.get('id')
+                        row_id = int(current_id) if pd.notna(current_id) and isinstance(current_id, (int, float)) else 0
+
+                        if row_id == 0 or row_id in existing_ids: # IDがないか、重複している場合
+                            max_id += 1
+                            row_id = max_id
+                        
+                        lesson_dict = {col: row[col] for col in LESSON_CARD_COLUMNS if col in row}
+                        lesson_dict['id'] = row_id # 割り振られたIDをセット
+                        new_entries.append(lesson_dict)
+                        existing_ids.add(row_id)
+
+                    st.session_state.lesson_data.extend(new_entries)
+                    save_lesson_data(st.session_state.lesson_data) # CSVファイルに保存
+                    st.success(f"{len(new_entries)}件の授業カードをファイルから追加しました！")
+                    st.experimental_rerun()
+            except Exception as e:
+                st.error(f"ファイルの読み込みまたは処理中にエラーが発生しました: {e}")
+                st.exception(e)
+
+        st.markdown("---")
+
 
 # メインページ
 if st.session_state.current_lesson_id is None:
@@ -1260,4 +1328,4 @@ else:  # 詳細ページ
 
     else:
         st.error("指定された授業カードが見つかりませんでした。")
-        st.button("↩️ 一覧に戻る", on_on_click=back_to_list)
+        st.button("↩️ 一覧に戻る", on_click=back_to_list)
