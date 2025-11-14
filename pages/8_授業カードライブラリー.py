@@ -29,7 +29,7 @@ st.set_page_config(
 def load_css():
     st.markdown(r"""
     <style>
-        @import url('https://fonts.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap');
         
         body {
             font-family: 'Noto Sans JP', sans-serif;
@@ -38,25 +38,25 @@ def load_css():
         }
 
         /* --- Streamlitのメインコンテナの幅を強制的に広げる --- */
-        /* stAppViewContainerはアプリ全体のビューポート */
+        /* layout="wide" であれば、通常は max-width を設定しなくても広い領域を確保できます。
+           もしそれでも足りない場合は、より大きな値を設定するか、削除して Streamlit のデフォルトに任せてください。*/
         [data-testid="stAppViewContainer"] > .main {
-            max-width: 1300px !important; /* さらに広く、!importantで強制 */
-            padding-left: 30px !important; /* !importantで強制 */
-            padding-right: 30px !important; /* !importantで強制 */
-            margin: auto !important; /* 中央寄せ、!importantで強制 */
+            max-width: 1400px !important; /* 少し広げてみる */
+            padding-left: 30px !important;
+            padding-right: 30px !important;
+            margin: auto !important;
         }
-        /* メインコンテンツブロック自体 (カラムの中身など) */
         [data-testid="stAppViewBlockContainer"] {
-            max-width: 100% !important; /* 親要素の幅を全て使う */
-            padding: 0px !important; /* 余計なパディングをなくす */
+            max-width: 100% !important; 
+            padding: 0px !important;
         }
-        /* 全体のVerticalBlockを広げる */
         [data-testid="stVerticalBlock"] {
-            width: 100% !important; /* !importantで強制 */
+            width: 100% !important;
         }
-        /* 各カラム内のブロックを広げる (もしst.columnsを使っている場合) */
-        /* このセレクタはStreamlitのバージョンで変わりやすいため、注意 */
-        .st-emotion-cache-nahz7x { /* Streamlitの内部クラス名を指定 (バージョンで変わる可能性あり) */
+        /* このセレクタはStreamlitのバージョンで変わりやすいため、注意。
+           もし表示がおかしい場合は、開発者ツールで現在の正しいクラス名を確認してください。
+           もしくは、Streamlitが提供するレイアウト（st.columnsなど）で対応できないか検討してください。*/
+        .st-emotion-cache-nahz7x { /* 現在のStreamlitの内部クラス名を指定（要確認） */
             width: 100% !important;
             max-width: 100% !important;
         }
@@ -65,8 +65,8 @@ def load_css():
         section.main {
             max-width: 100% !important; 
             width: 100% !important;
-            padding-left: 1rem !important; /* 必要に応じて調整 */
-            padding-right: 1rem !important; /* 必要に応じて調整 */
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
         }
         /* Streamlitの内部ブロックコンテナを直接ターゲットにする */
         div.block-container { 
@@ -154,43 +154,37 @@ def load_css():
         
         /* 授業カードグリッドのスタイル */
         .lesson-card-grid {
-            display: grid !important; /* 強制的にグリッド表示 */
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; /* デフォルトでminmaxを使って柔軟に */
-            gap: 20px !important; /* gapを少し小さくして、カードが収まりやすくする */
-            padding: 15px 0 !important; /* パディングを調整 */
+            display: grid !important;
+            /* 基本はauto-fitで柔軟に、最小幅を調整してより多くのカードを並べやすく */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; 
+            gap: 20px !important;
+            padding: 15px 0 !important;
             width: 100% !important;
-            max-width: 100% !important; /* 最大幅も100%に */
+            max-width: 100% !important;
             box-sizing: border-box !important;
-            justify-content: center !important; /* グリッドアイテムを中央寄せ */
+            justify-content: center !important;
         }
 
         /* 画面幅が約576px以上で2列 */
         @media (min-width: 576px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; /* minmaxの値を調整 */
+                grid-template-columns: repeat(2, 1fr) !important; /* 2列に固定 */
             }
         }
 
         /* 画面幅が約768px以上で3列 */
         @media (min-width: 768px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important; /* minmaxの値を調整 */
+                grid-template-columns: repeat(3, 1fr) !important; /* 3列に固定 */
             }
         }
 
-        /* 画面幅が約992px以上で4列 (もし希望するなら) */
-        @media (min-width: 992px) {
+        /* 画面幅が約1024px以上で4列（さらに広い画面の場合） */
+        @media (min-width: 1024px) {
             .lesson-card-grid {
-                grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important; /* minmaxの値を調整 */
+                grid-template-columns: repeat(4, 1fr) !important; /* 4列に固定 */
             }
         }
-        /* もしくはシンプルに3列に固定 (どちらか選ぶ) */
-        /* @media (min-width: 992px) {
-            .lesson-card-grid {
-                grid-template-columns: repeat(3, 1fr) !important; 
-            }
-        } */
-
 
         /* 個々の授業カードのスタイル (変更なし) */
         .lesson-card {
@@ -202,8 +196,8 @@ def load_css():
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            max-width: 100%; /* カード自体の幅も親コンテナに合わせる */
-            min-height: 480px; /* カードの最小高さを設定し、デザイン崩れを防ぐ */
+            max-width: 100%;
+            min-height: 480px;
         }
         .lesson-card:hover {
             transform: translateY(-10px);
@@ -1321,13 +1315,18 @@ else:  # 詳細ページ
 
         if selected_lesson['material_photos']:
             st.markdown("<h3><span class='header-icon'>📸</span>授業・教材写真</h3>", unsafe_allow_html=True)
-            cols = st.columns(3)
-            for i, photo_url in enumerate(selected_lesson['material_photos']):
-                with cols[i % 3]:
-                    if photo_url.strip():
-                        st.image(photo_url, use_container_width=True)
-                    else:
-                        st.warning("一部の教材写真URLが無効なため表示できませんでした。")
+            # 画像を3列で表示するように変更
+            num_photos = len(selected_lesson['material_photos'])
+            if num_photos > 0:
+                cols = st.columns(min(num_photos, 3)) # 最大3列
+                for i, photo_url in enumerate(selected_lesson['material_photos']):
+                    with cols[i % min(num_photos, 3)]:
+                        if photo_url.strip():
+                            st.image(photo_url, use_container_width=True)
+                        else:
+                            st.warning("一部の教材写真URLが無効なため表示できませんでした。")
+            else:
+                st.info("教材写真は登録されていません。")
 
         if selected_lesson['video_link'].strip():
             st.markdown("<h3><span class='header-icon'>▶️</span>参考動画</h3>", unsafe_allow_html=True)
@@ -1353,6 +1352,9 @@ else:  # 詳細ページ
             if selected_lesson['detail_excel_url']:
                 excel_button_html = f'<a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration: none;"><button style="background-color: #0E6839; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-right: 10px;">📈 評価シート (Excel)</button></a>'
                 st.markdown(excel_button_html, unsafe_allow_html=True)
+        else:
+            st.markdown("<h3><span class='header-icon'>📄</span>詳細資料ダウンロード</h3>", unsafe_allow_html=True)
+            st.info("ダウンロード可能な詳細資料は登録されていません。")
 
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
