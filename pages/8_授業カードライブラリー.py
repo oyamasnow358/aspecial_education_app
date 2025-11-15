@@ -26,7 +26,6 @@ st.set_page_config(
 )
 
 # カスタムCSSを読み込む関数
-# カスタムCSSを読み込む関数
 def load_css():
     st.markdown(r"""
     <style>
@@ -624,6 +623,7 @@ def load_lesson_data():
                 'disability_type': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
                 'duration': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明',
                 'materials': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '',
+                'developmental_stage': lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != '' and str(x).lower() != 'nan' else '不明', # 発達段階を追加
             }
         )
 
@@ -725,6 +725,7 @@ def set_page(page_num):
 # 授業カードのヘッダーカラム定義
 LESSON_CARD_COLUMNS = [
     "id", "unit_name", "catch_copy", "goal", "target_grade", "disability_type",
+    "developmental_stage", # 発達段階を追加
     "duration", "materials", "introduction_flow", "activity_flow", "reflection_flow", "points", "hashtags",
     "image", "material_photos", "video_link", "detail_word_url", "detail_pdf_url",
     "detail_ppt_url", "detail_excel_url",
@@ -745,25 +746,26 @@ def get_excel_template():
         worksheet.write_comment('D1', '例: お店での買い物の手順を理解し、お金の計算ができるようになる。')
         worksheet.write_comment('E1', '例: 小学部3年')
         worksheet.write_comment('F1', '例: 知的障害')
-        worksheet.write_comment('G1', '例: 45分×3コマ')
-        worksheet.write_comment('H1', '例: 財布;お金;買い物リスト  (セミコロン区切り)')
-        worksheet.write_comment('I1', '例: 課題の提示;本時の目標共有 (セミコロン区切りで複数行)')
-        worksheet.write_comment('J1', '例: 商品選び;お金の支払い練習 (セミコロン区切りで複数行)')
-        worksheet.write_comment('K1', '例: できたことの共有;次回の課題 (セミコロン区切りで複数行)')
-        worksheet.write_comment('L1', '例: スモールステップで指導;具体物を用意 (セミコロン区切り)')
-        worksheet.write_comment('M1', '例: 生活単元,自立活動 (カンマ区切り)')
-        worksheet.write_comment('N1', 'メインとなる画像URL (無い場合は空欄でOK)')
-        worksheet.write_comment('O1', '教材写真などのURL (セミコロン区切り、無い場合は空欄でOK)')
-        worksheet.write_comment('P1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
-        worksheet.write_comment('Q1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('R1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('S1', '指導案PowerPointファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('T1', '指導案ExcelファイルのダウンロードURL (無い場合は空欄でOK)')
-        worksheet.write_comment('U1', 'ICT活用有無 (TRUEまたはFALSE)')
-        worksheet.write_comment('V1', '例: 生活単元学習,国語,算数など (教科)')
-        worksheet.write_comment('W1', '例: 全体,個別,小グループ  (学習集団の単位)')
-        worksheet.write_comment('X1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)')
+        worksheet.write_comment('G1', '例: 基礎的段階') # 発達段階のコメントを追加
+        worksheet.write_comment('H1', '例: 45分×3コマ')
+        worksheet.write_comment('I1', '例: 財布;お金;買い物リスト  (セミコロン区切り)')
+        worksheet.write_comment('J1', '例: 課題の提示;本時の目標共有 (セミコロン区切りで複数行)')
+        worksheet.write_comment('K1', '例: 商品選び;お金の支払い練習 (セミコロン区切りで複数行)')
+        worksheet.write_comment('L1', '例: できたことの共有;次回の課題 (セミコロン区切りで複数行)')
+        worksheet.write_comment('M1', '例: スモールステップで指導;具体物を用意 (セミコロン区切り)')
+        worksheet.write_comment('N1', '例: 生活単元,自立活動 (カンマ区切り)')
+        worksheet.write_comment('O1', 'メインとなる画像URL (無い場合は空欄でOK)')
+        worksheet.write_comment('P1', '教材写真などのURL (セミコロン区切り、無い場合は空欄でOK)')
+        worksheet.write_comment('Q1', 'YouTubeなどの動画URL (無い場合は空欄でOK)')
+        worksheet.write_comment('R1', '指導案WordファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('S1', '指導案PDFファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('T1', '指導案PowerPointファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('U1', '指導案ExcelファイルのダウンロードURL (無い場合は空欄でOK)')
+        worksheet.write_comment('V1', 'ICT活用有無 (TRUEまたはFALSE)')
+        worksheet.write_comment('W1', '例: 生活単元学習,国語,算数など (教科)')
+        worksheet.write_comment('X1', '例: 全体,個別,小グループ  (学習集団の単位)')
         worksheet.write_comment('Y1', '単元内での授業の順序 (数値、小さいほど前)')
+        worksheet.write_comment('Z1', '例: 「〜しよう」など、単元内での各授業のタイトル (空欄の場合、単元名が使われます)')
     processed_data = output.getvalue()
     return processed_data
 
@@ -882,6 +884,8 @@ with st.sidebar:
                                 new_data_df[col] = '全体'
                             elif col == 'target_grade':
                                 new_data_df[col] = '不明'
+                            elif col == 'developmental_stage': # 発達段階のデフォルト値
+                                new_data_df[col] = '不明'
                             else:
                                 new_data_df[col] = ''
 
@@ -903,6 +907,7 @@ with st.sidebar:
                     new_data_df['group_type'] = process_string_column_df(new_data_df, 'group_type', '全体')
                     new_data_df['unit_name'] = process_string_column_df(new_data_df, 'unit_name', '単元なし')
                     new_data_df['target_grade'] = process_string_column_df(new_data_df, 'target_grade', '不明')
+                    new_data_df['developmental_stage'] = process_string_column_df(new_data_df, 'developmental_stage', '不明') # 発達段階の処理
                     new_data_df['image'] = process_string_column_df(new_data_df, 'image', '')
                     new_data_df['video_link'] = process_string_column_df(new_data_df, 'video_link', '')
                     new_data_df['detail_word_url'] = process_string_column_df(new_data_df, 'detail_word_url', '')
@@ -1018,6 +1023,7 @@ if st.session_state.current_lesson_id is None:
                 str(lesson.get('goal', '')).lower() +
                 str(lesson.get('target_grade', '')).lower() +
                 str(lesson.get('disability_type', '')).lower() +
+                str(lesson.get('developmental_stage', '')).lower() + # 発達段階を検索対象に追加
                 str(lesson.get('duration', '')).lower() +
                 str(lesson.get('materials', '')).lower() +
                 " ".join(lesson.get('introduction_flow', [])).lower() +
@@ -1088,6 +1094,7 @@ if st.session_state.current_lesson_id is None:
                      <div class="lesson-card-meta">
                 <span><span class="icon">🎓</span>{lesson['target_grade']}</span>
                 <span><span class="icon">🧩</span>{lesson['disability_type']}</span>
+                <span><span class="icon">🌱</span>{lesson['developmental_stage']}</span> <!-- 発達段階を表示 -->
                          <span><span class="icon">⏱</span>{lesson['duration']}</span>
                      </div>
                  </div>
@@ -1226,18 +1233,16 @@ else:  # 詳細ページ
         st.markdown("---")
 
         st.markdown("<h3><span class='header-icon'>ℹ️</span>基本情報</h3>", unsafe_allow_html=True)
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown(f"**対象学年:** {selected_lesson['target_grade']}")
-        with col2:
             st.markdown(f"**障害種別:** {selected_lesson['disability_type']}")
-        with col3:
+            st.markdown(f"**発達段階:** {selected_lesson.get('developmental_stage', '不明')}") # 発達段階を表示
+        with col2:
             st.markdown(f"**時間:** {selected_lesson['duration']}")
-        with col4:
             st.markdown(f"**ICT活用:** {selected_lesson.get('ict_use', 'なし')}")
-        with col5:
+        with col3:
             st.markdown(f"**教科:** {selected_lesson.get('subject', 'その他')}")
-        with col6:
             st.markdown(f"**学習集団:** {selected_lesson.get('group_type', '全体')}")
 
         unit_name_html = f"<p style='font-size:1.1em; font-weight:bold; margin-top:10px;'>単元名: <span style='color:#8A2BE2;'>{selected_lesson.get('unit_name', '単元なし')}</span></p>"
@@ -1329,7 +1334,6 @@ else:  # 詳細ページ
 
         st.markdown("---")
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_to_list_btn_bottom")
-
     else:
         st.error("指定された授業カードが見つかりませんでした。")
         st.button("↩️ 一覧に戻る", on_click=back_to_list)
