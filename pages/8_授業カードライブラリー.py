@@ -6,10 +6,14 @@ import io
 from io import BytesIO
 import xlsxwriter
 import hashlib # パスワードのハッシュ化に使用
+import os # 環境変数を使用するためにこのimportを追加
 
 # --- 管理者認証のための設定 ---
-ADMIN_USERNAME = st.secrets.get("ADMIN_USERNAME", "admin") # Streamlit Secretsから読み込むか、デフォルト値
-ADMIN_PASSWORD_HASH = st.secrets.get("ADMIN_PASSWORD_HASH", hashlib.sha256("password".encode()).hexdigest()) # パスワード'password'のSHA256ハッシュ
+# Renderではst.secretsがsecrets.tomlを見つけられないため、
+# まずos.environで環境変数を直接読み込み、
+# それがなければst.secrets、それでもなければデフォルト値を使用するように変更
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", st.secrets.get("ADMIN_USERNAME", "admin"))
+ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", st.secrets.get("ADMIN_PASSWORD_HASH", hashlib.sha256("password".encode()).hexdigest()))
 
 def check_password(username, password):
     """ユーザー名とパスワードが管理者と一致するか確認"""
