@@ -429,10 +429,10 @@ with col2:
 
 with col3:
     with st.container(border=True):
-        st.markdown("### 📜 知的段階（学習指導要領）")
+        st.markdown("### 📜 知的段階_早引き学習指導要領")
         st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
         b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
+        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["guideline_page"])
 
