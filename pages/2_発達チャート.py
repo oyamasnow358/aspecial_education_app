@@ -266,10 +266,10 @@ if 'display_mode' not in st.session_state:
     st.session_state.display_mode = "under7" # デフォルトは7歳未満用
 
 with col_under7:
-    if st.button("👦 7歳以下用を表示", use_container_width=True, type="primary" if st.session_state.display_mode == "under7" else "secondary"):
+    if st.button("発達年齢 7歳以下用を表示", use_container_width=True, type="primary" if st.session_state.display_mode == "under7" else "secondary"):
         st.session_state.display_mode = "under7"
 with col_over7:
-    if st.button("👧 8歳以上用を表示", use_container_width=True, type="primary" if st.session_state.display_mode == "over7" else "secondary"):
+    if st.button("発達年齢 8歳以上用を表示", use_container_width=True, type="primary" if st.session_state.display_mode == "over7" else "secondary"):
         st.session_state.display_mode = "over7"
 
 st.info(f"現在、**{'7歳以下用' if st.session_state.display_mode == 'under7' else '8歳以上用'}**の発達段階表が表示されています。")
