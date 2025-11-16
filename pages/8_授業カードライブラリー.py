@@ -21,6 +21,7 @@ def check_password(username, password):
         return hashlib.sha256(password.encode()).hexdigest() == ADMIN_PASSWORD_HASH
     return False
 
+
 # ページ設定
 st.set_page_config(
     page_title="授業カードライブラリー",
