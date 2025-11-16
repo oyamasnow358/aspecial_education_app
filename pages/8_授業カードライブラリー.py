@@ -8,12 +8,13 @@ import xlsxwriter
 import hashlib # パスワードのハッシュ化に使用
 import os # 環境変数を使用するためにこのimportを追加
 
-# --- 管理者認証のための設定 ---
-# Renderではst.secretsがsecrets.tomlを見つけられないため、
-# まずos.environで環境変数を直接読み込み、
-# それがなければst.secrets、それでもなければデフォルト値を使用するように変更
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", st.secrets.get("ADMIN_USERNAME", "admin"))
-ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", st.secrets.get("ADMIN_PASSWORD_HASH", hashlib.sha256("password".encode()).hexdigest()))
+# (※この方法はセキュリティ上、非推奨です。緊急回避策としてのみ使用してください。)
+ADMIN_USERNAME = "admin" # あなたが管理者として使用したいユーザー名を直接記述
+ADMIN_PASSWORD_HASH = hashlib.sha256("snow".encode()).hexdigest() # ここに設定したい簡単なパスワードを直接記述し、ハッシュ化します
+
+# 例: パスワードを "testpass" にしたい場合
+# ADMIN_PASSWORD_HASH = hashlib.sha256("testpass".encode()).hexdigest()
+
 
 def check_password(username, password):
     """ユーザー名とパスワードが管理者と一致するか確認"""
