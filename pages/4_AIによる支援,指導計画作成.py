@@ -11,7 +11,7 @@ import re
 from io import BytesIO
 
 # ==========================================
-# 0. ユーティリティ関数（Excel書き込み用・結合セル対応）
+# 0. ユーティリティ関数（Excel書き込み用）
 # ==========================================
 def safe_write(ws, cell_address, value):
     """
@@ -21,13 +21,9 @@ def safe_write(ws, cell_address, value):
     try:
         if value is None:
             value = ""
-        
-        # 値を文字列化
         value = str(value)
 
-        # 書き込み処理
         if isinstance(ws[cell_address], MergedCell):
-            # 結合セルの場合、その結合範囲の左上のセルを探して書き込む
             for merged_range in ws.merged_cells.ranges:
                 if cell_address in merged_range:
                     top_left_coord = merged_range.start_cell.coordinate
@@ -35,226 +31,105 @@ def safe_write(ws, cell_address, value):
                     ws[top_left_coord].alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
                     return
         else:
-            # 通常セルの場合
             ws[cell_address] = value
             ws[cell_address].alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
-
     except Exception as e:
         st.warning(f"⚠️ セル {cell_address} への書き込み中に警告: {e}")
 
-# --- ▼ 共通CSSの読み込み ▼ ---
+# ==========================================
+# 1. ページ設定 & CSS
+# ==========================================
+st.set_page_config(page_title="個別の支援計画・指導計画作成サポート", layout="wide")
+
 def load_css():
-    """カスタムCSSを読み込む関数"""
     css = """
     <style>
-        /* --- 背景画像の設定 --- */
+        /* 背景設定 */
         [data-testid="stAppViewContainer"] > .main {
             background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
             background-attachment: fixed;
         }
-        /* --- 戻るボタンのスタイル (位置調整) --- */
-        .back-button-container {
-            position: relative; /* relativeにして通常のフローで配置 */
-            padding-bottom: 20px; /* 下に余白 */
-            margin-bottom: -50px; /* 上の要素との重なりを調整 */
-        }
-        /* サイドバーの背景を少し透過 */
-        [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
-        }
-                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
-        [data-testid="stSidebarNavCollapseButton"] {
-            position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
-        }
-        /* 元のアイコンを完全に非表示にする */
-        [data-testid="stSidebarNavCollapseButton"] * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        /* カスタムアイコン「«」を疑似要素として追加 */
-        [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«' !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
-        }
-        [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
-        }
-        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
+        /* サイドバー背景 */
+        [data-testid="stSidebar"] { background-color: rgba(240, 242, 246, 0.9); }
+        
+        /* 見出し */
+        h1 { color: #2c3e50; text-align: center; padding-bottom: 20px; font-weight: bold; }
+        h2 { color: #34495e; border-left: 6px solid #8A2BE2; padding-left: 12px; margin-top: 40px; }
+        h3 { color: #34495e; border-bottom: 2px solid #4a90e2; padding-bottom: 8px; margin-top: 30px; }
 
-
-        /* --- 見出しのスタイル --- */
-        h1 {
-            color: #2c3e50; /* ダークブルー */
-            text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
-        }
-        h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
-            margin-top: 40px;
-        }
-        h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
-            padding-bottom: 8px;
-            margin-top: 30px;
-        }
-
-        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
+        /* カードデザイン */
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
             background-color: rgba(255, 255, 255, 0.95);
             border: 1px solid #e0e0e0;
             border-radius: 15px;
-            padding: 1.5em 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.3s ease-in-out, transform 0 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
-        }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
-            transform: translateY(-5px);
+            padding: 1.5em;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
         }
         
-        /* --- ボタンのスタイル --- */
+        /* ボタン */
         .stButton>button {
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            color: #4a90e2;
-            background-color: #ffffff;
-            padding: 10px 24px;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            border: 2px solid #4a90e2; border-radius: 25px; color: #4a90e2; background-color: #ffffff;
+            font-weight: bold; transition: all 0.3s ease;
         }
         .stButton>button:hover {
-            border-color: #8A2BE2;
-            color: white;
-            background-color: #8A2BE2;
-            transform: scale(1.05);
+            background-color: #8A2BE2; border-color: #8A2BE2; color: white; transform: scale(1.05);
         }
-        /* Primaryボタン */
         .stButton>button[kind="primary"] {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
+            background-color: #4a90e2; color: white; border: none;
         }
         .stButton>button[kind="primary"]:hover {
-            background-color: #357ABD;
-            border-color: #357ABD;
-            transform: scale(1.05);
+            background-color: #357ABD; transform: scale(1.05);
         }
 
-        /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 {
-             background-color: rgba(232, 245, 253, 0.7);
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
-        }
-        
-        /* --- ▼▼▼ st.expanderのデフォルトアイコンをカスタマイズ ▼▼▼ --- */
-        [data-testid="stExpanderToggleIcon"] {
-            display: none; /* デフォルトアイコンを非表示 */
-        }
-        .st-emotion-cache-p2n28p button { /* st.expanderのボタン全体 */
-            background-color: #4a90e2; /* 青色の背景 */
-            color: white; /* 白い文字 */
-            font-weight: bold;
-            border-radius: 10px; /* 角を丸くする */
-            padding: 15px 20px; /* パディングを増やす */
-            width: 100%; /* 幅をいっぱいに */
-            text-align: left; /* テキストを左寄せ */
-            transition: background-color 0.3s, transform 0.3s;
-            margin-bottom: 10px; /* 下に余白 */
-            border: none; /* ボーダーを削除 */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 影を追加 */
-            font-size: 1.2em; /* フォントサイズを大きく */
-        }
-
-        .st-emotion-cache-p2n28p button:hover {
-            background-color: #8A2BE2; /* ホバーで紫色 */
-            transform: translateY(-3px); /* 少し上に浮き上がる */
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 影を濃くする */
-        }
-        /* 展開時のボタンのスタイル */
-        .st-emotion-cache-p2n28p[aria-expanded="true"] button {
-             background-color: #8A2BE2; /* 展開時は紫色 */
-             color: white;
-        }
-
-        /* 展開アイコン（右矢印）を追加 */
-        .st-emotion-cache-p2n28p button::after {
-            content: '▼'; /* 閉じた状態のアイコン */
-            float: right;
-            font-size: 1em;
-            margin-left: 10px;
-            transition: transform 0.3s;
-        }
-        .st-emotion-cache-p2n28p[aria-expanded="true"] button::after {
-            content: '▲'; /* 開いた状態のアイコン */
-            transform: rotate(0deg); /* 展開時は上向き */
-        }
-        
-        /* st.expanderのコンテンツ部分のパディング */
-        div[data-testid="stExpander"] div[data-testid="stVerticalBlock"] {
-            padding-top: 10px;
-            padding-bottom: 10px;
-        }
-
-        /* --- ▲▲▲ ここまで ▲▲▲ --- */
-
-        /* --- フッターの区切り線 --- */
-        .footer-hr {
-            border: none;
-            height: 3px;
-            background: linear-gradient(to right, #4a90e2, #8A2BE2);
-            margin-top: 40px;
-            margin-bottom: 20px;
+        /* モード選択ラジオボタン */
+        div[role="radiogroup"] {
+            background-color: #f0f2f6;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #8A2BE2;
+            text-align: center;
+            display: flex;
+            justify-content: center;
         }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-# --- ▲ 共通CSSの読み込み ▲ ---
 
-# CSSを適用
 load_css()
 
-# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
-# st.columnsを使って、左端に配置する
-col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
+# --- 戻るボタン ---
+col_back, _ = st.columns([0.15, 0.85])
 with col_back:
-    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
     st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
-# --- ▲ 戻るボタンの配置 ▲ ---
 
 st.title("🤖 個別の支援計画・指導計画作成サポート")
 
-st.info(
-    """
-    ここでは、個別の支援計画・指導計画に関する文章を作成するためのプロンプト（AIへの命令文）を簡単に作成できます。
-    下の各セクションをボタンで展開し、必要な項目を入力してプロンプトを生成してください。
-    """
+# ==========================================
+# ★ モード選択エリア
+# ==========================================
+st.markdown("### 🛠️ 利用モードを選択してください")
+mode_selection = st.radio(
+    "モード選択",
+    ("📋 通常モード (プロンプトをコピーして使う)", "🚀 Excel作成モード (岩槻はるかぜ機能)"),
+    index=0,
+    horizontal=True,
+    label_visibility="collapsed"
 )
 
-# --- ▼▼▼ AIチャットへのリンク ▼▼▼ ---
+# モード判定フラグ
+is_excel_mode = "Excel" in mode_selection
+
+# モード説明
+if is_excel_mode:
+    st.info("🚀 **Excel作成モード**が選択されています。\nAIへの指示（プロンプト①～③）が**JSON形式**で出力するよう変更されます。生成されたJSONコードをページ下部の入力欄に貼り付けることで、Excelを自動作成できます。")
+else:
+    st.success("📋 **通常モード**が選択されています。\nAIは読みやすい文章形式で回答します。Word等に手動でコピペする方に適しています。")
+
+st.markdown("---")
+
+# --- AIチャットへのリンク ---
 with st.container(border=True):
     st.markdown("""
     <div style="background-color: #e9f5ff; padding: 15px 20px; border: 2px solid #4a90e2; border-radius: 10px;">
@@ -266,37 +141,64 @@ with st.container(border=True):
         </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # ボタンを中央に配置するための列
     b_col1, b_col2, b_col3 = st.columns([1, 1.5, 1])
     with b_col2:
         st.link_button("ChatGPT を開いて文章作成を始める ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
-
-    # Geminiへのリンクを追加（type="primary"に変更）
-    st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
+    st.markdown("<br>", unsafe_allow_html=True)
     b_col_g1, b_col_g2, b_col_g3 = st.columns([1, 1.5, 1])
     with b_col_g2:
         st.link_button("Gemini を開いて文章作成を始める ↗", "https://gemini.google.com/", type="primary", use_container_width=True)
 
-st.markdown("<br>", unsafe_allow_html=True) # 少し余白を追加
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("---")
 
-st.markdown("---") # 区切り線
-
-# --- プロンプト① ---
+# ==========================================
+# プロンプト①
+# ==========================================
 with st.expander("プロンプト①【プランA：特別な教育的ニーズ／合理的配慮】"):
     with st.container(border=True):
-        st.subheader("プロンプト①【プランA：特別な教育的ニーズ／合理的配慮】") # expanderの中ではsubheaderにする
+        st.subheader("プロンプト①【プランA：特別な教育的ニーズ／合理的配慮】")
         jittai_1 = st.text_area("✅ お子さんの実態や課題を入力", value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す", height=100, key="jittai_1")
+        
         if st.button("プロンプト① を生成", key="btn_1", use_container_width=True):
-            st.code(f"""以下の実態や課題をもとに、特別支援教育に関する「プランA」の以下の項目を作成してください。
-作成にあたっては、指定の【JSON形式】のみで出力してください。
+            if is_excel_mode:
+                # --- Excelモード用プロンプト (JSON) ---
+                prompt_text = f"""以下の実態や課題をもとに、特別支援教育に関する「プランA」の項目を作成し、指定の【JSON形式】のみで出力してください。
 前置きや解説は一切不要です。JSONデータだけを返してください。
 
 【入力】実態や課題：
 {jittai_1}
 
-【出力項目と内容】：
-1. "needs" (特別な教育的ニーズ)
+【出力項目と内容の指針】
+1. "needs" (特別な教育的ニーズ):
+   - 入力から共通性を見出し、2～3つの抽象的カテゴリーに分類する。
+   - 文頭は「対象児童（生徒）は現在、以下の状況である。①...②...従って、以下の支援が必要である。①...支援に当たっては、以下の配慮が必要である。①...」という形式でまとめる。
+   - 内容は200〜400字程度。
+
+2. "accommodations" (合理的配慮の実施内容):
+   - 上記のニーズに対応した合理的配慮を2つ以上提案する。
+   - 箇条書きで記述する。
+
+【出力フォーマット（厳守）】
+以下のJSON構造を絶対に崩さずに返してください。
+{{
+  "needs": "ここに特別な教育的ニーズの全文を記述",
+  "accommodations": "ここに合理的配慮の実施内容を記述"
+}}
+
+【条件】：
+- 「～である。」調で文章を作成してください。
+"""
+            else:
+                # --- 通常モード用プロンプト (元のテキスト) ---
+                prompt_text = f"""以下の実態や課題をもとに、特別支援教育に関する「プランA」の以下の項目を作成してください。
+
+【入力】実態や課題：
+{jittai_1}
+
+【出力項目】：
+1.特別な教育的ニーズ
+
 ・入力から共通性を見出し、2～3つの抽象的カテゴリーに分類する（表記は①～③の形【※必ずしも③まで必要としない入力内容や添付資料により臨機応変に】）。
 ・各ニーズは20〜100字程度で、児童・生徒の実態を柔らかく教育的にまとめる。
 ・具体的な出力の形【出力フォーマット】
@@ -316,122 +218,128 @@ with st.expander("プロンプト①【プランA：特別な教育的ニーズ�
 ② （②の状況に対応した配慮）
 ③ （③の状況に対応した配慮）
 
-2. "accommodations" (合理的配慮の実施内容)
+2.合理的配慮の実施内容
 ・上記①のニーズに対応した合理的配慮を少なくとも2つ以上提案する。
 ・シンプルに2つ以上箇条書きで示す。（例：「具体物を示し、視覚的な支援を行う。」、「落ち着ける環境設定にする。」、「生徒が好きな感触の本や音の出る玩具等を教室内に用意し、心理的安定を図る。」など）。
-
-【JSON出力フォーマット（厳守）】
-以下の構造を絶対に崩さずに返してください。
-{{
-  "needs": "ここに特別な教育的ニーズの文章を記述",
-  "accommodations": "ここに合理的配慮の実施内容を記述"
-}}
 
 【条件】：
 - 添付資料がある場合（「プランA」や「個別の教育支援計画」）にある書き方を参考にしてください。
 - この後、この「特別な教育的ニーズ」を「特別な教育的ニーズ」⇒「所属校の支援目標」及び「各目標に連動した支援内容」⇒「指導方針」（プランBや個別の指導計画）の順で具体化していくのでそのつもりで抽象的に表現する。
 - 「～です。～ます。」調ではなく、「～である。」調で文章を作成してください。
-- 各項目の文量は200〜300文字程度で、柔らかく教育的な表現で整えてください。""", language="text")
+- 各項目の文量は200〜300文字程度で、柔らかく教育的な表現で整えてください。"""
+
+            st.code(prompt_text, language="text")
             st.success("👆 右上のアイコンでコピーし、AIに貼り付けてください。")
 
-# --- プロンプト② ---
+# ==========================================
+# プロンプト②
+# ==========================================
 with st.expander("プロンプト②【プランA：所属校の支援】"):
     with st.container(border=True):
         st.subheader("プロンプト②【プランA：所属校の支援】")
-        needs_2 = st.text_area("✅ プロンプト①でAIが生成した「特別な教育的ニーズ」を貼り付け", value="① 感覚過敏があり、環境刺激に影響を受けやすい\n② 注意の持続が難しく、集中が途切れやすい\n③ コミュニケーションに混乱が見られ、一斉指示に反応しづらい", height=150, key="needs_2")
+        needs_2 = st.text_area("✅ プロンプト①でAIが生成した「特別な教育的ニーズ」を貼り付け", value="（例）対象児童は現在、感覚過敏があり...", height=150, key="needs_2")
+        
         if st.button("プロンプト② を生成", key="btn_2", use_container_width=True):
-            st.code(f"""以下の「特別な教育的ニーズ」に基づいて、「所属校による支援計画（プランA）」の項目を作成してください。
-作成にあたっては、指定の【JSON形式】のみで出力してください。
+            if is_excel_mode:
+                # --- Excelモード用プロンプト (JSON) ---
+                prompt_text = f"""以下の「特別な教育的ニーズ」に基づいて、「所属校による支援計画（プランA）」の項目を作成し、指定の【JSON形式】のみで出力してください。
 前置きや解説は一切不要です。JSONデータだけを返してください。
 
 【参考】特別な教育的ニーズ：
 {needs_2}
 
-【出力項目と内容】：
+【出力項目と内容の指針】
+1. "goals" (所属校の支援目標・機関名):
+   - 特別な教育的ニーズの①～③に対応して作成。
+   - 「①目標：... \n②目標：...」のように改行してまとめる。
+
+2. "support" (支援内容):
+   - 上記の目標に対応した具体的な支援内容。
+   - 「①... \n②...」のように改行してまとめる。
+
+【出力フォーマット（厳守）】
+以下のJSON構造を絶対に崩さずに返してください。
+{{
+  "goals": "目標の全文をここに記述",
+  "support": "支援内容の全文をここに記述"
+}}
+
+【条件】：
+- 「～である。」調で統一すること。
+- 番号（①, ②...）を揃えること。"""
+            else:
+                # --- 通常モード用プロンプト (元のテキスト) ---
+                prompt_text = f"""以下の「特別な教育的ニーズ」に基づいて、「所属校による支援計画（プランA）」の項目を作成してください。
+
+【参考】特別な教育的ニーズ：
+{needs_2}
+
+【出力項目】：
 ・1所属校の支援目標・機関名、2支援内容のプロンプトを生成　※機関名はそういう表記がされているだけで、意味は無視して良いタイトルはそのままで。
-1. "goals" (所属校の支援目標・機関名)
+1.所属校の支援目標・機関名  
 （特別な教育的ニーズの①～③に対応して作成。②までしかない場合は②まででよい。）
 
 ①目標：（30字以内程度・短くてもよい）  
 ②目標：（30字以内程度・短くてもよい）    
 ③目標：（30字以内程度・短くてもよい）  
 
-2. "support" (支援内容)
+2.支援内容  
 （上記の①～③の目標それぞれに対応して作成。）
 
 ①（50字以内程度で、学校現場で実践可能な支援内容を記載）  
 ②（50字以内程度で、学校現場で実践可能な支援内容を記載）  
 ③（50字以内程度で、学校現場で実践可能な支援内容を記載）
 
-・具体的な出力の形 
+・具体的な出力の形【出力フォーマット】 
 このような抽象的な表現でよい（次のプロンプトでより具体化するため）。  
 
-【JSON出力フォーマット（厳守）】
-以下の構造を絶対に崩さずに返してください。
-{{
-  "goals": "ここに所属校の支援目標の文章を記述",
-  "support": "ここに支援内容の文章を記述"
-}}
 
 【条件】：
 - 「特別な教育的ニーズ」と対応が分かるように①～③の番号を揃えること。  
 - 各文は短くてもよいが、教育的で柔らかい表現にすること。  
 - 「～です。～ます。」調ではなく、「～である。」調で統一すること。  
 - 添付資料（「プランA」や「個別の教育支援計画」）の書き方を参考にしてよい。  
-- ここでは抽象的にまとめ、**次の段階（プランBなど）で具体化していくための基礎**として作成すること。""", language="text")
+- ここでは抽象的にまとめ、**次の段階（プランBなど）で具体化していくための基礎**として作成すること。"""
+
+            st.code(prompt_text, language="text")
             st.success("👆 右上のアイコンでコピーし、AIに貼り付けてください。")
 
-# --- プロンプト③ ---
+# ==========================================
+# プロンプト③
+# ==========================================
 with st.expander("プロンプト③【プランB：指導方針・7項目の実態】"):
     with st.container(border=True):
         st.subheader("プロンプト③【プランB：指導方針・7項目の実態】")
         jittai_3 = st.text_area("✅ お子さんの実態や課題を入力（プロンプト①と同じでOK）", value="視力が弱い、落ち着きがない、疲れやすい、音に敏感、話しかけられると混乱する、同じ行動を繰り返す", height=100, key="jittai_3")
+        
         if st.button("プロンプト③ を生成", key="btn_3", use_container_width=True):
-            st.code(f"""以下の実態・課題をもとに、特別支援計画「プランB」の項目を作成してください。
-作成にあたっては、指定の【JSON形式】のみで出力してください。
-前置きや解説は一切不要です。JSONデータだけを返してください。
-
-【入力】実態・課題：
-{jittai_3}
-
-【出力項目とJSONキーの対応】
-
-1. "policy" (指導方針)
+            # ★共通の「例示部分」を定義（ここを一切変更しない）
+            examples_text = """1.指導方針
 ・「特別な教育的ニーズ①～③」と「所属校の支援目標①～③」を踏まえ、より具体的な指導の方向性を示す。
 ・児童生徒の実態を冒頭で丁寧に描写し、その後に必要な指導内容を①～③に整理する。
 ・全体を通して300〜500字程度とし、教育的で柔らかい表現を用いる。
+・文章が長くなる場合は複数回に分けて出力してよい。
 
-2. "status_1" ～ "status_7" (実態・特別支援における7区分)
-・以下の区分ごとに記述する。各区分に例を設けるので参考にしてください。
-① "status_1": 健康の保持（日常生活面、健康面など）【着替え】【食事】【排泄】【健康上の配慮】
+2.実態（特別支援における7区分〔箇条書きで、例：【着替え】・～の形〕）
+・以下の区分ごとに項目をもうけて（内容によって項目の数に偏りがあってもよい）記述する。各区分に例を設けるので参考にしてください
+① 健康の保持（日常生活面、健康面など）【着替え】【食事】【排泄】【健康上の配慮】
 （この区分は多めに項目を設ける【例：【着替え】・ズボンにはワッペンをつけると前後がわかって履くことができる。・言葉かけを受けて脱いだ服の裏返しを直すことができる。・登校時はオムツを着用している。登校後に布パンツに履き替えている。・下校時は布パンツを使用する。デイサービスにより帰り際にトイレに行かせる。【食事】・食事は少量ずつ別皿に入れて提供している。また、左手をお椀に添えて、右手でスプーンや補助具付きの箸を使用して食べることができる。【排泄】・立ち便器を使うことができる。【健康上の配慮】・春は花粉症の薬を服用している。など】）
-② "status_2": 心理的な安定（情緒面、状況の理解など）【苦手な状況】
+② 心理的な安定（情緒面、状況の理解など）【苦手な状況】
 【例：【苦手な状況】・急な音や大きな音は苦手で、驚いて不安定になることがある。・気持ちが不安定な時は、首に掴みかかろうとしたり、噛もうとしたりすることがある。・暑い季節は苦手で、夏場は気持ちが不安定になることが多い。汗を拭くことにより気持ちが落ち着くことがある。・気持ちが不安定な時に、イヤーマフを着用している。・気持ちが不安定なときに深呼吸を促したり、教員が胸や背中をトントン叩いたりすると落ち着くことがある。（感覚統合、副交感神経）【その他】・歩いたり、身体を動かしたりすることが好きで、散歩をすることで気持ちを切り替えられることがある。・見通しの持ちやすい課題には３０分程度離席せずに取り組むことができる。・見通しの持ちにくい場面や、気持ちが向かない活動の時にはトイレに行こうとすることがある。・怒ると近くにある物を噛む癖がある。(かなり減ってきた)】
-③ "status_3": 人間関係の形成（人とのかかわり、集団への参加など）【大人や友達との関わり】【集団参加】
+③ 人間関係の形成（人とのかかわり、集団への参加など）【大人や友達との関わり】【集団参加】
 【例：【大人や友達との関わり】・教員からの呼びかけに反応し、行動することができる。・身近な大人の膝の上に乗ろうとしたり、抱き着こうとしたりするなどの身体・接触が好きである。【集団参加】・誰とでも手を繋いだり、関わったりすることができる。】
-④ "status_4": 環境の把握（感覚の活用、認知面、学習面など）【学習の様子】
+④ 環境の把握（感覚の活用、認知面、学習面など）【学習の様子】
 【例：【学習の様子】・シールを自分で好きなように貼れる。丸い紙やタイルを一直線に貼れる。・色の区別ができる。・３０面までのパズルができる。・ひらがなやイラストのマッチングができる。】
-⑤ "status_5": 身体の動き（運動・動作、作業面など）【身体の動き】【手指の操作】
+⑤ 身体の動き（運動・動作、作業面など）【身体の動き】【手指の操作】
 【例：【身体の動き】・音楽が好きで、聴きながら身体を動かすことができる。・ブランコに一人で乗れる。・ボールを投げることができる。支援を受けてボールを蹴ることができる。【手指の操作】・利き手がまだ定まっていないが、右手を日常的に使用する。・支援を受けてハサミやのりなどの道具を使うことができる。・粗大模倣は、教員の手本や映像を観たりしながら行うことができる。・つまむ、ひねる、回す、押すなど手指を使った活動ができる。・爪がないため微細な動きは苦手である。・自助箸を使用して食事が取れる。】
-⑥ "status_6": コミュニケーション（意思の伝達、言語の形成など）【ｺﾐｭﾆｹｰｼｮﾝの理解】【ｺﾐｭﾆｹｰｼｮﾝの表出】
+⑥ コミュニケーション（意思の伝達、言語の形成など）【ｺﾐｭﾆｹｰｼｮﾝの理解】【ｺﾐｭﾆｹｰｼｮﾝの表出】
 【例：【ｺﾐｭﾆｹｰｼｮﾝの理解】・教員の指示をある程度理解していて、指示通り動くことができる。【ｺﾐｭﾆｹｰｼｮﾝの表出】・促されると､「ちょうだい」のサインを出すことができる。サインと一緒に・口を動かすことができる。サインを出している大人に物を渡すことができる。・教員を呼ぶときに、肩をトントンと叩くことができる。・「トイレ」「ごめん」など簡単な言葉の発語ができる。・排泄の意思表示は「トイレ」と伝えることができる。・口形模倣や単音の発声はできるようになってきている。】
-⑦ "status_7": その他（性格、行動特徴、興味関心など）【興味関心】
+⑦ その他（性格、行動特徴、興味関心など）【興味関心】
 【例：【興味関心】・活動中に身体を大きく左右に動かしたり飛び跳ねたりするときがある。・おもちゃを床にたたきつけるように投げる。】
 ・【入力】の実態・課題をもとに、可能な限り多くの具体的内容を盛り込む。
+・1回で書ききれない場合は、何回になってもよいので、複数回に分けて出力する。"""
 
-【JSON出力フォーマット（厳守）】
-以下の構造を絶対に崩さずに返してください。
-{{
-  "policy": "指導方針の内容...",
-  "status_1": "健康の保持の内容...",
-  "status_2": "心理的な安定の内容...",
-  "status_3": "人間関係の形成の内容...",
-  "status_4": "環境の把握の内容...",
-  "status_5": "身体の動きの内容...",
-  "status_6": "コミュニケーションの内容...",
-  "status_7": "その他の内容..."
-}}
-
+            common_conditions = """
 【条件】：
 - 添付資料があれば参考にしてください（プランBや個別の指導計画）。
 - 「～です。～ます。」調ではなく、「～である。」調で文章を作成してください。
@@ -444,10 +352,52 @@ with st.expander("プロンプト③【プランB：指導方針・7項目の実
 　②不適切行動が起きた時に繰り返さないようにする。
 　③絵カードや手話による要求を増やす。
 これらの指導を元に本生徒の生活面での自立、行動面・コミュニケーション面での成長につなげていく。」
-- 指導方針は全体的な視点で、各実態は200〜300文字で丁寧に描写してください。""", language="text")
+- 1回で書ききれない場合は、何回になってもよいので、複数回に分けて出力する。
+- 指導方針は全体的な視点で、各実態は200〜300文字で丁寧に描写してください。"""
+
+            if is_excel_mode:
+                # --- Excelモード (JSON) ---
+                # 例示はそのまま含めつつ、JSON出力を指示
+                prompt_text = f"""以下の実態・課題をもとに、特別支援計画「プランB」の項目を作成し、指定の【JSON形式】のみで出力してください。
+前置きや解説は一切不要です。JSONデータだけを返してください。
+
+【入力】実態・課題：
+{jittai_3}
+
+【出力内容の指示】
+以下の例や区分を参考にして内容を作成してください。
+{examples_text}
+
+【JSON出力フォーマット（厳守）】
+作成した内容を以下のキーに割り当てて、JSON形式で出力してください。
+{{
+  "policy": "1.指導方針の全文...",
+  "status_1": "① 健康の保持の内容...",
+  "status_2": "② 心理的な安定の内容...",
+  "status_3": "③ 人間関係の形成の内容...",
+  "status_4": "④ 環境の把握の内容...",
+  "status_5": "⑤ 身体の動きの内容...",
+  "status_6": "⑥ コミュニケーションの内容...",
+  "status_7": "⑦ その他の内容..."
+}}
+
+{common_conditions}
+"""
+            else:
+                # --- 通常モード (元のテキスト) ---
+                prompt_text = f"""以下の実態・課題をもとに、特別支援計画「プランB」の項目を作成してください。
+
+【入力】実態・課題：
+{jittai_3}
+
+【出力項目】
+{examples_text}
+{common_conditions}
+"""
+            st.code(prompt_text, language="text")
             st.success("👆 右上のアイコンでコピーし、AIに貼り付けてください。")
 
- # --- 新プロンプト④ ---
+# --- プロンプト④ (ここから先は元のコードを完全に復元し、モード分岐なし) ---
 with st.expander("プロンプト④【個別の指導計画：目標と手立て】"):
     with st.container(border=True):
         st.subheader("プロンプト④【個別の指導計画：目標と手立て】")
@@ -524,7 +474,7 @@ with st.expander("プロンプト④【個別の指導計画：目標と手立�
             else:
                 st.code("\n---\n".join(full_prompt_output), language="text") # 各教科のプロンプトを区切り線で結合して表示
 
-# --- プロンプト⑤ ---
+# --- プロンプト⑤ (元のコードを完全復元) ---
 with st.expander("プロンプト⑤【個別の指導計画：評価】"):
     with st.container(border=True):
         st.subheader("プロンプト⑤【個別の指導計画：評価】")
@@ -586,7 +536,7 @@ with st.expander("プロンプト⑤【個別の指導計画：評価】"):
             st.code(prompt_full_4, language="text")
 
 
-# --- プロンプト⑥ ---
+# --- プロンプト⑥ (元のコードを完全復元) ---
 with st.expander("プロンプト⑥【前期・後期の所見】"):
     with st.container(border=True):
         st.subheader("プロンプト⑥【前期・後期の所見】")
@@ -662,15 +612,11 @@ with st.expander("プロンプト⑥【前期・後期の所見】"):
 st.markdown("---")
 
 # ============================================================
-# ★★★ 岩槻はるかぜ特別支援学校の人だけ機能（全JSON化完了版） ★★★
+# ★★★ 岩槻はるかぜ特別支援学校の人だけ機能 (Excelモード時のみ表示) ★★★
 # ============================================================
-st.header("✨ 岩槻はるかぜ特別支援学校の人だけ機能")
-if st.button("岩槻はるかぜ特別支援学校の人向け（クリックで展開）", use_container_width=True, type="secondary"):
-    st.session_state["show_iwatsuki_features"] = not st.session_state.get("show_iwatsuki_features", False)
-
-if st.session_state.get("show_iwatsuki_features", False):
-    st.subheader("🚀 AIの回答を一括貼り付け＆Excel生成")
-    st.info("AIが出力したJSONコード（プロンプト①、②、③の回答）をそれぞれの欄に貼り付けるだけで、Excelに自動入力されます。")
+if is_excel_mode:
+    st.header("✨ 岩槻はるかぜ特別支援学校の人だけ機能")
+    st.info("この機能は「Excel作成モード」選択時のみ表示されます。\nAIが出力したJSONコードを以下の欄に貼り付けるだけで、Excelに自動入力されます。")
     st.warning("※WEBアプリと同じフォルダに「プラン.xlsx」が必要です。")
 
     c_iwatsuki_1, c_iwatsuki_2 = st.columns(2)
@@ -707,14 +653,11 @@ if st.session_state.get("show_iwatsuki_features", False):
                         e_idx = clean_json_1.rfind('}') + 1
                         if s_idx != -1 and e_idx != -1:
                             clean_json_1 = clean_json_1[s_idx:e_idx]
-                        
                         data_1 = json.loads(clean_json_1)
                         
                         if "プランＡ" in wb.sheetnames:
                             ws_a = wb["プランＡ"]
-                            # D12: 特別な教育的ニーズ
                             safe_write(ws_a, 'D12', data_1.get('needs', ''))
-                            # D15: 合理的配慮
                             safe_write(ws_a, 'D15', data_1.get('accommodations', ''))
                         else:
                             st.warning("⚠️ シート「プランＡ」が見つかりません。")
@@ -731,14 +674,11 @@ if st.session_state.get("show_iwatsuki_features", False):
                         e_idx = clean_json_2.rfind('}') + 1
                         if s_idx != -1 and e_idx != -1:
                             clean_json_2 = clean_json_2[s_idx:e_idx]
-                            
                         data_2 = json.loads(clean_json_2)
                         
                         if "プランＡ" in wb.sheetnames:
                             ws_a = wb["プランＡ"]
-                            # D18: 目標・機関名
                             safe_write(ws_a, 'D18', data_2.get('goals', ''))
-                            # E18: 支援内容
                             safe_write(ws_a, 'E18', data_2.get('support', ''))
                     except json.JSONDecodeError:
                         st.error("❌ プロンプト②のJSON解析エラー。貼り付け内容を確認してください。")
@@ -753,14 +693,11 @@ if st.session_state.get("show_iwatsuki_features", False):
                         e_idx = clean_json_3.rfind('}') + 1
                         if s_idx != -1 and e_idx != -1:
                             clean_json_3 = clean_json_3[s_idx:e_idx]
-                            
                         data_3 = json.loads(clean_json_3)
                         
                         if "プランＢ(実態)" in wb.sheetnames:
                             ws_b = wb["プランＢ(実態)"]
-                            # C5: 指導方針
                             safe_write(ws_b, 'C5', data_3.get('policy', ''))
-                            # 実態項目 (D8, D10, D12, D14, D16, D18, D20)
                             safe_write(ws_b, 'D8', data_3.get('status_1', ''))
                             safe_write(ws_b, 'D10', data_3.get('status_2', ''))
                             safe_write(ws_b, 'D12', data_3.get('status_3', ''))
