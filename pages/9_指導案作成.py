@@ -1,6 +1,7 @@
 import streamlit as st
 import openpyxl
-from openpyxl.styles import Alignment, Border, Side
+from openpyxl.styles import Alignment
+from openpyxl.cell.cell import MergedCell # 判定用にインポート
 import json
 import io
 import os
@@ -10,11 +11,39 @@ import re
 st.set_page_config(page_title="指導案作成WEBアプリ", layout="wide")
 
 # ==========================================
+# 0. ユーティリティ関数（エラー回避用）
+# ==========================================
+def safe_write(ws, cell_address, value):
+    """
+    結合セルエラー（MergedCell...read-only）を回避して書き込む関数。
+    指定したセルが結合の一部（左上以外）だった場合、自動的に左上のセルを探して書き込む。
+    """
+    try:
+        # まず普通に書き込みを試みる（対象がセルオブジェクトの場合）
+        if isinstance(ws[cell_address], MergedCell):
+            # 対象が結合セル(MergedCell)の場合、ここには書き込めない
+            # そのセルが含まれる「結合範囲」を探す
+            for merged_range in ws.merged_cells.ranges:
+                if cell_address in merged_range:
+                    # 結合範囲の左上（start_cell）を取得
+                    top_left_coord = merged_range.start_cell.coordinate
+                    # 左上のセルに値を書き込む
+                    ws[top_left_coord] = value
+                    # 書式設定（左上揃え・折り返し）
+                    ws[top_left_coord].alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
+                    return
+        else:
+            # 結合セルでない、または結合の左上セルの場合は普通に書き込む
+            ws[cell_address] = value
+            ws[cell_address].alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
+
+    except Exception as e:
+        st.warning(f"セル {cell_address} への書き込み中に警告: {e}")
+
+# ==========================================
 # 1. プロンプト生成ロジック
 # ==========================================
 def generate_prompt_text(data):
-    """ユーザー入力を基に、ChatGPT/Geminiへ投げるプロンプトを作成する"""
-    
     prompt = f"""
 あなたは特別支援学校および公立学校における熟練の教員です。
 以下の【授業情報】を基に、学習指導案に必要な情報を補完し、指定の【JSON形式】のみで出力してください。
@@ -29,19 +58,10 @@ def generate_prompt_text(data):
 ・場所: {data['place']}
 ・本時の内容: {data['content']}
 
-[任意項目（空欄の場合はあなたが教育的観点から最適に補完すること）]
+[任意項目]
 ・目標: {data['goals_in'] if data['goals_in'] else "未定（文脈に合わせて最大3つ生成せよ）"}
-・評価の基準: {data['eval_in'] if data['eval_in'] else "未定（観点別：知識・技能、思考判断表現、主体的態度の3点を含めて生成せよ）"}
-・学習内容のヒント: {data['flow_in'] if data['flow_in'] else "未定（自然な流れで導入・展開・まとめを構成せよ）"}
-
-■ 【生成ルール】
-1. **目標**: 最大3つ。簡潔に。
-2. **評価の基準**: 30字程度で3項目（または文章で）。
-3. **本時の展開**: 
-   - 4～6ステップ程度で構成。
-   - 1項目の学習内容は100字以内。
-   - 「留意点」は学習内容とリンクさせ、特別支援（支援・配慮）の視点を入れること。
-4. **準備物**: 必要なものを列挙。
+・評価の基準: {data['eval_in'] if data['eval_in'] else "未定（3観点を含めて生成せよ）"}
+・学習内容のヒント: {data['flow_in'] if data['flow_in'] else "未定（自然な流れで構成せよ）"}
 
 ■ 【出力フォーマット（厳守）】
 以下のJSON構造を崩さずに返してください。
@@ -59,8 +79,8 @@ def generate_prompt_text(data):
   "flow": [
     {{
       "time": "5",
-      "activity": "導入：挨拶と出席確認...",
-      "notes": "元気よく挨拶するよう促す..."
+      "activity": "導入：挨拶...",
+      "notes": "留意点..."
     }},
     {{
       "time": "10",
@@ -68,7 +88,7 @@ def generate_prompt_text(data):
       "notes": "..."
     }}
   ],
-  "materials": "iPad, プロジェクター, ワークシート..."
+  "materials": "準備物リスト"
 }}
 """
     return prompt
@@ -83,30 +103,26 @@ def create_excel(template_path, json_data):
     except Exception as e:
         return None, f"テンプレート読み込みエラー: {e}"
 
-    # --- ① 基本情報の入力 ---
-    # ユーザー入力そのものを優先するか、JSON(AI)を優先するかですが、
-    # 基本情報はユーザー入力が正なのでJSON内のbasic_infoを使います。
+    # --- ① 基本情報の入力（safe_writeを使用） ---
     bi = json_data.get('basic_info', {})
     
-    ws['C2'] = bi.get('grade', '')      # 学部学年
-    ws['I2'] = bi.get('subject', '')    # 教科単元
-    ws['C3'] = bi.get('date', '')       # 日時
-    ws['K3'] = bi.get('time', '')       # 時間
-    ws['N3'] = bi.get('place', '')      # 場所
-    ws['C4'] = bi.get('content', '')    # 本時の内容
+    safe_write(ws, 'C2', bi.get('grade', ''))      # 学部学年
+    safe_write(ws, 'I2', bi.get('subject', ''))    # 教科単元
+    safe_write(ws, 'C3', bi.get('date', ''))       # 日時
+    safe_write(ws, 'K3', bi.get('time', ''))       # 時間
+    safe_write(ws, 'N3', bi.get('place', ''))      # 場所
+    safe_write(ws, 'C4', bi.get('content', ''))    # 本時の内容
 
     # --- ② 目標（B10, B11, B12） ---
     goals = json_data.get('goals', [])
-    # 最大3つまで
-    if len(goals) > 0: ws['B10'] = f"・{goals[0]}"
-    if len(goals) > 1: ws['B11'] = f"・{goals[1]}"
-    if len(goals) > 2: ws['B12'] = f"・{goals[2]}"
+    if len(goals) > 0: safe_write(ws, 'B10', f"・{goals[0]}")
+    if len(goals) > 1: safe_write(ws, 'B11', f"・{goals[1]}")
+    if len(goals) > 2: safe_write(ws, 'B12', f"・{goals[2]}")
 
     # --- ③ 評価の基準（B14） ---
     evals = json_data.get('evaluation', [])
     eval_text = "\n".join([f"・{e}" for e in evals])
-    ws['B14'] = eval_text
-    ws['B14'].alignment = Alignment(wrap_text=True, vertical='top')
+    safe_write(ws, 'B14', eval_text)
 
     # --- ④ 本時の展開（A13～ 1行あけ） ---
     flow_list = json_data.get('flow', [])
@@ -114,23 +130,22 @@ def create_excel(template_path, json_data):
     
     for item in flow_list:
         # 時間 (A列)
-        ws[f'A{current_row}'] = item.get('time', '')
-        ws[f'A{current_row}'].alignment = Alignment(horizontal='center', vertical='center')
+        safe_write(ws, f'A{current_row}', item.get('time', ''))
 
-        # 学習内容 (B列) ※テンプレート側でB-J結合されている前提
-        ws[f'B{current_row}'] = item.get('activity', '')
-        ws[f'B{current_row}'].alignment = Alignment(wrap_text=True, vertical='top')
+        # 学習内容 (B列:J列想定)
+        # ※ここがエラーの原因になりやすい場所です。
+        # テンプレートでB13:J13が結合されているなら 'B13' に書き込めばOK。
+        # もし 'C13' などが指定されるとエラーになりますが、safe_writeが救ってくれます。
+        safe_write(ws, f'B{current_row}', item.get('activity', ''))
 
-        # 留意点 (K列) ※テンプレート側でK-M結合されている前提
-        ws[f'K{current_row}'] = item.get('notes', '')
-        ws[f'K{current_row}'].alignment = Alignment(wrap_text=True, vertical='top')
+        # 留意点 (K列:M列想定)
+        safe_write(ws, f'K{current_row}', item.get('notes', ''))
 
-        # 次の項目は1行空ける（仕様に従う）
+        # 次の項目は1行空ける
         current_row += 2 
 
     # --- 準備物 (N13) ---
-    ws['N13'] = json_data.get('materials', '')
-    ws['N13'].alignment = Alignment(wrap_text=True, vertical='top')
+    safe_write(ws, 'N13', json_data.get('materials', ''))
 
     # 保存
     output = io.BytesIO()
@@ -160,7 +175,7 @@ with st.container():
     with st.expander("詳細設定（任意入力）- 空欄でもAIが補完します"):
         in_goals = st.text_area("目標（最大3つ）", height=68)
         in_eval = st.text_area("評価の基準", height=68)
-        in_flow = st.text_area("学習内容・メモ（箇条書きなど）", height=100)
+        in_flow = st.text_area("学習内容・メモ", height=100)
 
 # データをまとめる
 input_data = {
@@ -171,16 +186,13 @@ input_data = {
 
 # --- Step 2: プロンプト生成 ---
 st.header("2. AI用プロンプトを生成")
-st.info("下のボタンを押すと、ChatGPT/Gemini用の命令文が作成されます。")
-
 if st.button("プロンプト作成 📋"):
     prompt_text = generate_prompt_text(input_data)
     st.code(prompt_text, language="text")
-    st.success("上のボックスの右上にあるコピーボタンでコピーし、ChatGPTやGeminiに貼り付けてください。")
+    st.success("コピーしてChatGPTやGeminiに貼り付けてください。")
 
 # --- Step 3: AI出力の貼り付け ---
 st.header("3. AIからの回答を貼り付け")
-st.warning("AIから返ってきたJSONコード（{...} で始まる部分）をそのままここに貼り付けてください。")
 json_input_str = st.text_area("ここにAIの回答をペースト", height=300)
 
 # --- Step 4: Excel生成 ---
@@ -190,11 +202,9 @@ if st.button("Excel作成実行 🚀"):
     if not json_input_str.strip():
         st.error("AIの回答が貼り付けられていません。")
     else:
-        # JSON解析の試み（Markdownの ```json 等が含まれていても除去して解析）
         try:
-            # ```json 等の除去
+            # 1. JSONのクリーニングと解析
             clean_json = re.sub(r"```json\s*|\s*```", "", json_input_str).strip()
-            # 先頭と末尾が { } でない場合のトリミング処理（簡易）
             start_idx = clean_json.find('{')
             end_idx = clean_json.rfind('}') + 1
             if start_idx != -1 and end_idx != -1:
@@ -202,16 +212,28 @@ if st.button("Excel作成実行 🚀"):
             
             data_dict = json.loads(clean_json)
             
-            # Excel生成
-            template_file = "指導案.xlsx"
+            # 2. ファイルパスの自動解決（pages対策）
+            # このファイル(pages/app.py)のあるフォルダを取得
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            # 一つ上の階層(ルート)を取得
+            base_dir = os.path.dirname(current_dir)
+            # ルートにあるExcelファイルを指定
+            template_file = os.path.join(base_dir, "指導案.xlsx")
+            
+            # デバッグ用：パスが見つかるか確認（見つからなければエラー表示）
             if not os.path.exists(template_file):
-                st.error(f"サーバー上にテンプレートファイル '{template_file}' が見つかりません。")
+                # もしルートになければ、同じフォルダ(pages)を探す予備処理
+                template_file = os.path.join(current_dir, "指導案.xlsx")
+
+            if not os.path.exists(template_file):
+                st.error(f"エラー: テンプレートファイルが見つかりません。\n探した場所:\n1. {os.path.join(base_dir, '指導案.xlsx')}\n2. {os.path.join(current_dir, '指導案.xlsx')}")
             else:
+                # 3. Excel生成実行
                 excel_data, err = create_excel(template_file, data_dict)
                 if err:
                     st.error(err)
                 else:
-                    st.success("Excel生成に成功しました！")
+                    st.success("成功！ダウンロードできます。")
                     st.download_button(
                         label="📥 指導案.xlsx をダウンロード",
                         data=excel_data,
@@ -220,6 +242,6 @@ if st.button("Excel作成実行 🚀"):
                     )
                     
         except json.JSONDecodeError:
-            st.error("貼り付けられたテキストをJSONとして解析できませんでした。AIが正しくJSON形式で返しているか確認してください。")
+            st.error("JSON解析エラー: AIの回答を正しく貼り付けてください。")
         except Exception as e:
-            st.error(f"予期せぬエラーが発生しました: {e}")
+            st.error(f"予期せぬエラー: {e}")
