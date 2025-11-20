@@ -1,7 +1,7 @@
 import streamlit as st
 import openpyxl
 from openpyxl.styles import Alignment
-from openpyxl.cell.cell import MergedCell # 判定用にインポート
+from openpyxl.cell.cell import MergedCell
 import json
 import io
 import os
@@ -19,6 +19,10 @@ def safe_write(ws, cell_address, value):
     指定したセルが結合の一部（左上以外）だった場合、自動的に左上のセルを探して書き込む。
     """
     try:
+        # 値がNoneの場合は空文字にする
+        if value is None:
+            value = ""
+            
         # まず普通に書き込みを試みる（対象がセルオブジェクトの場合）
         if isinstance(ws[cell_address], MergedCell):
             # 対象が結合セル(MergedCell)の場合、ここには書き込めない
@@ -103,7 +107,7 @@ def create_excel(template_path, json_data):
     except Exception as e:
         return None, f"テンプレート読み込みエラー: {e}"
 
-    # --- ① 基本情報の入力（safe_writeを使用） ---
+    # --- ① 基本情報の入力 ---
     bi = json_data.get('basic_info', {})
     
     safe_write(ws, 'C2', bi.get('grade', ''))      # 学部学年
@@ -113,18 +117,20 @@ def create_excel(template_path, json_data):
     safe_write(ws, 'N3', bi.get('place', ''))      # 場所
     safe_write(ws, 'C4', bi.get('content', ''))    # 本時の内容
 
-    # --- ② 目標（B10, B11, B12） ---
+    # --- ② 目標（C5, C6, C7） ---
     goals = json_data.get('goals', [])
-    if len(goals) > 0: safe_write(ws, 'B10', f"・{goals[0]}")
-    if len(goals) > 1: safe_write(ws, 'B11', f"・{goals[1]}")
-    if len(goals) > 2: safe_write(ws, 'B12', f"・{goals[2]}")
+    # リストが足りない場合にエラーにならないようチェックしながら書き込み
+    if len(goals) > 0: safe_write(ws, 'C5', f"・{goals[0]}")
+    if len(goals) > 1: safe_write(ws, 'C6', f"・{goals[1]}")
+    if len(goals) > 2: safe_write(ws, 'C7', f"・{goals[2]}")
 
-    # --- ③ 評価の基準（B14） ---
+    # --- ③ 評価の基準（C8, C9, C10） ---
     evals = json_data.get('evaluation', [])
-    eval_text = "\n".join([f"・{e}" for e in evals])
-    safe_write(ws, 'B14', eval_text)
+    if len(evals) > 0: safe_write(ws, 'C8', f"・{evals[0]}")
+    if len(evals) > 1: safe_write(ws, 'C9', f"・{evals[1]}")
+    if len(evals) > 2: safe_write(ws, 'C10', f"・{evals[2]}")
 
-    # --- ④ 本時の展開（A13～ 1行あけ） ---
+    # --- ④ 本時の展開（A13～ 2行あけ） ---
     flow_list = json_data.get('flow', [])
     current_row = 13
     
@@ -132,17 +138,15 @@ def create_excel(template_path, json_data):
         # 時間 (A列)
         safe_write(ws, f'A{current_row}', item.get('time', ''))
 
-        # 学習内容 (B列:J列想定)
-        # ※ここがエラーの原因になりやすい場所です。
-        # テンプレートでB13:J13が結合されているなら 'B13' に書き込めばOK。
-        # もし 'C13' などが指定されるとエラーになりますが、safe_writeが救ってくれます。
+        # 学習内容 (B列:J列想定 -> B列指定)
         safe_write(ws, f'B{current_row}', item.get('activity', ''))
 
-        # 留意点 (K列:M列想定)
+        # 留意点 (K列:M列想定 -> K列指定)
         safe_write(ws, f'K{current_row}', item.get('notes', ''))
 
-        # 次の項目は1行空ける
-        current_row += 2 
+        # 次の項目は「2行」空ける
+        # 記入行(13) -> 空(14) -> 空(15) -> 次(16) なので +3
+        current_row += 2
 
     # --- 準備物 (N13) ---
     safe_write(ws, 'N13', json_data.get('materials', ''))
@@ -212,7 +216,7 @@ if st.button("Excel作成実行 🚀"):
             
             data_dict = json.loads(clean_json)
             
-            # 2. ファイルパスの自動解決（pages対策）
+            # 2. ファイルパスの自動解決
             # このファイル(pages/app.py)のあるフォルダを取得
             current_dir = os.path.dirname(os.path.abspath(__file__))
             # 一つ上の階層(ルート)を取得
@@ -220,9 +224,8 @@ if st.button("Excel作成実行 🚀"):
             # ルートにあるExcelファイルを指定
             template_file = os.path.join(base_dir, "指導案.xlsx")
             
-            # デバッグ用：パスが見つかるか確認（見つからなければエラー表示）
+            # 予備検索: もしルートになければpages内も探す
             if not os.path.exists(template_file):
-                # もしルートになければ、同じフォルダ(pages)を探す予備処理
                 template_file = os.path.join(current_dir, "指導案.xlsx")
 
             if not os.path.exists(template_file):
