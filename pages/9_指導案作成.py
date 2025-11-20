@@ -7,51 +7,81 @@ import io
 import os
 import re
 
-# ページ設定
-st.set_page_config(page_title="指導案作成WEBアプリ", layout="wide")
+# ==========================================
+# 0. ページ設定 & デザイン・CSS定義
+# ==========================================
+st.set_page_config(
+    page_title="指導案作成エージェント",
+    page_icon="📝",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# おしゃれにするためのカスタムCSS
+st.markdown("""
+<style>
+    .stButton>button {
+        font-weight: bold;
+        border-radius: 10px;
+        height: 3em;
+    }
+    .big-font {
+        font-size: 20px !important;
+        font-weight: bold;
+    }
+    .header-box {
+        background-color: #f0f2f6;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #4CAF50;
+        margin-bottom: 20px;
+    }
+    .step-header {
+        color: #2c3e50;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-top: 30px;
+        font-weight: bold;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ==========================================
-# 0. ユーティリティ関数（エラー回避用）
+# 1. ユーティリティ関数（Excelエラー回避用）
 # ==========================================
 def safe_write(ws, cell_address, value):
     """
     結合セルエラー（MergedCell...read-only）を回避して書き込む関数。
-    指定したセルが結合の一部（左上以外）だった場合、自動的に左上のセルを探して書き込む。
     """
     try:
-        # 値がNoneの場合は空文字にする
         if value is None:
             value = ""
-            
-        # まず普通に書き込みを試みる（対象がセルオブジェクトの場合）
+        
+        # 値を文字列化（念のため）
+        value = str(value)
+
         if isinstance(ws[cell_address], MergedCell):
-            # 対象が結合セル(MergedCell)の場合、ここには書き込めない
-            # そのセルが含まれる「結合範囲」を探す
             for merged_range in ws.merged_cells.ranges:
                 if cell_address in merged_range:
-                    # 結合範囲の左上（start_cell）を取得
                     top_left_coord = merged_range.start_cell.coordinate
-                    # 左上のセルに値を書き込む
                     ws[top_left_coord] = value
-                    # 書式設定（左上揃え・折り返し）
                     ws[top_left_coord].alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
                     return
         else:
-            # 結合セルでない、または結合の左上セルの場合は普通に書き込む
             ws[cell_address] = value
             ws[cell_address].alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
 
     except Exception as e:
-        st.warning(f"セル {cell_address} への書き込み中に警告: {e}")
+        st.warning(f"⚠️ セル {cell_address} への書き込み中に警告: {e}")
 
 # ==========================================
-# 1. プロンプト生成ロジック
+# 2. プロンプト生成ロジック
 # ==========================================
 def generate_prompt_text(data):
     prompt = f"""
-あなたは特別支援学校および公立学校における熟練の教員です。
+あなたは特別支援学校および公立学校における【熟練の教員】です。
 以下の【授業情報】を基に、学習指導案に必要な情報を補完し、指定の【JSON形式】のみで出力してください。
-余計な挨拶や解説は不要です。JSONデータだけを返してください。
+前置きや解説は一切不要です。JSONデータだけを返してください。
 
 ■ 【授業情報】
 [必須項目]
@@ -62,13 +92,14 @@ def generate_prompt_text(data):
 ・場所: {data['place']}
 ・本時の内容: {data['content']}
 
-[任意項目]
+[任意項目（ユーザー入力があれば反映、なければ教育的観点で補完）]
 ・目標: {data['goals_in'] if data['goals_in'] else "未定（文脈に合わせて最大3つ生成せよ）"}
-・評価の基準: {data['eval_in'] if data['eval_in'] else "未定（3観点を含めて生成せよ）"}
-・学習内容のヒント: {data['flow_in'] if data['flow_in'] else "未定（自然な流れで構成せよ）"}
+・評価の基準: {data['eval_in'] if data['eval_in'] else "未定（3観点：知識・技能、思考判断表現、主体的態度を含めて生成せよ）"}
+・学習内容のメモ: {data['flow_in'] if data['flow_in'] else "未定（自然な流れで構成せよ）"}
+・備考: {data['remarks_in'] if data['remarks_in'] else "なし"}
 
 ■ 【出力フォーマット（厳守）】
-以下のJSON構造を崩さずに返してください。
+以下のJSON構造を絶対に崩さずに返してください。
 {{
   "basic_info": {{
     "grade": "{data['grade']}",
@@ -79,12 +110,12 @@ def generate_prompt_text(data):
     "content": "{data['content']}"
   }},
   "goals": ["目標1", "目標2", "目標3"],
-  "evaluation": ["評価基準1", "評価基準2", "評価基準3"],
+  "evaluation": ["評価基準1（知識技能）", "評価基準2（思考判断）", "評価基準3（主体性）"],
   "flow": [
     {{
       "time": "5",
       "activity": "導入：挨拶...",
-      "notes": "留意点..."
+      "notes": "配慮事項..."
     }},
     {{
       "time": "10",
@@ -92,13 +123,14 @@ def generate_prompt_text(data):
       "notes": "..."
     }}
   ],
-  "materials": "準備物リスト"
+  "materials": "準備物リスト",
+  "remarks": "備考の内容（特になければ空欄でも可）"
 }}
 """
     return prompt
 
 # ==========================================
-# 2. Excel出力ロジック
+# 3. Excel出力ロジック
 # ==========================================
 def create_excel(template_path, json_data):
     try:
@@ -107,107 +139,126 @@ def create_excel(template_path, json_data):
     except Exception as e:
         return None, f"テンプレート読み込みエラー: {e}"
 
-    # --- ① 基本情報の入力 ---
+    # --- ① 基本情報 ---
     bi = json_data.get('basic_info', {})
-    
-    safe_write(ws, 'C2', bi.get('grade', ''))      # 学部学年
-    safe_write(ws, 'I2', bi.get('subject', ''))    # 教科単元
-    safe_write(ws, 'C3', bi.get('date', ''))       # 日時
-    safe_write(ws, 'K3', bi.get('time', ''))       # 時間
-    safe_write(ws, 'N3', bi.get('place', ''))      # 場所
-    safe_write(ws, 'C4', bi.get('content', ''))    # 本時の内容
+    safe_write(ws, 'C2', bi.get('grade', ''))
+    safe_write(ws, 'I2', bi.get('subject', ''))
+    safe_write(ws, 'C3', bi.get('date', ''))
+    safe_write(ws, 'K3', bi.get('time', ''))
+    safe_write(ws, 'N3', bi.get('place', ''))
+    safe_write(ws, 'C4', bi.get('content', ''))
 
-    # --- ② 目標（C5, C6, C7） ---
+    # --- ② 目標 (C5, C6, C7) ---
     goals = json_data.get('goals', [])
-    # リストが足りない場合にエラーにならないようチェックしながら書き込み
     if len(goals) > 0: safe_write(ws, 'C5', f"・{goals[0]}")
     if len(goals) > 1: safe_write(ws, 'C6', f"・{goals[1]}")
     if len(goals) > 2: safe_write(ws, 'C7', f"・{goals[2]}")
 
-    # --- ③ 評価の基準（C8, C9, C10） ---
+    # --- ③ 評価の基準 (C8, C9, C10) ---
     evals = json_data.get('evaluation', [])
     if len(evals) > 0: safe_write(ws, 'C8', f"・{evals[0]}")
     if len(evals) > 1: safe_write(ws, 'C9', f"・{evals[1]}")
     if len(evals) > 2: safe_write(ws, 'C10', f"・{evals[2]}")
 
-    # --- ④ 本時の展開（A13～ 2行あけ） ---
+    # --- ④ 本時の展開 (A13～ 2行空け) ---
     flow_list = json_data.get('flow', [])
     current_row = 13
     
     for item in flow_list:
-        # 時間 (A列)
-        safe_write(ws, f'A{current_row}', item.get('time', ''))
-
-        # 学習内容 (B列:J列想定 -> B列指定)
-        safe_write(ws, f'B{current_row}', item.get('activity', ''))
-
-        # 留意点 (K列:M列想定 -> K列指定)
-        safe_write(ws, f'K{current_row}', item.get('notes', ''))
-
-        # 次の項目は「2行」空ける
-        # 記入行(13) -> 空(14) -> 空(15) -> 次(16) なので +3
+        safe_write(ws, f'A{current_row}', item.get('time', '')) # 時間
+        safe_write(ws, f'B{current_row}', item.get('activity', '')) # 学習内容
+        safe_write(ws, f'K{current_row}', item.get('notes', '')) # 留意点
+        
+        # 次の項目へ（2行空ける設定：13→16→19...）
         current_row += 2
 
-    # --- 準備物 (N13) ---
+    # --- ⑤ 準備物 (N13) ---
     safe_write(ws, 'N13', json_data.get('materials', ''))
 
-    # 保存
+    # --- ⑥ 備考 (B33) ---
+    # 仕様：B33:N35統合セル -> 左上のB33に書き込む
+    safe_write(ws, 'B33', json_data.get('remarks', ''))
+
+    # 保存処理
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
     return output, None
 
 # ==========================================
-# 3. メイン画面 UI
+# 4. メイン画面 UI
 # ==========================================
-st.title("📝 指導案作成WEBアプリ")
-st.markdown("ChatGPTやGeminiを使って指導案を作成し、Excelに出力します。")
+
+# --- ヘッダーエリア ---
+st.markdown("<div class='header-box'>", unsafe_allow_html=True)
+st.title("📝 指導案作成 AIエージェント")
+st.markdown("入力情報を元にプロンプトを作成し、AIとの連携で指導案Excelを完成させます。")
+st.markdown("</div>", unsafe_allow_html=True)
+
+# --- AIリンクボタン ---
+st.markdown("### 🔗 まずはAIを開く")
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    st.link_button("🤖 ChatGPT を開く", "https://chat.openai.com/", use_container_width=True)
+with col_btn2:
+    st.link_button("✨ Gemini を開く", "https://gemini.google.com/", use_container_width=True)
+
+st.markdown("---")
 
 # --- Step 1: 情報入力 ---
-st.header("1. 基本情報を入力")
-with st.container():
-    col1, col2 = st.columns(2)
-    with col1:
-        in_grade = st.text_input("学部学年", "小学部 5年")
-        in_subject = st.text_input("教科単元", "生活単元学習「お祭りを開こう」")
-        in_date = st.text_input("日時", "令和6年11月20日")
-    with col2:
-        in_time = st.text_input("時間", "45分")
-        in_place = st.text_input("場所", "5年1組教室")
-        in_content = st.text_input("本時の内容", "模擬店の商品作り")
+st.markdown("<h3 class='step-header'>Step 1. 基本情報を入力</h3>", unsafe_allow_html=True)
 
-    with st.expander("詳細設定（任意入力）- 空欄でもAIが補完します"):
-        in_goals = st.text_area("目標（最大3つ）", height=68)
-        in_eval = st.text_area("評価の基準", height=68)
-        in_flow = st.text_area("学習内容・メモ", height=100)
+with st.container():
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        in_grade = st.text_input("🎓 学部学年", "小学部 5年")
+        in_date = st.text_input("📅 日時", "令和6年11月20日")
+    with c2:
+        in_subject = st.text_input("📚 教科単元", "生活単元学習「お祭りを開こう」")
+        in_place = st.text_input("🏫 場所", "5年1組教室")
+    with c3:
+        in_time = st.text_input("⏰ 時間", "45分")
+        in_content = st.text_input("📝 本時の内容", "模擬店の商品作り")
+
+    # 詳細設定（アコーディオン）
+    with st.expander("⚙️ 詳細設定（目標・評価・備考など） ※空欄でもAIが補完します", expanded=False):
+        col_ex1, col_ex2 = st.columns(2)
+        with col_ex1:
+            in_goals = st.text_area("🎯 目標（最大3つ）", height=100, placeholder="例：\n・道具を正しく使うことができる\n・友達と協力することができる")
+            in_eval = st.text_area("📊 評価の基準", height=100, placeholder="知識・技能、思考・判断・表現、主体的に取り組む態度の観点で生成されます。")
+        with col_ex2:
+            in_flow = st.text_area("💡 学習内容のメモ・ヒント", height=100, placeholder="授業の流れや、必ず入れたい活動があれば箇条書きで。")
+            in_remarks = st.text_area("📌 備考（特記事項）", height=100, placeholder="Excelの下部（B33）に入力されます。")
 
 # データをまとめる
 input_data = {
     "grade": in_grade, "subject": in_subject, "date": in_date,
     "time": in_time, "place": in_place, "content": in_content,
-    "goals_in": in_goals, "eval_in": in_eval, "flow_in": in_flow
+    "goals_in": in_goals, "eval_in": in_eval, "flow_in": in_flow,
+    "remarks_in": in_remarks
 }
 
 # --- Step 2: プロンプト生成 ---
-st.header("2. AI用プロンプトを生成")
-if st.button("プロンプト作成 📋"):
+st.markdown("<h3 class='step-header'>Step 2. プロンプトをコピー</h3>", unsafe_allow_html=True)
+
+if st.button("📋 プロンプトを作成する", type="primary", use_container_width=True):
     prompt_text = generate_prompt_text(input_data)
     st.code(prompt_text, language="text")
-    st.success("コピーしてChatGPTやGeminiに貼り付けてください。")
+    st.success("👆 右上のアイコンでコピーし、ChatGPTやGeminiに貼り付けてください。")
+else:
+    st.info("上のボタンを押すと、AIへの指令文が表示されます。")
 
-# --- Step 3: AI出力の貼り付け ---
-st.header("3. AIからの回答を貼り付け")
-json_input_str = st.text_area("ここにAIの回答をペースト", height=300)
+# --- Step 3: AI出力貼り付け & Excel生成 ---
+st.markdown("<h3 class='step-header'>Step 3. AIの回答を貼り付けてExcel作成</h3>", unsafe_allow_html=True)
 
-# --- Step 4: Excel生成 ---
-st.header("4. 指導案Excelのダウンロード")
+json_input_str = st.text_area("ここにAIからの回答（JSONコード）を貼り付け", height=300, placeholder='{\n  "basic_info": { ... },\n  "goals": [ ... ]\n}')
 
-if st.button("Excel作成実行 🚀"):
+if st.button("🚀 指導案Excelを出力する", type="primary", use_container_width=True):
     if not json_input_str.strip():
-        st.error("AIの回答が貼り付けられていません。")
+        st.error("⚠️ AIの回答が貼り付けられていません。")
     else:
         try:
-            # 1. JSONのクリーニングと解析
+            # 1. JSONクリーニング
             clean_json = re.sub(r"```json\s*|\s*```", "", json_input_str).strip()
             start_idx = clean_json.find('{')
             end_idx = clean_json.rfind('}') + 1
@@ -216,35 +267,33 @@ if st.button("Excel作成実行 🚀"):
             
             data_dict = json.loads(clean_json)
             
-            # 2. ファイルパスの自動解決
-            # このファイル(pages/app.py)のあるフォルダを取得
+            # 2. テンプレート検索（階層対応）
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            # 一つ上の階層(ルート)を取得
             base_dir = os.path.dirname(current_dir)
-            # ルートにあるExcelファイルを指定
-            template_file = os.path.join(base_dir, "指導案.xlsx")
+            template_file = os.path.join(base_dir, "指導案.xlsx") # 親フォルダ検索
             
-            # 予備検索: もしルートになければpages内も探す
             if not os.path.exists(template_file):
-                template_file = os.path.join(current_dir, "指導案.xlsx")
+                template_file = os.path.join(current_dir, "指導案.xlsx") # 現フォルダ検索
 
             if not os.path.exists(template_file):
-                st.error(f"エラー: テンプレートファイルが見つかりません。\n探した場所:\n1. {os.path.join(base_dir, '指導案.xlsx')}\n2. {os.path.join(current_dir, '指導案.xlsx')}")
+                st.error(f"❌ エラー: テンプレートファイルが見つかりません。\n{base_dir} または {current_dir} に '指導案.xlsx' を配置してください。")
             else:
-                # 3. Excel生成実行
+                # 3. Excel生成
                 excel_data, err = create_excel(template_file, data_dict)
                 if err:
                     st.error(err)
                 else:
-                    st.success("成功！ダウンロードできます。")
+                    st.balloons()
+                    st.success("✨ 指導案Excelが完成しました！")
                     st.download_button(
-                        label="📥 指導案.xlsx をダウンロード",
+                        label="📥 完成した指導案をダウンロード",
                         data=excel_data,
                         file_name="完成_指導案.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
                     )
                     
         except json.JSONDecodeError:
-            st.error("JSON解析エラー: AIの回答を正しく貼り付けてください。")
+            st.error("❌ JSON解析エラー: 貼り付けたテキストが正しいJSON形式か確認してください。")
         except Exception as e:
-            st.error(f"予期せぬエラー: {e}")
+            st.error(f"❌ 予期せぬエラー: {e}")
