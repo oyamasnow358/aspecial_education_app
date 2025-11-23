@@ -233,7 +233,7 @@ st.markdown("""
 
 st.markdown(f"""
 <div class="recommended-tool">
-    <p>ここでは、特別支援教育で使える教育学的、心理学的、統計学的分析方法の解説と、実践で使えるツールを紹介します。</p>
+    <p>ここでは、特別支援教育で使える教育学的、心理学的、統計学的分析方法の解説と、実践で使えるツールを紹介します。特に統計学の分析ツールでは、相関関係だけではなく、因果関係の追及も分析が可能です</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -255,8 +255,8 @@ img_stats_tools_chart = "https://i.imgur.com/ASnp6PS.png"
 
 # 療法・分析法とマークダウンファイルの対応
 methods = {
-    "ABA（応用行動分析）": {"file": "pages2/aba.md", "description": "行動の原理を応用し、望ましい行動を促進します。"},
-    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）": {"file": "pages2/fba_pbs.md", "description": "問題行動の原因を探り、前向きな支援計画を立てます。"},
+    "ABA（応用行動分析）※ツール有": {"file": "pages2/aba.md", "description": "行動の原理を応用し、望ましい行動を促進します。"},
+    "FBA/PBS（機能的アセスメント/ポジティブ行動支援）※ツール有": {"file": "pages2/fba_pbs.md", "description": "問題行動の原因を探り、前向きな支援計画を立てます。"},
     "CBT（認知行動療法）": {"file": "pages2/cbt.md", "description": "思考パターンに焦点を当て、感情や行動の改善を目指します。"},
     "ソーシャルスキルトレーニング": {"file": "pages2/sst.md", "description": "対人関係で役立つスキルを効果的に学びます。"},
     "感覚統合療法": {"file": "pages2/sensory_integration.md", "description": "感覚の処理能力を高め、日常生活の適応を助けます。"},
@@ -269,7 +269,7 @@ methods = {
     "アートセラピー": {"file": "pages2/art_therapy.md", "description": "芸術表現を通じて自己理解と癒しを深めます。"},
     "ミュージックセラピー": {"file": "pages2/music_therapy.md", "description": "音楽の力で心身の健康を促進し、感情を豊かにします。"},
     "セルフモニタリング": {"file": "pages2/self_monitar.md", "description": "自身の行動や感情を記録し、客観的に分析します。"},
-    "統計学的分析方法": {"file": "pages2/toukei.md", "description": "データに基づいて教育実践を客観的に評価します。"},
+    "統計学的分析方法 ※ツール有": {"file": "pages2/toukei.md", "description": "データに基づいて教育実践を客観的に評価します。"},
 }
 
 # 実態と適した療法の対応
@@ -443,7 +443,7 @@ if st.session_state.selected_method:
         st.markdown("初めての方へ：**統計分析に役立つ強力なツールが揃っています！**")
         # アンケート分析ツールを強調
         st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
-        st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
+        st.markdown("<h4>✨ 初心者にもオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
         st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
         st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
         # ここにも画像を挿入
@@ -466,7 +466,7 @@ if st.session_state.selected_method:
 st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 
-with st.expander("🔗 全ての関連ツール＆リンクを表示", expanded=False):
+with st.expander("🔗 全ての統計学ツールリンクを表示", expanded=False):
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("##### 📁 教育・心理分析ツール")
