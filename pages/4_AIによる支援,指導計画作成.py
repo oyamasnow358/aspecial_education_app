@@ -129,25 +129,25 @@ else:
 
 st.markdown("---")
 
-# --- AIチャットへのリンク ---
+# --- AIチャットへのリンク (修正箇所: コンパクト化・横並び) ---
 with st.container(border=True):
     st.markdown("""
-    <div style="background-color: #e9f5ff; padding: 15px 20px; border: 2px solid #4a90e2; border-radius: 10px;">
-        <h2 style="margin-top: 0; color: #2c3e50; border-left: none; text-align: center;">
+    <div style="text-align: center; margin-bottom: 10px;">
+        <h3 style="margin: 0; padding: 0; color: #2c3e50; border: none; font-size: 1.4em;">
             🚀 プロンプトをコピーしたら、AIチャットへ！
-        </h2>
-        <p style="text-align: center; font-size: 1.1em; margin-bottom: 15px;">
-            下のボタンを押すと各AIチャットが開きます。コピーしたプロンプトを貼り付けて、文章作成を始めましょう。
+        </h3>
+        <p style="margin-top: 5px; color: #555; font-size: 0.95em;">
+            下のボタンを押すと各AIチャットが開きます。コピーしたプロンプトを貼り付けてください。
         </p>
     </div>
     """, unsafe_allow_html=True)
-    b_col1, b_col2, b_col3 = st.columns([1, 1.5, 1])
-    with b_col2:
-        st.link_button("ChatGPT を開いて文章作成を始める ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    b_col_g1, b_col_g2, b_col_g3 = st.columns([1, 1.5, 1])
-    with b_col_g2:
-        st.link_button("Gemini を開いて文章作成を始める ↗", "https://gemini.google.com/", type="primary", use_container_width=True)
+    
+    # リンクボタンを横並び（2カラム）に配置
+    btn_col1, btn_col2 = st.columns(2)
+    with btn_col1:
+        st.link_button("ChatGPT を開く ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
+    with btn_col2:
+        st.link_button("Gemini を開く ↗", "https://gemini.google.com/", type="primary", use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -422,7 +422,9 @@ JSONのvalue（値）となる文字列については、以下の整形ルー�
             st.code(prompt_text, language="text")
             st.success("👆 右上のアイコンでコピーし、AIに貼り付けてください。")
 
-# --- プロンプト④ (ここから先は元のコードを完全復元) ---
+# ==========================================
+# プロンプト④
+# ==========================================
 with st.expander("プロンプト④【個別の指導計画：目標と手立て】"):
     with st.container(border=True):
         st.subheader("プロンプト④【個別の指導計画：目標と手立て】")
@@ -499,7 +501,9 @@ with st.expander("プロンプト④【個別の指導計画：目標と手立�
             else:
                 st.code("\n---\n".join(full_prompt_output), language="text") # 各教科のプロンプトを区切り線で結合して表示
 
-# --- プロンプト⑤ (元のコードを完全復元) ---
+# ==========================================
+# プロンプト⑤
+# ==========================================
 with st.expander("プロンプト⑤【個別の指導計画：評価】"):
     with st.container(border=True):
         st.subheader("プロンプト⑤【個別の指導計画：評価】")
@@ -534,7 +538,7 @@ with st.expander("プロンプト⑤【個別の指導計画：評価】"):
                 if reference_text_4.strip() and reference_text_4 != "（例：個別の指導計画の「指導の目標および内容」の全文や、特に見てほしい部分など）":
                     prompt_main_source_4 = f"以下の【参考テキスト】も補足情報として考慮した上で、"
                 else:
-                     prompt_main_source_4 = "以下の"
+                      prompt_main_source_4 = "以下の"
 
             else:
                 prompt_intro_4 = "以下の【指導計画のテキスト】を主たる情報源として、"
@@ -561,7 +565,9 @@ with st.expander("プロンプト⑤【個別の指導計画：評価】"):
             st.code(prompt_full_4, language="text")
 
 
-# --- プロンプト⑥ (元のコードを完全復元) ---
+# ==========================================
+# プロンプト⑥
+# ==========================================
 with st.expander("プロンプト⑥【前期・後期の所見】"):
     with st.container(border=True):
         st.subheader("プロンプト⑥【前期・後期の所見】")
