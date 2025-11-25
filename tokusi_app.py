@@ -1,6 +1,9 @@
 import streamlit as st
+from PIL import Image
+import base64
+import os
 
-# --- 1. ページ設定 (タイトルをMirairoに変更) ---
+# --- 1. ページ設定 ---
 st.set_page_config(
     page_title="Mirairo",
     page_icon="🌟",
@@ -8,110 +11,119 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSSデザイン (ここだけ大幅変更：Mirairo風ダークモードへ) ---
+# --- 2. CSSデザイン (視認性とアニメーション強化) ---
 def load_css():
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
     css = """
     <style>
-        /* --- 全体フォント設定 --- */
-        html, body, [class*="css"] {
+        /* --- 全体フォント・色設定 --- */
+        html, body, [class*="css"], .stMarkdown, .stText, p, div, label, h1, h2, h3, h4, h5, h6 {
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #ffffff !important; /* 文字色を白に */
+            color: #ffffff !important; /* 文字は強制的に白 */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9) !important; /* 文字の周りに濃い影をつけて見やすく */
         }
 
-        /* --- 背景設定 (黒ベース + 画像) --- */
+        /* --- 背景設定 (画像をかなり薄く) --- */
         [data-testid="stAppViewContainer"] {
             background-color: #000000;
         }
         [data-testid="stAppViewContainer"] > .main {
-            /* 背景画像を暗くして表示 */
-            background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url("https://i.imgur.com/AbUxfxP.png");
+            /* 黒のカバー率を92%にして画像を薄くする */
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
         }
         
-        /* サイドバー (黒) */
+        /* --- サイドバー (黒背景ではっきりさせる) --- */
         [data-testid="stSidebar"] {
-            background-color: #0a0a0a;
+            background-color: rgba(10, 10, 10, 0.98) !important;
             border-right: 1px solid #333;
+        }
+        [data-testid="stSidebar"] * {
+            color: #ffffff !important;
+            text-shadow: none !important;
+        }
+
+        /* --- アニメーション (ふわふわ動く) --- */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating-element {
+            animation: float 5s ease-in-out infinite;
+            display: inline-block;
         }
 
         /* --- Mirairo タイトルデザイン --- */
-        .mirairo-header {
-            text-align: center;
+        .mirairo-header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
             padding: 40px 0;
-            animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
         }
         .mirairo-title {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 800;
             margin: 0;
             letter-spacing: 0.05em;
             background: -webkit-linear-gradient(45deg, #fff, #a5b4fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
         }
         .mirairo-sub {
-            font-size: 1rem;
-            color: #cbd5e0;
+            font-size: 1.2rem;
+            color: #cbd5e0 !important;
             letter-spacing: 0.1em;
-            margin-top: 10px;
+            margin-top: 5px;
+            text-align: center;
         }
 
-        /* --- カードデザイン (半透明ガラス風) --- */
+        /* --- カードデザイン (文字を見やすく) --- */
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(255, 255, 255, 0.05); /* 半透明の白 */
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(20, 20, 20, 0.6); /* 背景を少し濃く */
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 16px;
             padding: 20px;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px);
         }
         div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: #4a90e2; /* 青く光る */
-            transform: translateY(-5px);
+            background-color: rgba(40, 40, 40, 0.8);
+            border-color: #4a90e2;
+            transform: translateY(-3px);
         }
         
         /* 見出しの色調整 */
-        h1, h2, h3 { color: #ffffff !important; }
-        h3 { border-bottom: 1px solid #333 !important; }
+        h3 { border-bottom: 1px solid #555 !important; padding-bottom: 10px; }
 
-        /* --- ボタンデザイン (黒ベース) --- */
+        /* --- ボタンデザイン --- */
         .stButton > button {
             background-color: #000000 !important;
             color: #ffffff !important;
-            border: 1px solid #333 !important;
+            border: 1px solid #555 !important;
             border-radius: 30px !important;
             padding: 10px 24px !important;
             transition: all 0.3s ease !important;
+            font-weight: bold !important;
         }
         .stButton > button:hover {
             border-color: #4a90e2 !important;
             color: #4a90e2 !important;
-            box-shadow: 0 0 10px rgba(74, 144, 226, 0.3);
+            background-color: #1a1a1a !important;
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.4);
         }
         
-        /* ポップオーバーボタン */
-        [data-testid="stPopover"] > button {
-            background-color: rgba(255,255,255,0.1) !important;
-            border: none !important;
-            color: #aaa !important;
-        }
-
         /* リンクスタイル */
-        a { color: #4a90e2 !important; }
+        a { color: #63b3ed !important; font-weight: bold; }
         
-        /* --- フッターの区切り線 --- */
+        /* フッターの線 */
         .footer-hr {
             border: none;
             height: 1px;
@@ -202,19 +214,17 @@ manuals = {
     """
 }
 
-# --- 4. ロジック部分 (元のまま) ---
+# --- 4. ロジック部分 ---
 
-# ページ遷移を管理するための関数
+# ページ遷移関数
 def set_page(page):
     st.session_state.page_to_visit = page
 
-# st.session_stateをチェックしてページ遷移を実行
 if "page_to_visit" in st.session_state:
     page = st.session_state.page_to_visit
     del st.session_state.page_to_visit
     st.switch_page(page)
     
-# st.session_stateの初期化
 if 'current_lesson_id' not in st.session_state:
     st.session_state.current_lesson_id = None
 if 'show_all_flow' not in st.session_state: 
@@ -223,18 +233,30 @@ if 'show_create_form' not in st.session_state:
     st.session_state.show_create_form = False
 
   
-# --- 5. メインコンテンツ (タイトルとデザインのみ変更) ---
+# --- 5. メインコンテンツ (タイトル部分を修正) ---
 
-# タイトルエリア (Mirairoロゴ風)
-st.markdown("""
-    <div class="mirairo-header">
-        <h1 class="mirairo-title">Mirairo</h1>
-        <div class="mirairo-sub">Data-Driven Education Platform</div>
-    </div>
-""", unsafe_allow_html=True)
+# ロゴとタイトルを横並びで表示＆アニメーション
+col_logo, col_title = st.columns([1, 4])
 
-# メインイメージ
-st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
+with col_logo:
+    # ロゴ画像の読み込み (mirairo.png が同じフォルダにある想定)
+    # なければプレースホルダーを表示
+    try:
+        st.markdown('<div class="floating-element">', unsafe_allow_html=True)
+        st.image("mirairo.png", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    except:
+        st.markdown('<div class="floating-element" style="font-size:80px;">🌟</div>', unsafe_allow_html=True)
+
+with col_title:
+    st.markdown("""
+        <div class="floating-element" style="width:100%;">
+            <h1 class="mirairo-title">Mirairo</h1>
+            <div class="mirairo-sub">Data-Driven Education Platform</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
 
 st.header("ようこそ！")
 st.write("""
@@ -247,7 +269,7 @@ st.write("""
 
 st.header("各機能の紹介")
 
-# --- 3カラムレイアウト (元の構成を維持) ---
+# --- 3カラムレイアウト (内容は元のまま) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -288,7 +310,7 @@ with col2:
         with b_col2.popover("📖 マニュアル", use_container_width=True):
             st.markdown(manuals["chart"])
     
-    # 5. AI計画作成 (プロンプト作成)
+    # 5. AI計画作成
     with st.container(border=True):
         st.markdown("### 🤖 AIによる支援,指導計画作成", unsafe_allow_html=True)
         st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。", )
