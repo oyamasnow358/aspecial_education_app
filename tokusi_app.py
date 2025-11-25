@@ -1,493 +1,368 @@
-# page_title: TOPページ
 import streamlit as st
+from PIL import Image
+import time
 
+# --- ページ設定 ---
 st.set_page_config(
-    page_title="TOPページ",
+    page_title="Mirairo - Data-Driven Education",
     page_icon="🌟",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # メニューはメイン画面で操作するため閉じ気味に
 )
 
-# --- ▼ 共通CSSの読み込み（修正版） ▼ ---
+# --- 状態管理 (画面遷移用) ---
+if 'current_view' not in st.session_state:
+    st.session_state.current_view = 'HOME'
+
+def change_view(view_name):
+    st.session_state.current_view = view_name
+
+def go_home():
+    st.session_state.current_view = 'HOME'
+
+# ページ遷移用関数 (既存のpagesフォルダへの遷移)
+def set_page(page_name):
+    st.switch_page(page_name)
+
+# --- ▼ CSSデザイン (Mirairoテーマ) ▼ ---
 def load_css():
-    """カスタムCSSを読み込む関数"""
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-    """, unsafe_allow_html=True)
-    css = """
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 全体フォント設定 --- */
-        body {
-            font-family: 'Noto Sans JP', sans-serif !important;
-        }
-        /* Streamlitの全てのテキスト要素にフォントを適用 */
+        /* 全体フォント */
         html, body, [class*="css"] {
-            font-family: 'Noto Sans JP', sans-serif !important;
+            font-family: 'Noto Sans JP', sans-serif;
         }
-
-        /* --- カラーパレット変数 --- */
+        
+        /* カラー定義 */
         :root {
-            --primary-color: #6a1b9a; /* 深い紫 */
-            --secondary-color: #ab47bc; /* 少し明るい紫 */
-            --accent-color: #4a90e2; /* 鮮やかな青 */
-            --text-color-dark: #2c3e50;
-            --text-color-light: #34495e;
-            --bg-light: rgba(240, 242, 246, 0.95);
-            --card-bg: rgba(255, 255, 255, 0.98);
-            --border-light: #e0e0e0;
+            --primary: #6a1b9a;
+            --accent: #4a90e2;
+            --bg-dark: #0e1117;
+            --text-light: #fafafa;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(255, 255, 255, 0.1);
         }
 
-        /* --- 背景画像の設定 --- */
-        [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url("https://i.imgur.com/AbUxfxP.png");
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+        /* タイトルスタイル */
+        .mirairo-title {
+            font-size: 3.5rem !important;
+            font-weight: 800 !important;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2em;
+            letter-spacing: 0.05em;
+        }
+        .mirairo-subtitle {
+            font-size: 1.2rem;
+            color: #a0aec0;
+            margin-bottom: 2em;
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
         }
 
-        /* サイドバーの背景を少し透過 */
-        [data-testid="stSidebar"] {
-            background-color: var(--bg-light);
-        }
-        
-        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ ▼ --- */
-        [data-testid="stSidebarNavCollapseButton"] {
-            position: relative !important;
-            width: 2.2rem !important; /* 少し大きく */
-            height: 2.2rem !important; /* 少し大きく */
-            top: 10px !important; /* 上から少し離す */
-            left: 10px !important; /* 左から少し離す */
-            border-radius: 50% !important; /* 丸く */
-            background-color: rgba(255,255,255,0.7) !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        [data-testid="stSidebarNavCollapseButton"] * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«' !important;
+        /* カードボタンスタイル (st.buttonのハック) */
+        div.stButton > button {
+            width: 100%;
+            border: 1px solid rgba(250, 250, 250, 0.1) !important;
+            background-color: var(--card-bg) !important;
+            color: var(--text-light) !important;
+            border-radius: 12px !important;
+            padding: 1.5rem !important;
+            text-align: left !important;
+            transition: all 0.3s ease !important;
             display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            font-size: 20px !important; /* フォントサイズ調整 */
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            height: auto !important;
+        }
+        div.stButton > button:hover {
+            background-color: var(--card-hover) !important;
+            border-color: var(--accent) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);
+        }
+        div.stButton > button p {
+            font-size: 1.2rem !important;
             font-weight: bold !important;
-            color: var(--primary-color) !important;
-            transition: background-color 0.2s, color 0.2s, transform 0.2s !important;
-            border-radius: 50% !important;
-        }
-        [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: var(--primary-color) !important;
-            color: white !important;
-            transform: scale(1.1); /* ホバーで少し拡大 */
-        }
-        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
-
-
-        /* --- 見出しのスタイル --- */
-        h1 {
-            color: var(--primary-color);
-            text-align: center;
-            padding-bottom: 25px; /* 余白を少し増やす */
-            font-weight: 700; /* より太く */
-            font-size: 2.8em; /* サイズを大きく */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: var(--text-color-dark);
-            border-left: 8px solid var(--primary-color); /* 紫のアクセントを太く */
-            padding-left: 15px; /* 余白を増やす */
-            margin-top: 50px; /* 上部余白を増やす */
-            font-weight: 600;
-            font-size: 1.8em;
-        }
-        h3 {
-            color: var(--text-color-light);
-            border-bottom: 2px solid var(--secondary-color); /* 紫のアクセント */
-            padding-bottom: 10px;
-            margin-top: 35px;
-            font-weight: 500;
-            font-size: 1.4em;
         }
 
-        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 { /* Streamlitのカードコンテナセレクタ */
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-light);
-            border-radius: 18px; /* 角を少し丸く */
-            padding: 1.8em 1.8em; /* 内側の余白を増やす */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* 影を強調 */
-            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 25px; /* カード間の余白を増やす */
+        /* 戻るボタンのスタイル */
+        .back-btn div.stButton > button {
+            background-color: transparent !important;
+            border: 1px solid #555 !important;
+            padding: 0.5rem 1rem !important;
+            width: auto !important;
         }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 12px 25px rgba(var(--primary-color-rgb, 106, 27, 154), 0.2); /* ホバー時の影をブランドカラーに */
-            transform: translateY(-8px); /* ホバーで少し浮き上がる */
+
+        /* アニメーション (ゆらぎ) */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
-        /* カード内の見出し調整 */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 h3 {
-            border-bottom: none;
-            padding-bottom: 0;
-            margin-top: 0;
-            color: var(--primary-color);
-            font-size: 1.5em; /* カード内のH3を調整 */
-            font-weight: 600;
-            text-align: center; /* カード内のH3を中央寄せに */
-            margin-bottom: 15px;
-        }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 p {
-            font-size: 0.95em;
-            line-height: 1.6;
-            color: var(--text-color-light);
-            text-align: center; /* カード内のテキストも中央寄せ */
+        .floating-logo {
+            animation: float 4s ease-in-out infinite;
         }
         
-        /* --- ボタンのスタイル --- */
-        .stButton>button {
-            border: 2px solid var(--accent-color);
-            border-radius: 30px; /* より丸く */
-            color: var(--accent-color);
-            background-color: #ffffff;
-            padding: 12px 28px; /* パディングを増やす */
+        /* 情報カードのスタイル */
+        .info-card {
+            background-color: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .info-title {
             font-weight: bold;
-            font-size: 1.05em; /* フォントサイズを少し大きく */
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-        .stButton>button:hover {
-            border-color: var(--primary-color); /* ホバーで紫に */
-            color: white;
-            background-color: var(--primary-color);
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(var(--primary-color-rgb, 106, 27, 154), 0.3);
-        }
-        /* Primaryボタン */
-        .stButton>button[kind="primary"] {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 8px rgba(var(--accent-color-rgb, 74, 144, 226), 0.2);
-        }
-        .stButton>button[kind="primary"]:hover {
-            background-color: var(--primary-color); /* ホバーで紫に */
-            border-color: var(--primary-color);
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(var(--primary-color-rgb, 106, 27, 154), 0.3);
-        }
-
-        /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 {
-             background-color: rgba(232, 245, 253, 0.8); /* 少し透過度を調整 */
-             border-left: 6px solid var(--accent-color);
-             border-radius: 10px;
-             padding: 1em 1.5em;
-             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
         }
         
-        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
-        [data-testid="stExpanderToggleIcon"] {
-            display: none;
-        }
-
-        /* --- フッターの区切り線 --- */
-        .footer-hr {
-            border: none;
-            height: 4px; /* 太く */
-            background: linear-gradient(to right, var(--accent-color), var(--primary-color)); /* グラデーション */
-            margin-top: 50px; /* 余白を増やす */
-            margin-bottom: 30px;
-            border-radius: 2px;
-        }
-
-        /* 関連ツール＆リンクのカードデザイン */
-        .related-tools-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-light);
-            border-radius: 18px;
-            padding: 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px;
-            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-        }
-        .related-tools-card:hover {
-            box-shadow: 0 10px 20px rgba(var(--accent-color-rgb, 74, 144, 226), 0.2);
-            transform: translateY(-5px);
-        }
-        .related-tools-card h5 {
-            color: var(--primary-color);
-            font-weight: 600;
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            border-bottom: 1px dashed var(--border-light);
-            padding-bottom: 10px;
-        }
-        .related-tools-card .st-emotion-cache-ch5fgy { /* st.page_linkのコンテナ */
-            margin-bottom: 8px;
-        }
-        .related-tools-card .st-emotion-cache-ch5fgy a { /* st.page_linkのリンクテキスト */
-            color: var(--text-color-light);
+        /* リンクのスタイル */
+        a {
+            color: var(--accent) !important;
             text-decoration: none;
-            font-weight: 400;
-            transition: color 0.2s;
         }
-        .related-tools-card .st-emotion-cache-ch5fgy a:hover {
-            color: var(--primary-color);
+        a:hover {
+            text-decoration: underline;
         }
     </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
-# --- ▲ 共通CSSの読み込み ▲ ---
+    """, unsafe_allow_html=True)
 
-# --- マニュアルのテキストデータ ---
-manuals = {
-    "guidance": """
-    ### 📚 指導支援内容 マニュアル
-    このページでは、お子さんの日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索することができます。
-    #### **使い方**
-    1.  **3つのステップで項目を選択**
-        -   画面に表示される3つのドロップダウンメニューを左から順番に選択していきます。
-        -   **ステップ1**で大まかなカテゴリー（例：「コミュニケーション」）を選ぶと、**ステップ2**でより具体的な項目（例：「要求の伝え方」）が選べるようになります。同様に**ステップ3**でさらに詳細な内容を選択します。
-    2.  **指導・支援内容の表示**
-        -   3つの項目を選択し終えたら、**「💡 適した指導・支援を表示」** ボタンをクリックします。
-    3.  **結果の確認**
-        -   ボタンの下に、選択した項目に対する指導・支援の具体的な内容が表示されます。
-        -   内容はいくつかの項目に分かれており、タイトルをクリック（タップ）すると詳細な説明が開きます。
-    """,
-    "chart": """
-    ### 📊 発達チャート作成 マニュアル
-    お子さんの現在の発達段階を記録し、レーダーチャートで視覚的に確認したり、次のステップの目安をまとめた資料を作成・保存したりすることができます。
-    #### **使い方**
-    1.  **発達段階の入力**
-        -   「認知力・操作」「言語理解」など、12のカテゴリーが表示されます。
-        -   それぞれのカテゴリーについて、現在の状況に最も近い発達段階の選択肢（ラジオボタン）をクリックしてチェックを入れます。
-    2.  **目安の確認（任意）**
-        -   各カテゴリーの選択肢の下にある **「▼ 目安を見る」** をクリックすると、それぞれの発達段階でどのようなことができるかの目安が表示されます。
-    3.  **チャートの作成とデータ書き込み**
-        -   すべてのカテゴリーを選択し終えたら、フォームの一番下にある **「📊 チャートを作成して書き込む」** ボタンをクリックします。
-        -   これにより、入力されたデータがGoogleスプレッドシートに送信され、自動的にチャートが更新されます。
-    4.  **結果の確認と保存**
-        -   **「🌐 スプレッドシートでチャートを確認」**：ブラウザでスプレッドシートを開きます。
-        -   **「💾 Excel形式でダウンロード」**：入力内容を含むファイルをダウンロードします。
-    """,
-    "analysis": """
-    ### 📈 分析方法 マニュアル
-    特別支援教育で活用できる様々な分析方法や療法について、その概要や関連ツールを調べることができます。
-    #### **使い方**
-    **方法A：療法・分析法から直接探す**
-    1.  サイドバー（メニュー）から療法・分析法（ABA、CBTなど）を選択します。
-    2.  知りたい項目のラジオボタンをクリックすると、その解説が表示されます。
-    **方法B：お子さんの実態から探す**
-    1.  メインエリア上部のドロップダウンメニューから、お子さんの状況を選択します。
-    2.  有効とされる療法・分析法のボタンが表示されるので、クリックして解説を読みます。
-    """,
-    "plan_creation": """
-    ### 🤖 計画作成サポート マニュアル
-    個別の支援計画や指導計画の文章を作成する際に、生成AI（ChatGPTなど）に依頼するための**「命令文（プロンプト）」**を簡単に作成できるツールです。
-    #### **使い方**
-    1.  **プロンプトの種類を選択**
-        -   プランA・B用、評価用、総合所見用などから選択します。
-    2.  **情報を入力**
-        -   お子さんの実態や課題、参考情報を入力します。
-    3.  **プロンプトを生成**
-        -   **「プロンプトを生成」** ボタンをクリックし、表示された文面をコピーします。
-    4.  **生成AIで文章を作成**
-        -   ChatGPTなどを開き、プロンプトを貼り付けて文章を生成させます。
-    """,
-    "lesson_plan_ai": """
-    ### 📝 AIによる指導案作成 マニュアル
-    学習指導案を「基本情報の入力」だけで、ChatGPT等のAIを使って自動生成し、Excelファイルとして出力するツールです。
-    #### **使い方**
-    1.  **基本情報の入力**
-        -   学部学年、教科単元、日時などを入力します。目標や評価基準は空欄でもAIが補完します。
-    2.  **プロンプトを作成**
-        -   ボタンを押して、AIへの命令文（プロンプト）を生成し、コピーします。
-    3.  **AIで回答を作成**
-        -   コピーした命令文をChatGPTやGeminiに貼り付けます。
-        -   AIが生成したJSONコード（プログラム用データ）をコピーします。
-    4.  **Excel出力**
-        -   AIの回答をアプリの入力欄に貼り付け、「Excel作成実行」ボタンを押します。
-        -   完成した指導案ファイル（Excel）がダウンロードされます。
-    """,
-    "guideline_page": """
-    ### 📜 知的段階（学習指導要領） マニュアル
-    学習指導要領の中から、必要な部分を素早く探し出して閲覧することができます。
-    #### **使い方**
-    1.  **項目を選択**
-        -   学部、障害種別（段階）、教科を選択します。
-    2.  **内容の表示**
-        -   **「表示する」** ボタンをクリックすると、該当する学習指導要領の内容（目標、各段階の指導内容など）が表示されます。
-    """,
-    "lesson_card_library": """
-    ### 🃏 授業カードライブラリー マニュアル
-    先生方が実践している授業のアイデアをカード形式で共有・検索できる機能です。
-    #### **使い方**
-    1.  **検索・絞り込み**
-        -   検索バーやハッシュタグ（#高等部 #買い物など）を使って授業を探せます。
-    2.  **一覧表示**
-        -   授業のタイトル、ねらい、写真などがカード形式で一覧表示されます。
-    3.  **詳細ページの閲覧**
-        -   カードをクリックすると詳細が表示され、指導略案PDFや動画リンクなどを確認できます。
-    """
-}
-
-
-# CSSを適用
 load_css()
 
-# ページ遷移を管理するための関数
-def set_page(page):
-    st.session_state.page_to_visit = page
+# --- ▼ 画面描画ロジック ▼ ---
 
-
-# st.session_stateをチェックしてページ遷移を実行
-if "page_to_visit" in st.session_state:
-    page = st.session_state.page_to_visit
-    del st.session_state.page_to_visit
-    st.switch_page(page)
-
-    
-# st.session_stateの初期化
-if 'current_lesson_id' not in st.session_state:
-    st.session_state.current_lesson_id = None
-if 'show_all_flow' not in st.session_state: 
-    st.session_state.show_all_flow = False
-if 'show_create_form' not in st.session_state:
-    st.session_state.show_create_form = False
-
-  
-# --- メインコンテンツ ---
-st.title("🌟 特別支援教育サポートアプリ")
-
-# メインイメージ
-st.image("https://i.imgur.com/AbUxfxP.png", caption="子どもたちの「できた！」を支援する", use_container_width=True)
-
-st.header("ようこそ！")
-st.write("""
-このアプリは、特別支援教育に関わる先生方をサポートするためのツールです。
-子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
-発達段階を記録・分析したり、AIによる計画作成の補助を受けたりすることができます。
-
-**下の各機能やサイドバーのメニューから、利用したい機能を選択してください。**
-""")
-
-st.header("各機能の紹介")
-
-# --- 3カラムレイアウト ---
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    # 1. 指導支援内容
-    with st.container(border=True):
-        st.markdown("### 📚 指導支援内容")
-        st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["guidance"])
-
-    # 2. 分析方法
-    with st.container(border=True):
-        st.markdown("### 📈 分析方法")
-        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["analysis"])
-    
-    # 3. 授業カード
-    with st.container(border=True):
-        st.markdown("### 🃏 授業カードライブラリー") 
-        st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["lesson_card_library"])
-
-with col2:
-    # 4. 発達チャート
-    with st.container(border=True):
-        st.markdown("### 📊 発達チャート作成")
-        st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["chart"])
-    
-    # 5. AI計画作成 (プロンプト作成)
-    with st.container(border=True):
-        st.markdown("### 🤖 AIによる支援,指導計画作成", unsafe_allow_html=True)
-        st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。", )
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["plan_creation"])
-
-    # 9. AIによる指導案作成 (NEW!)
-    with st.container(border=True):
-        st.markdown("### 📝 AIによる指導案作成")
-        st.write("AIを活用して、Excel形式の学習指導案を半自動で作成・出力します。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/9_AIによる指導案作成.py",), key="btn_lesson_plan_ai", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["lesson_plan_ai"])
-
-with col3:
-    # 6. 学習指導要領
-    with st.container(border=True):
-        st.markdown("### 📜 知的段階_早引き学習指導要領")
-        st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
-            st.markdown(manuals["guideline_page"])
-
-    # 7. 動画ギャラリー
-    with st.container(border=True):
-        st.markdown("### ▶️ 動画ギャラリー")
-        st.write("特別支援教育に関する動画と解説をまとめています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
-
-    # 10. フィードバック (UPDATED!)
-    with st.container(border=True):
-        st.markdown("### 📝 フィードバック")
-        st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/10_フィードバック.py",), key="btn_feedback", use_container_width=True)
-
-
-# --- ▼ 関連ツール＆リンク ▼ ---
-st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-
-st.header("関連ツール＆リンク")
-c1, c2 = st.columns(2)
+# 1. ヘッダー (常に表示)
+c1, c2 = st.columns([1, 5])
 with c1:
-    #st.markdown('<div class="related-tools-card">', unsafe_allow_html=True) 
-    st.markdown("##### 📁 教育・心理分析ツール")
-    st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
-    st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
-
+    # ロゴ画像 (ゆらゆらアニメーション付き)
+    st.markdown('<div class="floating-logo">', unsafe_allow_html=True)
+    st.image("https://i.imgur.com/AbUxfxP.png", use_container_width=True) # ※Mirairoロゴがあれば差し替えてください
+    st.markdown('</div>', unsafe_allow_html=True)
 with c2:
-    st.markdown("##### 📁 統計学分析ツール")
-    st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
-    st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-    st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-    st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-    st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
-    st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+    st.markdown('<h1 class="mirairo-title">Mirairo</h1>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="mirairo-subtitle">
+        Data-Driven Education.<br>
+        指導案作成から統計分析までを一元化したプラットフォーム。
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown("---")
-st.markdown("##### 🗨️ ご意見・ご感想")
-st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
-st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
-st.markdown('</div>', unsafe_allow_html=True) # カードの閉じタグ
+st.divider()
 
-st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-st.warning("""
-**【利用上の注意】**
-それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
-""")
+# 2. ビューの切り替え処理
+if st.session_state.current_view == 'HOME':
+    # === ホーム画面 (メニュー一覧) ===
+    
+    st.write("##### 📍 MENU SELECT")
+    
+    # グリッドレイアウト
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📂 Mirairo アプリ\n\n現場の困りごとを解決するツール群"):
+            change_view('APPS')
+        if st.button("🏫 導入校\n\n岩槻はるかぜ特別支援学校について"):
+            change_view('SCHOOL')
+
+    with col2:
+        if st.button("📖 アプリマニュアル\n\n詳しい使い方・ガイド"):
+            change_view('MANUAL')
+        if st.button("📊 分析ツール\n\n研究論文・データ分析用 (外部連携)"):
+            change_view('TOOLS')
+
+    with col3:
+        if st.button("🤝 つながり\n\nNetwork & Administrator"):
+            change_view('NETWORK')
+
+elif st.session_state.current_view == 'APPS':
+    # === Mirairo アプリ一覧 ===
+    st.markdown('<div class="back-btn">', unsafe_allow_html=True)
+    if st.button("← HOMEに戻る"):
+        go_home()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.header("📂 Mirairo アプリ")
+    st.write("利用したいアプリケーションを選択してください。")
+
+    row1 = st.columns(2)
+    with row1[0]:
+        st.info("🔍 日常の困りごとに")
+        if st.button("指導支援内容 検索 ➡"):
+            set_page("pages/1_指導支援内容.py")
+    with row1[1]:
+        st.info("📊 発達の記録・可視化")
+        if st.button("発達チャート作成 ➡"):
+            set_page("pages/2_発達チャート.py")
+
+    row2 = st.columns(2)
+    with row2[0]:
+        st.info("📝 AIで指導案作成")
+        if st.button("AIによる指導案作成 ➡"):
+            set_page("pages/9_AIによる指導案作成.py")
+    with row2[1]:
+        st.info("🤖 計画作成プロンプト")
+        if st.button("AI計画作成サポート ➡"):
+            set_page("pages/4_AIによる支援,指導計画作成.py")
+
+    row3 = st.columns(2)
+    with row3[0]:
+        st.info("📜 学習指導要領")
+        if st.button("知的段階 早引き ➡"):
+            set_page("pages/6_知的段階_早引き学習指導要領.py")
+    with row3[1]:
+        st.info("🃏 授業・動画")
+        c_a, c_b = st.columns(2)
+        with c_a:
+            if st.button("授業カード ➡"):
+                set_page("pages/8_授業カードライブラリー.py")
+        with c_b:
+            if st.button("動画ギャラリー ➡"):
+                set_page("pages/7_動画ギャラリー.py")
+
+elif st.session_state.current_view == 'MANUAL':
+    # === マニュアル ===
+    st.markdown('<div class="back-btn">', unsafe_allow_html=True)
+    if st.button("← HOMEに戻る"):
+        go_home()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.header("📖 アプリマニュアル")
+    
+    with st.expander("📚 指導支援内容 マニュアル", expanded=True):
+        st.markdown(manuals["guidance"])
+    with st.expander("📊 発達チャート作成 マニュアル"):
+        st.markdown(manuals["chart"])
+    with st.expander("🤖 AI計画作成サポート マニュアル"):
+        st.markdown(manuals["plan_creation"])
+    with st.expander("📝 AI指導案作成 マニュアル"):
+        st.markdown(manuals["lesson_plan_ai"])
+    with st.expander("📜 知的段階 早引き マニュアル"):
+        st.markdown(manuals["guideline_page"])
+    with st.expander("🃏 授業カードライブラリー マニュアル"):
+        st.markdown(manuals["lesson_card_library"])
+    with st.expander("📈 分析方法 マニュアル"):
+        st.markdown(manuals["analysis"])
+
+elif st.session_state.current_view == 'NETWORK':
+    # === つながり (管理者紹介) ===
+    st.markdown('<div class="back-btn">', unsafe_allow_html=True)
+    if st.button("← HOMEに戻る"):
+        go_home()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.header("🤝 つながり (Network)")
+
+    # 管理者カード
+    st.markdown("""
+    <div class="info-card" style="border-left: 5px solid #4a90e2;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="background-color: #333; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">👤</div>
+            <div>
+                <div style="color: #4a90e2; font-size: 0.8em; font-weight: bold; letter-spacing: 2px;">ADMINISTRATOR</div>
+                <div style="font-size: 1.8em; font-weight: bold;">KOYAMA</div>
+                <div style="color: #aaa;">Special Education Teacher / App Developer</div>
+            </div>
+        </div>
+        <hr style="border-color: rgba(255,255,255,0.1);">
+        <p style="line-height: 1.6;">
+            特別支援教育×データサイエンス。<br>
+            現場の「感覚」や「経験」を、データという「根拠」で支えるためのツール開発を行っています。<br>
+            埼玉県立岩槻はるかぜ特別支援学校 教諭。
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("### 🌐 Information Tech Teachers")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("""
+        <div class="info-card">
+            <div class="info-title">IT Teacher A</div>
+            <div>High School Info Dept.</div>
+            <div style="font-size: 0.9em; color: #888;">Network Specialist</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c2:
+        st.markdown("""
+        <div class="info-card">
+            <div class="info-title">IT Teacher B</div>
+            <div>Special Ed. Coordinator</div>
+            <div style="font-size: 0.9em; color: #888;">iPad Utilization Expert</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif st.session_state.current_view == 'SCHOOL':
+    # === 導入校 ===
+    st.markdown('<div class="back-btn">', unsafe_allow_html=True)
+    if st.button("← HOMEに戻る"):
+        go_home()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.header("🏫 導入校 (Introduction)")
+    
+    st.markdown("""
+    <div class="info-card">
+        <h3 style="margin-top:0;">埼玉県立岩槻はるかぜ特別支援学校</h3>
+        <p>
+            知的障害のある児童生徒が通う特別支援学校です。<br>
+            ICTの積極的な活用や、データに基づいた指導の実践研究を行っています。
+        </p>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <span style="background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:4px; font-size:0.8em;">小学部</span>
+            <span style="background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:4px; font-size:0.8em;">中学部</span>
+            <span style="background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:4px; font-size:0.8em;">高等部</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("### 💡 Future Curriculum Design")
+    st.info("""
+    **【次年度予定】教育課程の未来デザイン研究**
+    
+    次年度より開始される研究プロジェクトの詳細をここに掲載予定です。
+    データ利活用によるカリキュラム・マネジメントの実践事例などを発信していきます。
+    """)
+
+elif st.session_state.current_view == 'TOOLS':
+    # === 分析ツール (研究者向け) ===
+    st.markdown('<div class="back-btn">', unsafe_allow_html=True)
+    if st.button("← HOMEに戻る"):
+        go_home()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.header("📊 分析ツール (For Researchers)")
+    st.write("研究論文作成やデータ分析に活用できる専門ツール集です。")
+
+    # ツールリスト
+    tools = [
+        {"name": "応用行動分析 (ABA)", "url": "https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/"},
+        {"name": "機能的行動評価", "url": "https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/"},
+        {"name": "アンケート統計分析", "url": "https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/"},
+        {"name": "多変量回帰分析", "url": "https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/"},
+        {"name": "t検定・統計ツール", "url": "https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/"},
+        {"name": "ノンパラメトリック分析", "url": "https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/"},
+    ]
+
+    cols = st.columns(2)
+    for i, tool in enumerate(tools):
+        with cols[i % 2]:
+            st.markdown(f"""
+            <div class="info-card" style="padding: 15px;">
+                <div style="font-weight:bold; margin-bottom:5px;">{tool['name']}</div>
+                <a href="{tool['url']}" target="_blank" style="font-size:0.9em;">🔗 ツールを開く</a>
+            </div>
+            """, unsafe_allow_html=True)
+
+# --- フッター ---
+st.divider()
+st.markdown("""
+<div style="text-align: center; color: #666; font-size: 0.8em;">
+    &copy; 2025 Mirairo Project. All Rights Reserved.<br>
+    Administrator: KOYAMA (Iwatsuki Harukaze Special Needs School)
+</div>
+""", unsafe_allow_html=True)
