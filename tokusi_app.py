@@ -24,7 +24,7 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (視認性と枠線を最強にする) ---
+# --- 2. CSSデザイン (枠線復活・ロゴ巨大化) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -46,30 +46,35 @@ def load_css():
             background-attachment: fixed;
         }}
 
-        /* --- ★文字色を強制的に白にする (最重要) --- */
-        /* 本文、見出し、説明文すべてを対象 */
-        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, .stCaptionContainer {{
+        /* --- 文字色を強制的に白にする --- */
+        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, .stCaptionContainer, div {{
             color: #ffffff !important;
-            text-shadow: 0 2px 4px rgba(0,0,0, 0.8) !important; /* 文字の周りに濃い影をつけて浮き上がらせる */
+            text-shadow: 0 2px 4px rgba(0,0,0, 0.8) !important;
         }}
 
         /* --- サイドバー --- */
         [data-testid="stSidebar"] {{
             background-color: #111111 !important;
-            border-right: 1px solid #444;
+            border-right: 1px solid #666;
         }}
         [data-testid="stSidebar"] * {{
             color: #ffffff !important;
         }}
 
-        /* --- ★機能カードの枠線と背景をはっきりさせる (最重要) --- */
+        /* --- ★機能カードの枠線 (ここを修正) --- */
         [data-testid="stBorderContainer"] {{
-            background-color: rgba(0, 0, 0, 0.85) !important; /* 濃い黒背景で文字を見やすく */
-            border: 2px solid rgba(255, 255, 255, 0.6) !important; /* 白くて太い枠線 */
+            background-color: rgba(0, 0, 0, 0.85) !important;
+            /* 枠線を「白の実線」で強制的に表示 */
+            border: 2px solid #ffffff !important; 
             border-radius: 12px !important;
             padding: 20px !important;
             margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+        }}
+        /* ホバー時に枠線を青く光らせる */
+        [data-testid="stBorderContainer"]:hover {{
+            border-color: #4a90e2 !important;
+            box-shadow: 0 0 15px #4a90e2;
         }}
         
         /* --- ヘッダーアニメーション --- */
@@ -82,24 +87,26 @@ def load_css():
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
+            gap: 30px; /* ロゴと文字の間隔 */
             padding: 50px 0;
             animation: float 6s ease-in-out infinite;
         }}
+        
+        /* --- ★ロゴサイズ (2倍に変更) --- */
         .logo-img {{
-            width: 90px;
+            width: 180px; /* 90px -> 180px に変更 */
             height: auto;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.8)); /* ロゴも見やすく発光 */
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.8));
         }}
         
-        /* --- タイトル (真っ白にする) --- */
+        /* --- タイトル --- */
         .main-title {{
-            font-size: 4.5rem;
+            font-size: 5rem;
             font-weight: 900;
             line-height: 1;
             margin: 0;
-            color: #ffffff !important; /* 白 */
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8); /* 白い発光 */
+            color: #ffffff !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
             background: none !important;
             -webkit-text-fill-color: #ffffff !important;
         }}
@@ -108,15 +115,16 @@ def load_css():
             font-size: 1.2rem;
             color: #ffffff !important;
             letter-spacing: 0.15em;
-            margin-top: 8px;
+            margin-top: 10px;
             font-weight: 700;
             text-shadow: 0 2px 4px rgba(0,0,0,0.9);
         }}
 
         /* --- 説明文用のプレート --- */
         .glass-container {{
-            background-color: rgba(0, 0, 0, 0.8); /* 濃い黒 */
-            border: 2px solid rgba(74, 144, 226, 0.8); /* 青い枠線 */
+            background-color: rgba(0, 0, 0, 0.8);
+            /* ここも枠線を白くはっきりさせる */
+            border: 2px solid #ffffff;
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 40px;
@@ -132,9 +140,9 @@ def load_css():
         .stButton > button {{
             width: 100%;
             background-color: #000000 !important;
-            border: 2px solid #4a90e2 !important; /* 枠線を太く */
+            border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
-            font-weight: 900 !important; /* 文字を太く */
+            font-weight: 900 !important;
             border-radius: 8px !important;
         }}
         .stButton > button:hover {{
@@ -153,7 +161,7 @@ def load_css():
             color: #ffffff !important;
         }}
         
-        hr {{ border-color: #666; }}
+        hr {{ border-color: #888; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -245,7 +253,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文エリア (濃い背景プレートで見やすく)
+# 説明文エリア (枠線を白く強調)
 st.markdown("""
 <div class="glass-container">
     <h3>ようこそ！</h3>
@@ -262,7 +270,7 @@ st.markdown("""
 
 st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト (枠線付きで見やすく) ---
+# --- 3カラムレイアウト (枠線強化版) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -347,9 +355,9 @@ with col3:
 # --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-# リンク集
+# リンク集 (枠線強化)
 st.markdown("""
-<div class="glass-container" style="padding: 15px; margin-bottom: 20px; border-color: #666;">
+<div class="glass-container" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff;">
     <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
 </div>
 """, unsafe_allow_html=True)
