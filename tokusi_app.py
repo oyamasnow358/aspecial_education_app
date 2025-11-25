@@ -1,5 +1,4 @@
 import streamlit as st
-from PIL import Image
 import base64
 import os
 
@@ -11,133 +10,170 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSSデザイン (視認性とアニメーション強化) ---
+# --- 画像をBase64エンコードする関数 (HTMLで表示するため) ---
+def get_img_as_base64(file):
+    try:
+        with open(file, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
+
+# ロゴ画像のパス (同じフォルダにある前提)
+logo_path = "mirairo.png"
+logo_b64 = get_img_as_base64(logo_path)
+
+# 画像がない場合の代替アイコン
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
+
+
+# --- 2. CSSデザイン (視認性と統一感の強化) ---
 def load_css():
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
-    css = """
+    css = f"""
     <style>
-        /* --- 全体フォント・色設定 --- */
-        html, body, [class*="css"], .stMarkdown, .stText, p, div, label, h1, h2, h3, h4, h5, h6 {
+        /* --- 全体設定 --- */
+        html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #ffffff !important; /* 文字は強制的に白 */
-            text-shadow: 0 2px 4px rgba(0,0,0,0.9) !important; /* 文字の周りに濃い影をつけて見やすく */
-        }
+            color: #e0e0e0 !important;
+        }}
 
-        /* --- 背景設定 (画像をかなり薄く) --- */
-        [data-testid="stAppViewContainer"] {
+        /* --- 背景設定 (黒ベース) --- */
+        [data-testid="stAppViewContainer"] {{
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #000000 100%);
+        }}
+        [data-testid="stSidebar"] {{
             background-color: #000000;
-        }
-        [data-testid="stAppViewContainer"] > .main {
-            /* 黒のカバー率を92%にして画像を薄くする */
-            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
-            background-size: cover;
-            background-position: center center;
-            background-attachment: fixed;
-        }
-        
-        /* --- サイドバー (黒背景ではっきりさせる) --- */
-        [data-testid="stSidebar"] {
-            background-color: rgba(10, 10, 10, 0.98) !important;
             border-right: 1px solid #333;
-        }
-        [data-testid="stSidebar"] * {
-            color: #ffffff !important;
-            text-shadow: none !important;
-        }
+        }}
 
-        /* --- アニメーション (ふわふわ動く) --- */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
-        .floating-element {
-            animation: float 5s ease-in-out infinite;
-            display: inline-block;
-        }
-
-        /* --- Mirairo タイトルデザイン --- */
-        .mirairo-header-container {
+        /* --- ヘッダーアニメーション (ロゴ+タイトル) --- */
+        @keyframes float {{
+            0% {{ transform: translateY(0px); }}
+            50% {{ transform: translateY(-10px); }}
+            100% {{ transform: translateY(0px); }}
+        }}
+        
+        .header-container {{
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            padding: 40px 0;
-        }
-        .mirairo-title {
-            font-size: 4.5rem;
-            font-weight: 800;
+            gap: 25px;
+            padding: 60px 0 40px 0;
+            animation: float 6s ease-in-out infinite; /* 全体がゆらゆら動く */
+        }}
+        
+        .logo-img {{
+            width: 100px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+        }}
+        
+        .logo-placeholder {{
+            font-size: 80px;
+        }}
+
+        .title-box {{
+            display: flex;
+            flex-direction: column;
+        }}
+        
+        .main-title {{
+            font-size: 5rem;
+            font-weight: 900;
+            line-height: 1;
             margin: 0;
-            letter-spacing: 0.05em;
-            background: -webkit-linear-gradient(45deg, #fff, #a5b4fc);
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
-        }
-        .mirairo-sub {
-            font-size: 1.2rem;
-            color: #cbd5e0 !important;
-            letter-spacing: 0.1em;
-            margin-top: 5px;
-            text-align: center;
-        }
-
-        /* --- カードデザイン (文字を見やすく) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(20, 20, 20, 0.6); /* 背景を少し濃く */
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            background-color: rgba(40, 40, 40, 0.8);
-            border-color: #4a90e2;
-            transform: translateY(-3px);
-        }
+            letter-spacing: -0.02em;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }}
         
-        /* 見出しの色調整 */
-        h3 { border-bottom: 1px solid #555 !important; padding-bottom: 10px; }
+        .sub-title {{
+            font-size: 1.1rem;
+            color: #94a3b8;
+            letter-spacing: 0.2em;
+            margin-top: 5px;
+            font-weight: 400;
+        }}
+
+        /* --- 機能カード (線引きを明確に) --- */
+        [data-testid="stBorderContainer"] {{
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important; /* 白っぽい薄い線 */
+            border-radius: 16px !important;
+            padding: 20px !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s, transform 0.3s;
+        }}
+        
+        /* ホバー時に枠線を光らせる */
+        [data-testid="stBorderContainer"]:hover {{
+            border-color: #4a90e2 !important; /* 青く光る */
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.2);
+            transform: translateY(-2px);
+        }}
+
+        /* --- 見出しデザイン --- */
+        h3 {{
+            color: #fff !important;
+            font-weight: 700 !important;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 15px !important;
+        }}
 
         /* --- ボタンデザイン --- */
-        .stButton > button {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-            border: 1px solid #555 !important;
-            border-radius: 30px !important;
-            padding: 10px 24px !important;
-            transition: all 0.3s ease !important;
-            font-weight: bold !important;
-        }
-        .stButton > button:hover {
-            border-color: #4a90e2 !important;
+        .stButton > button {{
+            width: 100%;
+            background: transparent !important;
+            border: 1px solid #4a90e2 !important;
             color: #4a90e2 !important;
-            background-color: #1a1a1a !important;
-            box-shadow: 0 0 15px rgba(74, 144, 226, 0.4);
-        }
+            border-radius: 8px !important;
+            font-weight: bold !important;
+            transition: all 0.3s ease !important;
+        }}
+        .stButton > button:hover {{
+            background: #4a90e2 !important;
+            color: #fff !important;
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.6);
+        }}
+
+        /* --- マニュアル(Expander)のデザイン --- */
+        .streamlit-expanderHeader {{
+            background-color: rgba(255,255,255,0.05) !important;
+            border-radius: 8px !important;
+            color: #fff !important;
+        }}
         
-        /* リンクスタイル */
-        a { color: #63b3ed !important; font-weight: bold; }
-        
-        /* フッターの線 */
-        .footer-hr {
-            border: none;
-            height: 1px;
-            background: linear-gradient(to right, transparent, #4a90e2, transparent);
-            margin: 40px 0;
-        }
+        /* --- リンクのデザイン --- */
+        a {{
+            color: #63b3ed !important;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
+            color: #90cdf4 !important;
+        }}
+
+        /* フッター線 */
+        hr {{
+            border-color: #333;
+        }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# CSSを適用
+# CSS適用
 load_css()
 
-# --- 3. マニュアルデータ (元のまま) ---
+# --- 3. マニュアルデータ (内容はそのまま) ---
 manuals = {
     "guidance": """
     ### 📚 指導支援内容 マニュアル
@@ -214,9 +250,7 @@ manuals = {
     """
 }
 
-# --- 4. ロジック部分 ---
-
-# ページ遷移関数
+# --- 4. ページ遷移ロジック ---
 def set_page(page):
     st.session_state.page_to_visit = page
 
@@ -233,150 +267,138 @@ if 'show_create_form' not in st.session_state:
     st.session_state.show_create_form = False
 
   
-# --- 5. メインコンテンツ (タイトル部分を修正) ---
+# --- 5. メインコンテンツ ---
 
-# ロゴとタイトルを横並びで表示＆アニメーション
-col_logo, col_title = st.columns([1, 4])
-
-with col_logo:
-    # ロゴ画像の読み込み (mirairo.png が同じフォルダにある想定)
-    # なければプレースホルダーを表示
-    try:
-        st.markdown('<div class="floating-element">', unsafe_allow_html=True)
-        st.image("mirairo.png", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    except:
-        st.markdown('<div class="floating-element" style="font-size:80px;">🌟</div>', unsafe_allow_html=True)
-
-with col_title:
-    st.markdown("""
-        <div class="floating-element" style="width:100%;">
-            <h1 class="mirairo-title">Mirairo</h1>
-            <div class="mirairo-sub">Data-Driven Education Platform</div>
+# ▼ ヘッダーエリア (HTML/CSSで一体化させて動かす)
+# 画像と文字を一つのdivに入れ、CSSの animation: float で一緒に動かします。
+st.markdown(f"""
+    <div class="header-container">
+        {logo_html}
+        <div class="title-box">
+            <h1 class="main-title">Mirairo</h1>
+            <div class="sub-title">Data-Driven Education Platform</div>
         </div>
-    """, unsafe_allow_html=True)
+    </div>
+""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-st.header("ようこそ！")
+# 概要テキスト
 st.write("""
-このアプリは、特別支援教育に関わる先生方をサポートするためのツールです。
-子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
-発達段階を記録・分析したり、AIによる計画作成の補助を受けたりすることができます。
-
-**下の各機能やサイドバーのメニューから、利用したい機能を選択してください。**
+**Mirairo（ミライロ）へようこそ。**  
+このプラットフォームは、特別支援教育に関わる先生方をサポートするために開発されました。  
+「経験」や「勘」にデータという「根拠」をプラスし、指導案作成から分析までを一元化します。
 """)
 
-st.header("各機能の紹介")
+st.divider()
+st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト (内容は元のまま) ---
+# --- 3カラムレイアウト (カードデザイン適用) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
     # 1. 指導支援内容
     with st.container(border=True):
         st.markdown("### 📚 指導支援内容")
-        st.write("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.caption("困りごとに応じた指導・支援のアイデアを検索")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["guidance"])
 
     # 2. 分析方法
     with st.container(border=True):
         st.markdown("### 📈 分析方法")
-        st.write("教育学や心理学に基づいた様々な分析方法の解説と、実践で使えるツールを提供します。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.caption("教育学・心理学に基づいた分析手法の解説")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["analysis"])
     
     # 3. 授業カード
     with st.container(border=True):
-        st.markdown("### 🃏 授業カードライブラリー") 
-        st.write("先生方の授業アイデアを共有・検索できる、視覚的な授業カード集です。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.markdown("### 🃏 授業カード") 
+        st.caption("授業アイデアを共有・検索できるライブラリ")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["lesson_card_library"])
 
 with col2:
     # 4. 発達チャート
     with st.container(border=True):
-        st.markdown("### 📊 発達チャート作成")
-        st.write("お子さんの発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.markdown("### 📊 発達チャート")
+        st.caption("発達段階を記録し、レーダーチャートで可視化")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["chart"])
     
     # 5. AI計画作成
     with st.container(border=True):
-        st.markdown("### 🤖 AIによる支援,指導計画作成", unsafe_allow_html=True)
-        st.write("フォーム入力で、個別の支援・指導計画のプロンプトを簡単に作成します。", )
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.markdown("### 🤖 AI計画作成")
+        st.caption("個別の支援・指導計画プロンプトを作成")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["plan_creation"])
 
     # 9. AIによる指導案作成
     with st.container(border=True):
-        st.markdown("### 📝 AIによる指導案作成")
-        st.write("AIを活用して、Excel形式の学習指導案を半自動で作成・出力します。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/9_AIによる指導案作成.py",), key="btn_lesson_plan_ai", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.markdown("### 📝 AI指導案作成")
+        st.caption("基本情報から学習指導案を自動生成・出力")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/9_AIによる指導案作成.py",), key="btn_lesson_plan_ai", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["lesson_plan_ai"])
 
 with col3:
     # 6. 学習指導要領
     with st.container(border=True):
-        st.markdown("### 📜 知的段階_早引き学習指導要領")
-        st.write("学部・段階・教科を選択し、学習指導要領の内容を確認できます。")
-        b_col1, b_col2 = st.columns(2)
-        b_col1.button("この機能を使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
-        with b_col2.popover("📖 マニュアル", use_container_width=True):
+        st.markdown("### 📜 指導要領早引き")
+        st.caption("学部・段階ごとの内容を素早く検索")
+        col_btn, col_pop = st.columns([1, 1])
+        col_btn.button("使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page", use_container_width=True)
+        with col_pop.popover("📖 説明"):
             st.markdown(manuals["guideline_page"])
 
     # 7. 動画ギャラリー
     with st.container(border=True):
         st.markdown("### ▶️ 動画ギャラリー")
-        st.write("特別支援教育に関する動画と解説をまとめています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
+        st.caption("特別支援教育に関する動画と解説まとめ")
+        st.button("見る ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery", use_container_width=True)
 
     # 10. フィードバック
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
-        st.write("アプリの改善やご意見をお待ちしています。")
-        st.button("この機能を使う ➡", on_click=set_page, args=("pages/10_フィードバック.py",), key="btn_feedback", use_container_width=True)
+        st.caption("アプリの改善要望やバグ報告はこちら")
+        st.button("送る ➡", on_click=set_page, args=("pages/10_フィードバック.py",), key="btn_feedback", use_container_width=True)
 
 
-# --- ▼ 関連ツール＆リンク (元のまま) ▼ ---
+# --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
 
-st.header("関連ツール＆リンク")
+st.header("🔗 研究・分析ツール (External Links)")
+st.write("研究論文やデータ分析に活用できる外部ツール集です。")
+
 c1, c2 = st.columns(2)
 with c1:
-    st.markdown("##### 📁 教育・心理分析ツール")
-    st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
-    st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
+    st.markdown("##### 📁 教育・心理分析")
+    st.markdown("- [応用行動分析 (ABA)](https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/)")
+    st.markdown("- [機能的行動評価](https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/)")
 
 with c2:
-    st.markdown("##### 📁 統計学分析ツール")
-    st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
-    st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-    st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-    st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-    st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
-    st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+    st.markdown("##### 📁 統計学分析")
+    st.markdown("- [アンケートデータ統計分析](https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/)")
+    st.markdown("- [相関分析](https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/)")
+    st.markdown("- [多変量回帰分析](https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/)")
+    st.markdown("- [t検定](https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/)")
+    st.markdown("- [ロジスティック回帰分析](https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/)")
+    st.markdown("- [ノンパラメトリック分析](https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/)")
 
-st.markdown("---")
-st.markdown("##### 🗨️ ご意見・ご感想")
-st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
-st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
-
-st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-st.warning("""
+st.markdown("<br>", unsafe_allow_html=True)
+st.info("""
 **【利用上の注意】**
-それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
+それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、
+管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
 """)
