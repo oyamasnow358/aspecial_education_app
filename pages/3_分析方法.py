@@ -1,259 +1,188 @@
 import streamlit as st
 import os
 
-# --- ▼ 共通CSSの読み込み ▼ ---
+# --- 1. ページ設定 (必ず最初に記述) ---
+st.set_page_config(
+    page_title="Mirairo - 分析方法", 
+    page_icon="📈", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# --- 2. デザイン定義 (Mirairo共通のダークモード・白枠線デザイン) ---
 def load_css():
-    """カスタムCSSを読み込む関数"""
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+    
     css = """
     <style>
-        /* --- 背景画像の設定 --- */
-        [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+        /* --- 全体フォント --- */
+        html, body, [class*="css"] {
+            font-family: 'Noto Sans JP', sans-serif !important;
+        }
+
+        /* --- 背景 (黒ベース + 画像) --- */
+        [data-testid="stAppViewContainer"] {
+            background-color: #000000;
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
             background-attachment: fixed;
         }
-        /* --- 戻るボタンのスタイル (位置調整) --- */
-        .back-button-container {
-            position: relative; /* relativeにして通常のフローで配置 */
-            padding-bottom: 20px; /* 下に余白 */
-            margin-bottom: -50px; /* 上の要素との重なりを調整 */
+
+        /* --- 文字色 (白・影付き) --- */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stSelectbox label {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
         }
-        /* サイドバーの背景を少し透過 */
+
+        /* --- サイドバー (半透明) --- */
         [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
-        /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
+        /* サイドバー閉じるボタン */
         [data-testid="stSidebarNavCollapseButton"] {
-            position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
-        }
-        /* 元のアイコンを完全に非表示にする */
-        [data-testid="stSidebarNavCollapseButton"] * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        /* カスタムアイコン「«」を疑似要素として追加 */
-        [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«' !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
-        }
-        [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
-        }
-        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
-
-
-        /* --- 見出しのスタイル --- */
-        h1 {
-            color: #2c3e50; /* ダークブルー */
-            text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
-        }
-        h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
-            margin-top: 40px;
-        }
-        h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
-            padding-bottom: 8px;
-            margin-top: 30px;
+            color: #fff !important;
         }
 
-        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        /* st.container(border=True)の内部のdivに直接影響させる */
-        div[data-testid="stVerticalBlock"] > div > div.st-emotion-cache-1r6slb0 { /* Streamlitの内部構造に合わせたセレクタ */
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 1.5em 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
-        }
-        div[data-testid="stVerticalBlock"] > div > div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
-            transform: translateY(-5px);
-        }
+        /* 
+           ================================================================
+           ★ 機能カードのデザイン (白枠・アニメーション) ★
+           ================================================================
+        */
         
-        /* --- ボタンのスタイル --- */
-        .stButton>button {
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            color: #4a90e2;
-            background-color: #ffffff;
-            padding: 10px 24px;
-            font-weight: bold;
+        /* アニメーション定義 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        [data-testid="stBorderContainer"] {
+            background-color: #151515 !important;
+            border: 2px solid #ffffff !important; /* 白い太枠 */
+            border-radius: 16px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            
+            /* アニメーション適用 */
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* ホバー時の動き */
+        [data-testid="stBorderContainer"]:hover {
+            border-color: #4a90e2 !important;
+            transform: translateY(-5px);
+            background-color: #000000 !important;
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
             transition: all 0.3s ease;
         }
-        .stButton>button:hover {
-            border-color: #8A2BE2;
-            color: white;
-            background-color: #8A2BE2;
-            transform: scale(1.05);
+
+        /* --- ボタンのデザイン --- */
+        .stButton > button {
+            width: 100%;
+            background-color: #000000 !important;
+            border: 2px solid #ffffff !important;
+            color: #4a90e2 !important;
+            font-weight: bold !important;
+            border-radius: 30px !important;
+            transition: all 0.3s ease !important;
         }
+        .stButton > button:hover {
+            border-color: #4a90e2 !important;
+            color: #ffffff !important;
+            background-color: #4a90e2 !important;
+        }
+        
         /* Primaryボタン */
-        .stButton>button[kind="primary"] {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
+        .stButton > button[kind="primary"] {
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
         }
-        .stButton>button[kind="primary"]:hover {
-            background-color: #357ABD;
-            border-color: #357ABD;
-            transform: scale(1.05);
-        }
-
-        /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 { /* st.infoの内部的なクラス名に依存 */
-             background-color: rgba(232, 245, 253, 0.7);
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
-        }
-        
-        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
-        [data-testid="stExpanderToggleIcon"] {
-            display: none;
-        }
-        /* st.expanderのカスタムアイコン */
-        .streamlit-expanderHeader > div:first-child::before {
-            content: '▼'; /* 閉じたときのアイコン */
-            font-size: 1.2em;
-            margin-right: 0.5em;
-            transition: transform 0.2s ease-in-out;
-        }
-        .streamlit-expanderHeader.is-expanded > div:first-child::before {
-            content: '▲'; /* 開いたときのアイコン */
-            transform: rotate(0deg); /* 開いた状態なので回転させない */
+        .stButton > button[kind="primary"]:hover {
+            background-color: #ffffff !important;
+            color: #4a90e2 !important;
         }
 
+        /* --- 説明文プレート (Glass Plate) --- */
+        .glass-plate {
+            background-color: rgba(20, 20, 20, 0.8);
+            border: 2px solid #4a90e2;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            animation: fadeInUp 1s ease-in-out;
+        }
 
-        /* --- フッターの区切り線 --- */
-        .footer-hr {
-            border: none;
-            height: 3px;
-            background: linear-gradient(to right, #4a90e2, #8A2BE2);
-            margin-top: 40px;
+        /* --- 戻るボタンのリンク --- */
+        .back-link a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #fff;
+            border-radius: 20px;
+            color: #fff !important;
+            text-decoration: none;
             margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .back-link a:hover {
+            background: #fff;
+            color: #000 !important;
         }
 
-        /* 分析方法カードのカスタムスタイル */
-        .analysis-card-btn { /* st.buttonに適用されるdivのスタイル */
-            background-color: rgba(255, 255, 255, 0.98);
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            text-align: center;
+        /* セレクトボックスの調整 */
+        div[data-baseweb="select"] > div {
+            background-color: #222 !important;
+            color: #fff !important;
+            border-color: #555 !important;
         }
-        .analysis-card-btn:hover {
-            box-shadow: 0 8px 16px rgba(74, 144, 226, 0.15);
-            transform: translateY(-3px);
-            background-color: #e6f0fa; /* ホバー時の背景色 */
-        }
-        .analysis-card-btn h4 {
-            color: #34495e;
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        .analysis-card-btn p {
-            color: #606060;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-
         
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-            100% { transform: scale(1.01); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); }
-        }
-
+        hr { border-color: #666; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# --- ▲ 共通CSSの読み込み ▲ ---
-st.set_page_config(page_title="分析方法", page_icon="📈", layout="wide")
-
-# CSSを読み込む
+# CSS適用
 load_css()
-# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
-# st.columnsを使って、左端に配置する
-col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
-with col_back:
-    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
-    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
-# --- ▲ 戻るボタンの配置 ▲ ---
+
+# --- ▼ 戻るボタン ▼ ---
+st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 st.title("📈 分析方法")
+
+# --- 推奨ツールエリア (プレートデザイン) ---
 st.markdown("""
-<style>
-.recommended-tool {
-    background-color: #fff3e0; /* 薄いオレンジ系の背景 */
-    border-left: 8px solid #ff9800; /* オレンジの強調線 */
-    padding: 20px;
-    margin: 30px 0;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    /* width: fit-content; */ /* テキストの幅に合わせる (モダンなブラウザ向け) */
-    display: inline-block; /* テキストの幅に合わせる (より広範な互換性) */
-    font-weight: bold; /* 文字を太字にする */
-    color: #333333; /* 文字色を少し濃くする */
-    /* animation: pulse 1.5s infinite alternate; */
-}
-
-/* アニメーションをPythonで表現する、または別の方法を検討 */
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown(f"""
-<div class="recommended-tool">
-    <p>ここでは、特別支援教育で使える教育学的、心理学的、統計学的分析方法の解説と、実践で使えるツールを紹介します。特に統計学の分析ツールでは、相関関係だけではなく、因果関係の追及も分析が可能です</p>
+<div class="glass-plate">
+    <h4 style="color: #4a90e2 !important; margin-top: 0;">✨ 特にオススメ！アンケート分析ツール</h4>
+    <p>Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！<br>
+    アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。</p>
 </div>
 """, unsafe_allow_html=True)
+
+st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析ツールを開く", icon="🔗")
+
+# イメージ画像
+img_stats_tools_chart = "https://i.imgur.com/ASnp6PS.png"
+st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
+
 
 # --- データ定義 ---
 # 画像URL
 img_dousa = [
-    "https://i.imgur.com/SwjfDft.png",
-    "https://i.imgur.com/LqbE9Nf.png",
-    "https://i.imgur.com/XLwjXFE.png",
-    "https://i.imgur.com/2MfaBxc.png",
+    "https://i.imgur.com/SwjfDft.png", "https://i.imgur.com/LqbE9Nf.png",
+    "https://i.imgur.com/XLwjXFE.png", "https://i.imgur.com/2MfaBxc.png",
 ]
 img_mindfulness = "https://i.imgur.com/zheqhdv.png"
 img_pecs = "https://i.imgur.com/Hw4PIKo.jpeg"
 img_cbt = "https://i.imgur.com/vnMHFNE.png"
-# 統計学ツールのイメージ画像（仮）
-# ここで直接画像URLを定義
-img_stats_tools_chart = "https://i.imgur.com/ASnp6PS.png" 
 
-
-# 療法・分析法とマークダウンファイルの対応
+# 療法・分析法データ
 methods = {
     "ABA（応用行動分析）※ツール有": {"file": "pages2/aba.md", "description": "行動の原理を応用し、望ましい行動を促進します。"},
     "FBA/PBS（機能的アセスメント/ポジティブ行動支援）※ツール有": {"file": "pages2/fba_pbs.md", "description": "問題行動の原因を探り、前向きな支援計画を立てます。"},
@@ -272,7 +201,7 @@ methods = {
     "統計学的分析方法 ※ツール有": {"file": "pages2/toukei.md", "description": "データに基づいて教育実践を客観的に評価します。"},
 }
 
-# 実態と適した療法の対応
+# 実態対応データ
 student_conditions = {
     "言葉で気持ちを伝えるのが難しい": ["プレイセラピー", "アートセラピー", "PECS（絵カード交換式コミュニケーション）"],
     "感情のコントロールが苦手": ["CBT（認知行動療法）", "SEL（社会情動的学習）", "マインドフルネス"],
@@ -283,9 +212,7 @@ student_conditions = {
     "統計的な分析をしたい": ["統計学的分析方法"],
 }
 
-# --- UI ---
-
-# セッションステートで選択を管理
+# --- UI状態管理 ---
 if "selected_method" not in st.session_state:
     st.session_state.selected_method = None
 if "show_toukei_description" not in st.session_state:
@@ -296,199 +223,146 @@ if "show_student_conditions" not in st.session_state:
     st.session_state.show_student_conditions = False
 
 
-# 「特にオススメ！アンケート分析ツール」をマストで表示
-st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
-st.markdown("<h4>✨ 特にオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
-st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
-st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
-# ここに画像を挿入
-st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# 分析方法一覧の表示（右側）
-if st.button("「分析方法の一覧から探す」を表示/非表示", key="toggle_analysis_methods"):
+# --- 1. 分析方法の一覧から探す ---
+st.markdown("---")
+if st.button("📂 「分析方法の一覧から探す」を表示/非表示", key="toggle_analysis_methods"):
     st.session_state.show_analysis_methods = not st.session_state.show_analysis_methods
 
 if st.session_state.show_analysis_methods:
-    st.subheader("分析方法の一覧から探す")
-    st.write("気になる分析方法をクリックして詳細をご覧ください。")
+    st.subheader("分析方法の一覧")
+    st.caption("気になる分析方法をクリックして詳細をご覧ください。")
 
-    # 3列で分析方法カードを表示
+    # 3列グリッド (カードデザイン適用)
     cols_count = 3
     cols = st.columns(cols_count)
-    col_idx = 0
-
-    for method_name, method_info in methods.items():
-        with cols[col_idx % cols_count]:
-            if st.button(
-                f"**{method_name}**\n\n_{method_info['description']}_", 
-                key=f"method_btn_{method_name}",
-                use_container_width=True,
-                type="primary" if st.session_state.selected_method == method_name else "secondary"
-            ):
-                st.session_state.selected_method = method_name
-                if method_name == "統計学的分析方法":
-                    st.session_state.show_toukei_description = True
-                else:
-                    st.session_state.show_toukei_description = False
-                st.rerun()
-        col_idx += 1
+    
+    for i, (method_name, method_info) in enumerate(methods.items()):
+        with cols[i % cols_count]:
+            # st.container(border=True) を使うことで白枠・アニメーションが適用される
+            with st.container(border=True):
+                st.markdown(f"**{method_name}**")
+                st.caption(f"{method_info['description']}")
+                if st.button("詳細を見る ➡", key=f"method_btn_{method_name}", type="primary" if st.session_state.selected_method == method_name else "secondary"):
+                    st.session_state.selected_method = method_name
+                    if method_name == "統計学的分析方法":
+                        st.session_state.show_toukei_description = True
+                    else:
+                        st.session_state.show_toukei_description = False
+                    st.rerun()
 
 
-st.markdown("---") # 区切り線
-
-# 「児童・生徒の実態から探す」セクションの表示/非表示
-if st.button("「児童・生徒の実態から探す」を表示/非表示", key="toggle_student_conditions"):
+# --- 2. 児童・生徒の実態から探す ---
+st.markdown("---")
+if st.button("👦 「児童・生徒の実態から探す」を表示/非表示", key="toggle_student_conditions"):
     st.session_state.show_student_conditions = not st.session_state.show_student_conditions
 
 if st.session_state.show_student_conditions:
     st.subheader("児童・生徒の実態から探す")
-    condition = st.selectbox("実態を選んでください", list(student_conditions.keys()))
+    condition = st.selectbox("▼ 実態を選んでください", list(student_conditions.keys()))
 
     st.write("💡 **この実態に適した療法・分析法:**")
+    
+    # 結果表示用カラム
     cols_for_condition = st.columns(3)
-    col_idx_condition = 0
-    for method in student_conditions[condition]:
+    for i, method in enumerate(student_conditions[condition]):
         if method in methods:
-            if cols_for_condition[col_idx_condition % 3].button(
-                method, 
-                key=f"btn_condition_{method}",
-                type="primary" if st.session_state.selected_method == method else "secondary"
-            ):
-                st.session_state.selected_method = method
-                if method == "統計学的分析方法":
-                    st.session_state.show_toukei_description = True
-                else:
-                    st.session_state.show_toukei_description = False
-                st.rerun()
-        col_idx_condition += 1
+            with cols_for_condition[i % 3]:
+                with st.container(border=True):
+                    st.markdown(f"**{method}**")
+                    if st.button("詳細を見る ➡", key=f"btn_condition_{method}"):
+                        st.session_state.selected_method = method
+                        if method == "統計学的分析方法":
+                            st.session_state.show_toukei_description = True
+                        else:
+                            st.session_state.show_toukei_description = False
+                        st.rerun()
 
 
-# --- 詳細表示 ---
+# --- 詳細表示エリア ---
 if st.session_state.selected_method:
     st.markdown("---")
-    st.header(f"解説：{st.session_state.selected_method}")
     
-    # 選択されたメソッド名からIDを生成（日本語対応のため文字を置換）
-    safe_method_id = st.session_state.selected_method.replace(" ", "-").replace("（", "").replace("）", "").replace("/", "-").replace("・", "-")
+    # 白枠コンテナの中に詳細を表示
+    with st.container(border=True):
+        st.header(f"解説：{st.session_state.selected_method}")
+        
+        safe_method_id = st.session_state.selected_method.replace(" ", "-").replace("（", "").replace("）", "").replace("/", "-").replace("・", "-")
+        
+        # 自動スクロール用JS
+        st.markdown(f"""
+            <script>
+                setTimeout(function() {{
+                    var element = window.parent.document.querySelector('.element-container h2');
+                    if(element) element.scrollIntoView({{behavior: 'smooth'}});
+                }}, 300);
+            </script>
+        """, unsafe_allow_html=True)
 
-    # JavaScriptでスクロール処理を挿入
-    st.markdown(
-        f"""
-        <script>
-            // Streamlitの再実行後にDOMが更新されるため、少し遅延させてからスクロールを実行
-            setTimeout(function() {{
-                var selectedElement = document.getElementById('section-{safe_method_id}');
-                if (selectedElement) {{
-                    selectedElement.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
-                }}
-            }}, 100); // 100ミリ秒の遅延
-        </script>
-        """, 
-        unsafe_allow_html=True
-    )
-
-    st.markdown(f'<div id="section-{safe_method_id}" class="st-emotion-cache-1r6slb0">', unsafe_allow_html=True)
-
-    if st.session_state.selected_method == "統計学的分析方法":
-        if st.button("「統計学的分析方法」の説明を表示/非表示", key="toggle_toukei_description_in_detail"):
-            st.session_state.show_toukei_description = not st.session_state.show_toukei_description
-            
-        if st.session_state.show_toukei_description:
+        # テキスト読み込み
+        if st.session_state.selected_method == "統計学的分析方法":
+            if st.button("説明文を表示/非表示", key="toggle_toukei"):
+                st.session_state.show_toukei_description = not st.session_state.show_toukei_description
+            if st.session_state.show_toukei_description:
+                file_path = methods.get(st.session_state.selected_method)["file"]
+                if file_path and os.path.exists(file_path):
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        st.markdown(f.read(), unsafe_allow_html=True)
+        else:
             file_path = methods.get(st.session_state.selected_method)["file"]
             if file_path and os.path.exists(file_path):
                 with open(file_path, "r", encoding="utf-8") as f:
                     st.markdown(f.read(), unsafe_allow_html=True)
             else:
-                st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
-    else:
-        file_path = methods.get(st.session_state.selected_method)["file"]
-        if file_path and os.path.exists(file_path):
-            with open(file_path, "r", encoding="utf-8") as f:
-                st.markdown(f.read(), unsafe_allow_html=True)
-        else:
-            st.warning(f"詳細な説明ページは準備中です。(ファイルが見つかりません: {file_path})")
+                st.warning("準備中です。")
 
-    method = st.session_state.selected_method
+        # 個別画像・リンク表示
+        method = st.session_state.selected_method
 
-    if method == "CBT（認知行動療法）":
-        st.image(img_cbt, caption="認知の歪みの例", use_container_width=True)
-    
-    elif method == "PECS（絵カード交換式コミュニケーション）":
-        st.image(img_pecs, caption="PECSの例", use_container_width=True)
-    
-    elif method == "マインドフルネス":
-        st.image(img_mindfulness, caption="マインドフルネスの活動例", use_container_width=True)
+        if method == "CBT（認知行動療法）":
+            st.image(img_cbt, caption="認知の歪みの例", use_container_width=True)
+        elif method == "PECS（絵カード交換式コミュニケーション）":
+            st.image(img_pecs, caption="PECSの例", use_container_width=True)
+        elif method == "マインドフルネス":
+            st.image(img_mindfulness, caption="マインドフルネスの活動例", use_container_width=True)
+        elif method == "動作法":
+            st.write("**【指導例画像】**")
+            img_cols = st.columns(2)
+            for i, img_url in enumerate(img_dousa):
+                img_cols[i % 2].image(img_url, caption=f"生徒{i+1}", use_container_width=True)
+        elif method == "ABA（応用行動分析）":
+            st.info("##### 🛠️ 簡単分析ツール")
+            st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析ツール", icon="🔗")
+        elif method == "FBA/PBS（機能的アセスメント/ポジティブ行動支援）":
+            st.info("##### 🛠️ 分析ツールと参考資料")
+            st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析ツール", icon="🔗")
+        elif method == "統計学的分析方法":
+            st.info("##### 🛠️ 統計学 分析ツール一覧")
+            st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
+            st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
+            st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
+            st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック分析", icon="🔗")
+            st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
 
-    elif method == "動作法":
-        st.write("**【指導例画像】**")
-        img_cols = st.columns(2)
-        for i, img_url in enumerate(img_dousa):
-            img_cols[i % 2].image(img_url, caption=f"生徒{i+1}", use_container_width=True)
 
-    elif method == "ABA（応用行動分析）":
-        st.info("##### 🛠️ 簡単分析ツール")
-        st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析ツール", icon="🔗")
+# --- フッター ---
+st.markdown('<hr>', unsafe_allow_html=True)
 
-    elif method == "FBA/PBS（機能的アセスメント/ポジティブ行動支援）":
-        st.info("##### 🛠️ 分析ツールと参考資料")
-        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析ツール", icon="🔗")
-        st.markdown("""
-        **【出典情報】**
-        - **参考文献:** Durand, V. M. (1990). Severe behavior problems: A functional communication training approach. Guilford Press.
-        - **Webサイト:** [機能的アセスメント](http://www.kei-ogasawara.com/support/assessment/)
-        """)
-    elif method == "統計学的分析方法":
-        st.info("##### 🛠️ 統計学 分析ツール一覧")
-        st.markdown("初めての方へ：**統計分析に役立つ強力なツールが揃っています！**")
-        # アンケート分析ツールを強調
-        st.markdown('<div class="recommended-tool">', unsafe_allow_html=True)
-        st.markdown("<h4>✨ 初心者にもオススメ！アンケート分析ツール ✨</h4>", unsafe_allow_html=True)
-        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析", icon="🔗")
-        st.markdown("Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。")
-        # ここにも画像を挿入
-        st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("#### その他の統計分析ツール")
-        st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
-        st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
-        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析ツール", icon="🔗")
-        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析ツール", icon="🔗")
-        st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-        # ここは上記でマスト表示されるので削除
-        # st.image(img_stats_tools_chart, caption="データ分析をサポートするツール群", use_container_width=True)
-        
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# フッターの区切り線
-st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
-st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-
-with st.expander("🔗 全ての統計学ツールリンクを表示", expanded=False):
+with st.expander("🔗 全ての統計学ツールリンクを表示"):
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("##### 📁 教育・心理分析ツール")
+        st.markdown("##### 📁 教育・心理分析")
         st.page_link("https://abaapppy-k7um2qki5kggexf8qkfxjc.streamlit.app/", label="応用行動分析", icon="🔗")
-        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価分析", icon="🔗")
-
+        st.page_link("https://kinoukoudou-ptfpnkq3uqgaorabcyzgf2.streamlit.app/", label="機能的行動評価", icon="🔗")
     with c2:
-        st.markdown("##### 📁 統計学分析ツール")
-        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケートデータ、総合統計分析", icon="🔗")
+        st.markdown("##### 📁 統計学分析")
+        st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="アンケート分析", icon="🔗")
         st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
         st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰分析", icon="🔗")
-        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック統計分析", icon="🔗")
+        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰", icon="🔗")
+        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック", icon="🔗")
 
 st.markdown("---")
-st.markdown("##### 🗨️ ご意見・ご感想")
-st.markdown("自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください（埼玉県の学校教育関係者のみＳＴアカウントで回答できます）。")
-st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="アンケートフォーム", icon="📝")
+st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="🗨️ ご意見・ご感想 (アンケートフォーム)", icon="📝")
 
-st.markdown("<hr class='footer-hr'>", unsafe_allow_html=True)
-st.warning("""
-**【利用上の注意】**
-それぞれのアプリに記載してある内容、分析ツールのデータや図、表を外部（研究発表など）で利用する場合は、管理者(岩槻はるかぜ特別支援学校 小山)までご相談ください。無断での転記・利用を禁じます。
-""")
+st.warning("【利用上の注意】無断での転記・利用を禁じます。研究発表等での利用は管理者までご相談ください。")
