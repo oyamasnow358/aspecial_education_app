@@ -1,5 +1,6 @@
 import streamlit as st
 import base64
+import time
 
 # --- 1. ページ設定 ---
 st.set_page_config(
@@ -20,11 +21,10 @@ def get_img_as_base64(file):
 
 logo_path = "mirairo.png"
 logo_b64 = get_img_as_base64(logo_path)
-# ロゴ画像のHTML生成
-logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div style="font-size:80px;">🌟</div>'
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (今回はHTMLカードに対する直接指定なので確実に効きます) ---
+# --- 2. CSSデザイン (アニメーション強化・マニュアル見やすく) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- 全体リセット --- */
+        /* --- 全体 --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
         }}
@@ -45,7 +45,7 @@ def load_css():
             background-attachment: fixed;
         }}
 
-        /* --- 文字色 (白・影付きで最強に見やすく) --- */
+        /* --- 文字色 (白・影付き) --- */
         h1, h2, h3, h4, h5, h6, p, span, div, label {{
             color: #ffffff !important;
             text-shadow: 0 2px 4px #000000 !important;
@@ -59,33 +59,35 @@ def load_css():
 
         /* 
            ================================================================
-           ★ カスタムHTMLカードのデザイン (これが表示される枠です) ★
+           ★ アニメーション定義 (下からフワッと)
            ================================================================
         */
-        
-        /* アニメーション定義: 下からフワッと */
         @keyframes fadeInUp {{
-            from {{ opacity: 0; transform: translateY(30px); }}
+            from {{ opacity: 0; transform: translateY(40px); }}
             to {{ opacity: 1; transform: translateY(0); }}
         }}
 
+        /* 
+           ================================================================
+           ★ カードデザイン (アニメーション適用)
+           ================================================================
+        */
         .mirairo-card {{
-            /* 背景: 濃いグレー */
             background-color: #151515;
-            
-            /* 枠線: 太さ2pxの白い実線 (絶対に見えます) */
             border: 2px solid #ffffff;
-            
-            /* 形と影 */
-            border-radius: 15px 15px 0 0; /* 下はボタンが来るので直角気味に */
+            border-radius: 15px 15px 0 0;
             padding: 25px;
             margin-top: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.8);
             
-            /* アニメーション適用 */
-            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            /* 初期状態は透明 */
+            opacity: 0; 
+            /* アニメーション設定 (遅延はPython側で個別に指定) */
+            animation-name: fadeInUp;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
             
-            /* 高さ調整 */
             min-height: 180px;
             display: flex;
             flex-direction: column;
@@ -93,7 +95,7 @@ def load_css():
         }}
         
         .mirairo-card:hover {{
-            border-color: #4a90e2; /* ホバーで青枠に */
+            border-color: #4a90e2;
             background-color: #000000;
             transform: translateY(-5px);
             transition: all 0.3s ease;
@@ -114,20 +116,27 @@ def load_css():
             color: #ddd;
         }}
 
-        /* --- ボタンのデザイン修正 --- */
+        /* --- ボタン --- */
         .stButton > button {{
             width: 100%;
             background-color: #000000 !important;
-            border: 2px solid #ffffff !important; /* ボタンも白枠 */
-            border-top: none !important; /* 上の線は消してカードと一体化 */
-            border-radius: 0 0 15px 15px !important; /* 下側だけ丸く */
+            border: 2px solid #ffffff !important;
+            border-top: none !important;
+            border-radius: 0 0 15px 15px !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
             padding: 10px !important;
-            margin-top: -16px !important; /* 無理やりカードの下にくっつける */
+            margin-top: -16px !important;
             transition: all 0.3s ease !important;
             position: relative;
             z-index: 5;
+            
+            /* ボタンもアニメーションさせる */
+            opacity: 0;
+            animation-name: fadeInUp;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards;
+            animation-delay: 1s; /* カードより遅れて出る */
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
@@ -147,11 +156,11 @@ def load_css():
             justify-content: center;
             align-items: center;
             padding: 60px 0;
-            animation: float 6s ease-in-out infinite; /* ロゴも文字も一緒に動く */
+            animation: float 6s ease-in-out infinite;
         }}
         
         .logo-img {{
-            width: 180px; /* ロゴ2倍サイズ */
+            width: 180px;
             height: auto;
             filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));
             margin-right: 30px;
@@ -162,8 +171,8 @@ def load_css():
             font-weight: 900;
             line-height: 1;
             margin: 0;
-            color: #ffffff; /* タイトル白 */
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.7); /* 白く発光 */
+            color: #ffffff;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.7);
         }}
         
         .sub-title {{
@@ -174,7 +183,7 @@ def load_css():
             margin-top: 10px;
         }}
 
-        /* --- 説明文のプレート --- */
+        /* --- 説明文プレート --- */
         .glass-plate {{
             background-color: rgba(20, 20, 20, 0.95);
             border: 2px solid #4a90e2;
@@ -182,7 +191,15 @@ def load_css():
             padding: 30px;
             margin-bottom: 40px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            animation: fadeInUp 1s ease-in-out;
+            opacity: 0;
+            animation: fadeInUp 1s ease-in-out forwards;
+            animation-delay: 0.2s;
+        }}
+
+        /* --- ダイアログ(マニュアル)のスタイル調整 --- */
+        div[data-testid="stDialog"] {{
+            background-color: #111111;
+            border: 1px solid #444;
         }}
 
         hr {{ border-color: #666; }}
@@ -198,48 +215,84 @@ load_css()
 manuals = {
     "guidance": """
     ### 📚 指導支援内容 マニュアル
-    **使い方:**
-    1.  画面のドロップダウンを左から順に選びます。
-    2.  「💡 適した指導・支援を表示」をクリック。
-    3.  表示された内容を確認します。
+    **概要**  
+    お子さんの日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。
+
+    **使い方**  
+    1.  **3つのステップで選択**:  
+        画面のドロップダウンメニューを「カテゴリー」→「項目」→「詳細」の順に選択します。
+    2.  **表示ボタン**:  
+        「💡 適した指導・支援を表示」ボタンをクリックします。
+    3.  **結果の確認**:  
+        表示された内容を確認します。タイトルをクリックすると詳細が開きます。
     """,
     "chart": """
     ### 📊 発達チャート作成 マニュアル
-    **使い方:**
-    1.  12のカテゴリーで現在の状況を選択します。
-    2.  「📊 チャートを作成」ボタンをクリック。
-    3.  スプレッドシートまたはExcel形式でダウンロード。
+    **概要**  
+    発達段階を記録し、レーダーチャートで可視化・保存できます。
+
+    **使い方**  
+    1.  **入力**:  
+        12のカテゴリーについて、現在の状況に最も近い段階を選択します。「▼ 目安を見る」で詳細を確認できます。
+    2.  **作成**:  
+        「📊 チャートを作成して書き込む」ボタンをクリックします。
+    3.  **保存**:  
+        スプレッドシートを開くか、Excel形式でダウンロードして保存します。
     """,
     "analysis": """
     ### 📈 分析方法 マニュアル
-    **使い方:**
-    *   サイドバーから手法（ABAなど）を直接選択、またはメインエリアでお子さんの状況を選んで検索。
+    **概要**  
+    特別支援教育で活用できる様々な分析方法や療法について調べられます。
+
+    **使い方**  
+    *   **方法A**: サイドバーから知りたい療法（ABA、CBTなど）を直接選択します。
+    *   **方法B**: メインエリアでお子さんの状況を選択し、有効な療法を検索します。
     """,
     "plan_creation": """
     ### 🤖 計画作成サポート マニュアル
-    **使い方:**
-    1.  プロンプトの種類を選択し、実態や課題を入力。
-    2.  生成された文面をコピーしてChatGPT等で使用。
+    **概要**  
+    生成AI（ChatGPTなど）に支援計画作成を依頼するための「プロンプト（命令文）」を作成します。
+
+    **使い方**  
+    1.  **選択**: プロンプトの種類（プランA・B用など）を選びます。
+    2.  **入力**: お子さんの実態や課題、参考情報を入力します。
+    3.  **生成**: 「プロンプトを生成」を押し、表示された文面をコピーしてAIチャットに貼り付けます。
     """,
     "lesson_plan_ai": """
     ### 📝 AI指導案作成 マニュアル
-    **使い方:**
-    1.  基本情報を入力し、プロンプトを作成してAIに入力。
-    2.  AIの回答（JSON）を貼り付けてExcelを出力。
+    **概要**  
+    基本情報を入力するだけで、AIを活用して学習指導案（Excel）を自動生成します。
+
+    **使い方**  
+    1.  **入力**: 学部学年、教科単元などの基本情報を入力します。
+    2.  **AI連携**: 「プロンプトを作成」し、ChatGPT等に入力してコード（JSON）を取得します。
+    3.  **出力**: 取得したコードをアプリに入力し、「Excel作成実行」を押してダウンロードします。
     """,
     "guideline_page": """
     ### 📜 指導要領早引き マニュアル
-    **使い方:**
-    *   学部、障害種別、教科を選択して「表示」をクリック。
+    **概要**  
+    学習指導要領の内容を素早く検索して閲覧できます。
+
+    **使い方**  
+    *   学部、障害種別（段階）、教科を選択して「表示する」ボタンをクリックしてください。
     """,
     "lesson_card_library": """
     ### 🃏 授業カード マニュアル
-    **使い方:**
-    *   検索バーやハッシュタグで実践事例を探せます。
+    **概要**  
+    先生方が実践している授業のアイデアをカード形式で共有・検索できます。
+
+    **使い方**  
+    *   検索バーにキーワードを入れるか、ハッシュタグ（#高等部など）をクリックして授業を探します。
+    *   カードをクリックすると詳細（略案PDFや動画）が見られます。
     """
 }
 
-# --- 4. ページ遷移ロジック ---
+# --- 4. マニュアル表示用ダイアログ (ここが見やすさのポイント！) ---
+@st.dialog("📖 マニュアル")
+def show_manual(key):
+    st.markdown(manuals[key])
+
+# --- 5. ページ遷移ロジック ---
 def set_page(page):
     st.session_state.page_to_visit = page
 
@@ -256,9 +309,9 @@ if 'show_create_form' not in st.session_state:
     st.session_state.show_create_form = False
 
   
-# --- 5. メインコンテンツ ---
+# --- 6. メインコンテンツ ---
 
-# ヘッダー (HTMLで一体化して動かす)
+# ヘッダー
 st.markdown(f"""
     <div class="header-wrapper">
         {logo_html}
@@ -269,7 +322,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文 (青枠プレート)
+# 説明文
 st.markdown("""
 <div class="glass-plate">
     <h3>ようこそ！</h3>
@@ -286,78 +339,78 @@ st.markdown("""
 
 st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト (HTMLカード方式) ---
-col1, col2, col3 = st.columns(3)
-
-# カードを描画するヘルパー関数
-def render_card(title, desc):
+# カードを描画する関数 (アニメーション遅延つき)
+def render_card(title, desc, delay):
     st.markdown(f"""
-    <div class="mirairo-card">
+    <div class="mirairo-card" style="animation-delay: {delay}s;">
         <div class="card-title">{title}</div>
         <div class="card-desc">{desc}</div>
     </div>
     """, unsafe_allow_html=True)
 
+# --- 3カラムレイアウト (カード + ボタン) ---
+col1, col2, col3 = st.columns(3)
+
 with col1:
-    # 1. 指導支援内容
-    render_card("📚 指導支援内容", "日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
+    # 1. 指導支援内容 (Delay: 0.2s)
+    render_card("📚 指導支援内容", "日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。", 0.2)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance")
-    with c_pop.popover("📖"): st.markdown(manuals["guidance"])
+    if c_pop.button("📖", key="m_guidance"): show_manual("guidance")
 
-    # 2. 分析方法
-    render_card("📈 分析方法", "教育学や心理学に基づいた分析手法の解説とツールです。")
+    # 2. 分析方法 (Delay: 0.5s)
+    render_card("📈 分析方法", "教育学や心理学に基づいた分析手法の解説とツールです。", 0.5)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
-    with c_pop.popover("📖"): st.markdown(manuals["analysis"])
+    if c_pop.button("📖", key="m_analysis"): show_manual("analysis")
     
-    # 3. 授業カード
-    render_card("🃏 授業カード", "先生方の授業アイデアを共有・検索できるライブラリです。")
+    # 3. 授業カード (Delay: 0.8s)
+    render_card("🃏 授業カード", "先生方の授業アイデアを共有・検索できるライブラリです。", 0.8)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library")
-    with c_pop.popover("📖"): st.markdown(manuals["lesson_card_library"])
+    if c_pop.button("📖", key="m_card"): show_manual("lesson_card_library")
 
 with col2:
-    # 4. 発達チャート
-    render_card("📊 発達チャート", "発達段階を記録し、レーダーチャートで可視化・保存します。")
+    # 4. 発達チャート (Delay: 0.3s)
+    render_card("📊 発達チャート", "発達段階を記録し、レーダーチャートで可視化・保存します。", 0.3)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
-    with c_pop.popover("📖"): st.markdown(manuals["chart"])
+    if c_pop.button("📖", key="m_chart"): show_manual("chart")
     
-    # 5. AI計画作成
-    render_card("🤖 AI計画作成", "個別の支援・指導計画作成用のプロンプトを簡単に生成します。")
+    # 5. AI計画作成 (Delay: 0.6s)
+    render_card("🤖 AI計画作成", "個別の支援・指導計画作成用のプロンプトを簡単に生成します。", 0.6)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation")
-    with c_pop.popover("📖"): st.markdown(manuals["plan_creation"])
+    if c_pop.button("📖", key="m_plan"): show_manual("plan_creation")
 
-    # 9. AIによる指導案作成
-    render_card("📝 AI指導案作成", "基本情報を入力するだけで、AIを活用して学習指導案を自動生成します。")
+    # 9. AIによる指導案作成 (Delay: 0.9s)
+    render_card("📝 AI指導案作成", "基本情報を入力するだけで、AIを活用して学習指導案を自動生成します。", 0.9)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/9_AIによる指導案作成.py",), key="btn_lesson_plan_ai")
-    with c_pop.popover("📖"): st.markdown(manuals["lesson_plan_ai"])
+    if c_pop.button("📖", key="m_lesson"): show_manual("lesson_plan_ai")
 
 with col3:
-    # 6. 学習指導要領
-    render_card("📜 指導要領早引き", "学部・段階ごとの学習指導要領の内容を素早く検索できます。")
+    # 6. 学習指導要領 (Delay: 0.4s)
+    render_card("📜 指導要領早引き", "学部・段階ごとの学習指導要領の内容を素早く検索できます。", 0.4)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page")
-    with c_pop.popover("📖"): st.markdown(manuals["guideline_page"])
+    if c_pop.button("📖", key="m_guide"): show_manual("guideline_page")
 
-    # 7. 動画ギャラリー
-    render_card("▶️ 動画ギャラリー", "特別支援教育に関する動画と解説をまとめています。")
+    # 7. 動画ギャラリー (Delay: 0.7s)
+    render_card("▶️ 動画ギャラリー", "特別支援教育に関する動画と解説をまとめています。", 0.7)
     st.button("見る ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery")
 
-    # 10. フィードバック
-    render_card("📝 フィードバック", "アプリの改善やご意見をお待ちしています。")
+    # 10. フィードバック (Delay: 1.0s)
+    render_card("📝 フィードバック", "アプリの改善やご意見をお待ちしています。", 1.0)
     st.button("送る ➡", on_click=set_page, args=("pages/10_フィードバック.py",), key="btn_feedback")
 
 
 # --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-# リンク集 (こちらもHTMLカード化)
+# リンク集もアニメーション
 st.markdown("""
-<div class="glass-plate" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff;">
+<div class="glass-plate" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff; animation-delay: 1.2s;">
     <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
 </div>
 """, unsafe_allow_html=True)
@@ -365,7 +418,7 @@ st.markdown("""
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("""
-    <div class="mirairo-card" style="min-height: auto;">
+    <div class="mirairo-card" style="min-height: auto; animation-delay: 1.3s;">
         <div class="card-title" style="font-size: 1.2rem;">📁 教育・心理分析</div>
         <div class="card-desc">
             <ul style="padding-left: 20px; margin: 0;">
@@ -378,7 +431,7 @@ with c1:
 
 with c2:
     st.markdown("""
-    <div class="mirairo-card" style="min-height: auto;">
+    <div class="mirairo-card" style="min-height: auto; animation-delay: 1.4s;">
         <div class="card-title" style="font-size: 1.2rem;">📁 統計学分析</div>
         <div class="card-desc">
             <ul style="padding-left: 20px; margin: 0;">
@@ -397,7 +450,7 @@ st.markdown("---")
 
 # アンケート
 st.markdown("""
-<div class="glass-plate" style="text-align: center;">
+<div class="glass-plate" style="text-align: center; animation-delay: 1.5s;">
     <h5 style="color: #fff;">🗨️ ご意見・ご感想</h5>
     <p>自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください。<br>
     (埼玉県の学校教育関係者のみＳＴアカウントで回答できます)</p>
