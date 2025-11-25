@@ -24,7 +24,7 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (視認性・枠線強化版) ---
+# --- 2. CSSデザイン (視認性と枠線を最強にする) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -32,56 +32,46 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- 基本フォント設定 --- */
+        /* --- フォント設定 --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
         }}
 
-        /* --- 背景設定 (かなり暗くして文字を目立たせる) --- */
+        /* --- 背景設定 --- */
         [data-testid="stAppViewContainer"] {{
             background-color: #000000;
-            /* 黒のオーバーレイを93%にして、画像の主張を抑える */
-            background-image: linear-gradient(rgba(0,0,0,0.93), rgba(0,0,0,0.93)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
         }}
 
-        /* --- サイドバー (完全な黒背景) --- */
+        /* --- ★文字色を強制的に白にする (最重要) --- */
+        /* 本文、見出し、説明文すべてを対象 */
+        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, .stCaptionContainer {{
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0, 0.8) !important; /* 文字の周りに濃い影をつけて浮き上がらせる */
+        }}
+
+        /* --- サイドバー --- */
         [data-testid="stSidebar"] {{
-            background-color: #050505 !important;
-            border-right: 1px solid #333;
+            background-color: #111111 !important;
+            border-right: 1px solid #444;
         }}
         [data-testid="stSidebar"] * {{
             color: #ffffff !important;
         }}
 
-        /* --- 機能カードの枠線と背景 (ここを重点的に修正) --- */
+        /* --- ★機能カードの枠線と背景をはっきりさせる (最重要) --- */
         [data-testid="stBorderContainer"] {{
-            /* 背景: ほぼ不透明な濃いグレーで文字をくっきりさせる */
-            background-color: #151515 !important;
-            /* 枠線: 太さを2pxにして、明るめのグレーではっきり見せる */
-            border: 2px solid rgba(200, 200, 200, 0.3) !important;
+            background-color: rgba(0, 0, 0, 0.85) !important; /* 濃い黒背景で文字を見やすく */
+            border: 2px solid rgba(255, 255, 255, 0.6) !important; /* 白くて太い枠線 */
             border-radius: 12px !important;
-            padding: 25px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.8); /* 影をつけて浮かせる */
+            padding: 20px !important;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }}
         
-        /* カード内の説明文を見やすく */
-        [data-testid="stBorderContainer"] p {{
-            color: #e0e0e0 !important; /* 明るいグレーで読みやすく */
-            font-weight: 500 !important; /* 文字を少し太く */
-            line-height: 1.6 !important;
-            font-size: 1rem !important;
-        }}
-        
-        /* カード内の小さい文字(caption) */
-        [data-testid="stBorderContainer"] div[data-testid="stCaptionContainer"] {{
-            color: #bbbbbb !important;
-            font-size: 0.95rem !important;
-            font-weight: 500 !important;
-        }}
-
         /* --- ヘッダーアニメーション --- */
         @keyframes float {{
             0% {{ transform: translateY(0px); }}
@@ -99,69 +89,71 @@ def load_css():
         .logo-img {{
             width: 90px;
             height: auto;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.8)); /* ロゴも見やすく発光 */
         }}
+        
+        /* --- タイトル (真っ白にする) --- */
         .main-title {{
             font-size: 4.5rem;
             font-weight: 900;
             line-height: 1;
             margin: 0;
-            color: #ffffff;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            color: #ffffff !important; /* 白 */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8); /* 白い発光 */
+            background: none !important;
+            -webkit-text-fill-color: #ffffff !important;
         }}
+        
         .sub-title {{
-            font-size: 1.1rem;
-            color: #cbd5e0;
+            font-size: 1.2rem;
+            color: #ffffff !important;
             letter-spacing: 0.15em;
             margin-top: 8px;
-            font-weight: 500;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
         }}
 
-        /* --- 冒頭の説明文エリア (目立つプレート) --- */
+        /* --- 説明文用のプレート --- */
         .glass-container {{
-            background-color: #111111; /* 濃い黒 */
-            border: 2px solid rgba(74, 144, 226, 0.3); /* 青っぽい枠線 */
+            background-color: rgba(0, 0, 0, 0.8); /* 濃い黒 */
+            border: 2px solid rgba(74, 144, 226, 0.8); /* 青い枠線 */
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 40px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-            color: #ffffff;
+            color: #ffffff !important;
         }}
-        .glass-container h3 {{
-            color: #4a90e2 !important;
-            border-bottom: none !important;
-            margin-bottom: 15px !important;
+        .glass-container p {{
+            font-size: 1.1rem;
+            font-weight: 500;
+            line-height: 1.8;
         }}
 
         /* --- ボタンデザイン --- */
         .stButton > button {{
             width: 100%;
             background-color: #000000 !important;
-            border: 1px solid #4a90e2 !important;
+            border: 2px solid #4a90e2 !important; /* 枠線を太く */
             color: #4a90e2 !important;
+            font-weight: 900 !important; /* 文字を太く */
             border-radius: 8px !important;
-            font-weight: 700 !important;
-            margin-top: 10px;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
         }}
 
-        /* --- 見出し --- */
-        h3 {{
+        /* --- リンク --- */
+        a {{
+            color: #63b3ed !important; 
+            font-weight: 700;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
             color: #ffffff !important;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            margin-bottom: 20px !important;
-            font-weight: 700 !important;
         }}
         
-        /* --- リンク --- */
-        a {{ color: #63b3ed !important; font-weight: bold; }}
-        
-        /* --- フッター --- */
-        hr {{ border-color: #333; }}
+        hr {{ border-color: #666; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -253,25 +245,24 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文エリア (くっきりしたプレートで表示)
+# 説明文エリア (濃い背景プレートで見やすく)
 st.markdown("""
 <div class="glass-container">
     <h3>ようこそ！</h3>
-    <p style="font-size: 1.1rem; line-height: 1.8;">
+    <p>
         このアプリは、特別支援教育に関わる先生方をサポートするための統合ツールです。<br>
         子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
         発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。
     </p>
-    <p style="color: #90cdf4; font-weight: bold; margin-top: 15px; font-size: 1rem;">
+    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px;">
         ▼ 下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-st.subheader("📂 各機能の紹介")
+st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト ---
-# ここでは st.container(border=True) のCSSを強化したので、そのまま使えば枠線が見えます
+# --- 3カラムレイアウト (枠線付きで見やすく) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -356,9 +347,9 @@ with col3:
 # --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-# リンク集も枠線付きカードで見やすく
+# リンク集
 st.markdown("""
-<div class="glass-container" style="padding: 15px; margin-bottom: 20px;">
+<div class="glass-container" style="padding: 15px; margin-bottom: 20px; border-color: #666;">
     <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
 </div>
 """, unsafe_allow_html=True)
