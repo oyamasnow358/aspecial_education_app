@@ -1,6 +1,5 @@
 import streamlit as st
 import base64
-import time
 
 # --- 1. ページ設定 ---
 st.set_page_config(
@@ -24,7 +23,7 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (アニメーション強化・マニュアル見やすく) ---
+# --- 2. CSSデザイン (マニュアルの視認性を改善) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -32,7 +31,7 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- 全体 --- */
+        /* --- 全体リセット --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
         }}
@@ -45,8 +44,12 @@ def load_css():
             background-attachment: fixed;
         }}
 
-        /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label {{
+        /* --- 通常の文字色 (白・影付き) --- */
+        /* ダイアログ以外に適用 */
+        .stAppViewContainer h1, .stAppViewContainer h2, .stAppViewContainer h3, 
+        .stAppViewContainer h4, .stAppViewContainer h5, .stAppViewContainer h6, 
+        .stAppViewContainer p, .stAppViewContainer span, .stAppViewContainer div, 
+        .stAppViewContainer label {{
             color: #ffffff !important;
             text-shadow: 0 2px 4px #000000 !important;
         }}
@@ -59,19 +62,54 @@ def load_css():
 
         /* 
            ================================================================
-           ★ アニメーション定義 (下からフワッと)
+           ★ マニュアル（ダイアログ）の視認性改善 ★
            ================================================================
         */
-        @keyframes fadeInUp {{
-            from {{ opacity: 0; transform: translateY(40px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
+        
+        /* ダイアログの本体 */
+        div[role="dialog"] {{
+            background-color: #222222 !important; /* 読みやすい濃いグレー */
+            border: 1px solid #555 !important;
+            border-radius: 15px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9) !important;
+        }}
+
+        /* ダイアログ内の文字 (影を消してくっきり白く) */
+        div[role="dialog"] p, div[role="dialog"] li, div[role="dialog"] span, div[role="dialog"] div {{
+            color: #f0f0f0 !important;
+            text-shadow: none !important; /* 影なし */
+            font-weight: 400 !important;
+            line-height: 1.8 !important;
+        }}
+
+        /* ダイアログ内の見出し (青にして目立たせる) */
+        div[role="dialog"] h3 {{
+            color: #4a90e2 !important;
+            text-shadow: none !important;
+            border-bottom: 1px solid #4a90e2 !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 15px !important;
+        }}
+        
+        /* ダイアログ内の強調文字 */
+        div[role="dialog"] strong {{
+            color: #ffffff !important;
+            font-weight: 900 !important;
+            background-color: rgba(255,255,255,0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
         }}
 
         /* 
            ================================================================
-           ★ カードデザイン (アニメーション適用)
+           ★ HTMLカードのデザイン (アニメーション付き) ★
            ================================================================
         */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
         .mirairo-card {{
             background-color: #151515;
             border: 2px solid #ffffff;
@@ -80,9 +118,7 @@ def load_css():
             margin-top: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.8);
             
-            /* 初期状態は透明 */
-            opacity: 0; 
-            /* アニメーション設定 (遅延はPython側で個別に指定) */
+            opacity: 0;
             animation-name: fadeInUp;
             animation-duration: 0.8s;
             animation-fill-mode: forwards;
@@ -131,12 +167,11 @@ def load_css():
             position: relative;
             z-index: 5;
             
-            /* ボタンもアニメーションさせる */
             opacity: 0;
             animation-name: fadeInUp;
             animation-duration: 0.8s;
             animation-fill-mode: forwards;
-            animation-delay: 1s; /* カードより遅れて出る */
+            animation-delay: 1s;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
@@ -144,7 +179,7 @@ def load_css():
             border-color: #4a90e2 !important;
         }}
 
-        /* --- ヘッダーアニメーション --- */
+        /* --- ヘッダー --- */
         @keyframes float {{
             0% {{ transform: translateY(0px); }}
             50% {{ transform: translateY(-10px); }}
@@ -196,12 +231,6 @@ def load_css():
             animation-delay: 0.2s;
         }}
 
-        /* --- ダイアログ(マニュアル)のスタイル調整 --- */
-        div[data-testid="stDialog"] {{
-            background-color: #111111;
-            border: 1px solid #444;
-        }}
-
         hr {{ border-color: #666; }}
         a {{ color: #63b3ed !important; font-weight: bold; text-decoration: none; }}
         a:hover {{ text-decoration: underline; color: #fff !important; }}
@@ -211,7 +240,7 @@ def load_css():
 
 load_css()
 
-# --- 3. マニュアルデータ ---
+# --- 3. マニュアルデータ (内容はそのまま) ---
 manuals = {
     "guidance": """
     ### 📚 指導支援内容 マニュアル
@@ -287,9 +316,10 @@ manuals = {
     """
 }
 
-# --- 4. マニュアル表示用ダイアログ (ここが見やすさのポイント！) ---
+# --- 4. マニュアル表示用ダイアログ ---
 @st.dialog("📖 マニュアル")
 def show_manual(key):
+    # ここでマニュアルを表示
     st.markdown(manuals[key])
 
 # --- 5. ページ遷移ロジック ---
@@ -348,59 +378,59 @@ def render_card(title, desc, delay):
     </div>
     """, unsafe_allow_html=True)
 
-# --- 3カラムレイアウト (カード + ボタン) ---
+# --- 3カラムレイアウト ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    # 1. 指導支援内容 (Delay: 0.2s)
+    # 1. 指導支援内容
     render_card("📚 指導支援内容", "日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。", 0.2)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance")
     if c_pop.button("📖", key="m_guidance"): show_manual("guidance")
 
-    # 2. 分析方法 (Delay: 0.5s)
+    # 2. 分析方法
     render_card("📈 分析方法", "教育学や心理学に基づいた分析手法の解説とツールです。", 0.5)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
     if c_pop.button("📖", key="m_analysis"): show_manual("analysis")
     
-    # 3. 授業カード (Delay: 0.8s)
+    # 3. 授業カード
     render_card("🃏 授業カード", "先生方の授業アイデアを共有・検索できるライブラリです。", 0.8)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library")
     if c_pop.button("📖", key="m_card"): show_manual("lesson_card_library")
 
 with col2:
-    # 4. 発達チャート (Delay: 0.3s)
+    # 4. 発達チャート
     render_card("📊 発達チャート", "発達段階を記録し、レーダーチャートで可視化・保存します。", 0.3)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
     if c_pop.button("📖", key="m_chart"): show_manual("chart")
     
-    # 5. AI計画作成 (Delay: 0.6s)
+    # 5. AI計画作成
     render_card("🤖 AI計画作成", "個別の支援・指導計画作成用のプロンプトを簡単に生成します。", 0.6)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation")
     if c_pop.button("📖", key="m_plan"): show_manual("plan_creation")
 
-    # 9. AIによる指導案作成 (Delay: 0.9s)
+    # 9. AIによる指導案作成
     render_card("📝 AI指導案作成", "基本情報を入力するだけで、AIを活用して学習指導案を自動生成します。", 0.9)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/9_AIによる指導案作成.py",), key="btn_lesson_plan_ai")
     if c_pop.button("📖", key="m_lesson"): show_manual("lesson_plan_ai")
 
 with col3:
-    # 6. 学習指導要領 (Delay: 0.4s)
+    # 6. 学習指導要領
     render_card("📜 指導要領早引き", "学部・段階ごとの学習指導要領の内容を素早く検索できます。", 0.4)
     c_btn, c_pop = st.columns([3, 1])
     c_btn.button("使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page")
     if c_pop.button("📖", key="m_guide"): show_manual("guideline_page")
 
-    # 7. 動画ギャラリー (Delay: 0.7s)
+    # 7. 動画ギャラリー
     render_card("▶️ 動画ギャラリー", "特別支援教育に関する動画と解説をまとめています。", 0.7)
     st.button("見る ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery")
 
-    # 10. フィードバック (Delay: 1.0s)
+    # 10. フィードバック
     render_card("📝 フィードバック", "アプリの改善やご意見をお待ちしています。", 1.0)
     st.button("送る ➡", on_click=set_page, args=("pages/10_フィードバック.py",), key="btn_feedback")
 
@@ -408,7 +438,6 @@ with col3:
 # --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-# リンク集もアニメーション
 st.markdown("""
 <div class="glass-plate" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff; animation-delay: 1.2s;">
     <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
