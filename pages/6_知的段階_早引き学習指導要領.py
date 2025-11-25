@@ -1,221 +1,221 @@
-# pages/6_知的段階_学習指導要領.py
 import streamlit as st
-# guideline_data.pyをインポート
+# guideline_data.pyをインポート (ファイル名が違う場合は修正してください)
 from guideline_data import data
 
-# --- ▼ 共通CSSの読み込み（変更なし） ▼ ---
+# ==========================================
+# 0. ページ設定
+# ==========================================
+st.set_page_config(
+    page_title="Mirairo - 学習指導要領",
+    page_icon="📜",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ==========================================
+# 1. デザイン定義 (Mirairo共通・白枠線・アニメーション)
+# ==========================================
 def load_css():
-    """カスタムCSSを読み込む関数"""
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+    
     css = """
     <style>
-        /* --- 背景画像の設定 --- */
-        [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+        /* --- 全体 --- */
+        html, body, [class*="css"] {
+            font-family: 'Noto Sans JP', sans-serif !important;
+        }
+
+        /* --- 背景 (黒) --- */
+        [data-testid="stAppViewContainer"] {
+            background-color: #000000;
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
             background-attachment: fixed;
         }
-        /* --- 戻るボタンのスタイル (位置調整) --- */
-        .back-button-container {
-            position: relative; /* relativeにして通常のフローで配置 */
-            padding-bottom: 20px; /* 下に余白 */
-            margin-bottom: -50px; /* 上の要素との重なりを調整 */
+
+        /* --- 文字色 (白・影付き) --- */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stSelectbox label {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
         }
-        /* サイドバーの背景を少し透過 */
+
+        /* --- サイドバー --- */
         [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
-                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
-        [data-testid="stSidebarNavCollapseButton"] {
-            position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
-        }
-        /* 元のアイコンを完全に非表示にする */
-        [data-testid="stSidebarNavCollapseButton"] * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        /* カスタムアイコン「«」を疑似要素として追加 */
-        [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«' !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
-        }
-        [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
-        }
-        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
+        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
 
-
-        /* --- 見出しのスタイル --- */
-        h1 {
-            color: #2c3e50; /* ダークブルー */
-            text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
-        }
-        h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
-            margin-top: 40px;
-        }
-        h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
-            padding-bottom: 8px;
-            margin-top: 30px;
+        /* --- 機能カード (白枠・アニメーション) --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 1.5em 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
+        [data-testid="stBorderContainer"] {
+            background-color: #151515 !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
+        
+        [data-testid="stBorderContainer"]:hover {
+            border-color: #4a90e2 !important;
+            background-color: #000000 !important;
             transform: translateY(-5px);
-        }
-        
-        /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 {
-             background-color: rgba(232, 245, 253, 0.7);
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
-        }
-        
-        /* --- st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
-        [data-testid="stExpanderToggleIcon"] {
-            display: none;
-        }
-        
-        /* --- ラジオボタンをタブ風にスタイリング --- */
-        div[role="radiogroup"] {
-            display: flex;
-            justify-content: center; /* 中央揃え */
-            margin-bottom: 20px;
-            gap: 10px; /* ボタン間の隙間 */
-        }
-        div[role="radiogroup"] label {
-            background-color: #f0f2f6;
-            color: #31333F;
-            padding: 10px 20px;
-            margin: 0;
-            border: 1px solid #d1d9e1;
-            border-radius: 25px; /* 角を丸く */
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        /* 選択されているラジオボタンのスタイル */
-        div[role="radiogroup"] label:has(input:checked) {
-            background-color: #4a90e2; /* プライマリカラー */
-            color: white;
-            border-color: #4a90e2;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        /* ホバー時のスタイル */
-        div[role="radiogroup"] label:hover {
-            background-color: #e1e5f2;
-            border-color: #8A2BE2;
-        }
-        /* ラジオボタンの丸 자체를 숨김 */
-        div[role="radiogroup"] input[type="radio"] {
-            display: none;
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
+            transition: all 0.3s ease;
         }
 
+        /* --- ボタン --- */
+        .stButton > button {
+            width: 100%;
+            background-color: #000000 !important;
+            border: 2px solid #ffffff !important;
+            color: #4a90e2 !important;
+            font-weight: bold !important;
+            border-radius: 30px !important;
+            transition: all 0.3s ease !important;
+        }
+        .stButton > button:hover {
+            border-color: #4a90e2 !important;
+            color: #ffffff !important;
+            background-color: #4a90e2 !important;
+        }
+        
+        /* Primaryボタン */
+        .stButton > button[kind="primary"] {
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
+        }
+        .stButton > button[kind="primary"]:hover {
+            background-color: #ffffff !important;
+            color: #4a90e2 !important;
+        }
+
+        /* --- セレクトボックス・ラジオボタン --- */
+        div[data-baseweb="select"] > div, div[role="radiogroup"] label {
+            background-color: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: #fff !important;
+        }
+        div[role="radiogroup"] label:hover {
+            background-color: rgba(74, 144, 226, 0.2) !important;
+            border-color: #4a90e2 !important;
+        }
+
+        /* --- エキスパンダー --- */
+        .streamlit-expanderHeader {
+            background-color: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+            border: 1px solid #555;
+        }
+        .streamlit-expanderContent {
+            background-color: rgba(0,0,0,0.5) !important;
+            border: 1px solid #444;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* --- 戻るボタン --- */
+        .back-link a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #fff;
+            border-radius: 20px;
+            color: #fff !important;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .back-link a:hover {
+            background: #fff;
+            color: #000 !important;
+        }
+        
+        hr { border-color: #666; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
-# st.columnsを使って、左端に配置する
-col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
-with col_back:
-    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
-    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
-# --- ▲ 戻るボタンの配置 ▲ ---
+load_css()
 
+# --- ▼ 戻るボタン ▼ ---
+st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
-
+# ==========================================
+# 2. ロジック・ヘルパー関数
+# ==========================================
 def format_guideline_text(text):
     if not isinstance(text, str): return ""
     processed_text = text.replace("　", "&nbsp;&nbsp;")
     processed_text = processed_text.replace("\n", "  \n")
     return processed_text
 
-# --- ▼▼▼【新規追加】表示状態をリセットする関数 ▼▼▼ ---
 def reset_display_state():
     """選択肢が変更されたときに、表示状態をリセットする"""
     if 'show_results' in st.session_state:
         st.session_state.show_results = False
-# --- ▲▲▲【ここまで】▲▲▲ ---
 
-st.set_page_config(page_title="知的段階（学習指導要領）", page_icon="📜", layout="wide")
-load_css()
+# ==========================================
+# 3. メインコンテンツ
+# ==========================================
 st.title("📜 知的段階　早引き学習指導要領")
-st.info("学習指導要領の内容を一瞬でピンポイントで探してくるツールです。学部、段階（障害種別）、教科を選択すると、関連する学習指導要領の内容が表示されます。")
+st.markdown("""
+<div style="background: rgba(255,255,255,0.05); border: 1px solid #fff; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+    学習指導要領の内容を一瞬でピンポイント検索。<br>
+    学部、段階（障害種別）、教科を選択すると、関連する学習指導要領の内容が表示されます。
+</div>
+""", unsafe_allow_html=True)
 
+# --- 選択肢 (白枠カード内) ---
+with st.container(border=True):
+    st.subheader("検索条件の選択")
+    col1, col2, col3 = st.columns(3)
 
+    with col1:
+        selected_gakubu = st.selectbox("**1. 学部を選択**", options=list(data.keys()), on_change=reset_display_state)
 
-# --- 選択肢 ---
-col1, col2, col3 = st.columns(3)
+    with col2:
+        shubetsu_options = list(data[selected_gakubu].keys())
+        selected_shubetsu = st.selectbox("**2. 段階（障害種別）を選択**", options=shubetsu_options, on_change=reset_display_state)
 
-with col1:
-    selected_gakubu = st.selectbox("**1. 学部を選択**", options=list(data.keys()), on_change=reset_display_state)
+    is_chiteki = "知的障害者" in selected_shubetsu
+    if is_chiteki:
+        with col3:
+            kyoka_options = ["選択してください"] + list(data[selected_gakubu][selected_shubetsu].keys())
+            selected_kyoka = st.selectbox("**3. 教科を選択**", options=kyoka_options, on_change=reset_display_state)
+    else:
+        selected_kyoka = None
 
-with col2:
-    shubetsu_options = list(data[selected_gakubu].keys())
-    selected_shubetsu = st.selectbox("**2. 段階（障害種別）を選択**", options=shubetsu_options, on_change=reset_display_state)
+    st.markdown("<br>", unsafe_allow_html=True)
 
-is_chiteki = "知的障害者" in selected_shubetsu
-if is_chiteki:
-    with col3:
-        kyoka_options = ["選択してください"] + list(data[selected_gakubu][selected_shubetsu].keys())
-        selected_kyoka = st.selectbox("**3. 教科を選択**", options=kyoka_options, on_change=reset_display_state)
-else:
-    selected_kyoka = None
+    # --- 表示ボタン ---
+    show_button_enabled = (not is_chiteki) or (is_chiteki and selected_kyoka != "選択してください")
 
-st.markdown("---")
+    if show_button_enabled:
+        if st.button("表示する", type="primary", use_container_width=True):
+            st.session_state.show_results = True
+    else:
+        st.warning("ステップ3で教科を選択してください。")
 
-# --- ▼▼▼【ここからロジックを修正】▼▼▼ ---
-# 表示ボタンの制御
-show_button_enabled = (not is_chiteki) or (is_chiteki and selected_kyoka != "選択してください")
-
-if show_button_enabled:
-    if st.button("表示する", type="primary", use_container_width=True):
-        st.session_state.show_results = True
-else:
-    st.warning("ステップ3で教科を選択してください。")
-
-# --- 内容表示 ---
+# --- 結果表示エリア ---
 if st.session_state.get('show_results', False):
+    st.markdown("---")
     st.header(f"表示結果：{selected_gakubu} - {selected_shubetsu}" + (f" - {selected_kyoka}" if is_chiteki and selected_kyoka else ""))
     
+    # 結果を白枠コンテナで表示
     with st.container(border=True):
-        # 知的障害者以外の場合の表示
+        # 知的障害者以外の場合
         if not is_chiteki:
             shubetsu_data = data[selected_gakubu][selected_shubetsu]
             st.subheader("全体")
@@ -227,7 +227,7 @@ if st.session_state.get('show_results', False):
                         with st.expander(f"**{key}**"):
                             st.markdown(format_guideline_text(value), unsafe_allow_html=True)
         
-        # 知的障害者の場合の表示
+        # 知的障害者の場合
         elif is_chiteki and selected_kyoka and selected_kyoka != "選択してください":
             kyoka_data = data[selected_gakubu][selected_shubetsu][selected_kyoka]
             
@@ -235,27 +235,31 @@ if st.session_state.get('show_results', False):
                 st.subheader("🎯 目標")
                 st.markdown(format_guideline_text(kyoka_data["目標"]), unsafe_allow_html=True)
 
-            段階keys = sorted([key for key in kyoka_data.keys() if "段階" in key])
+            dankai_keys = sorted([key for key in kyoka_data.keys() if "段階" in key])
             
-            if 段階keys:
+            if dankai_keys:
+                st.markdown("---")
                 st.subheader("📖 段階を選択してください")
                 
                 selected_dankai = st.radio(
                     "表示する段階を選択:",
-                    options=段階keys,
+                    options=dankai_keys,
                     horizontal=True,
                     label_visibility="collapsed",
-                    key=f"radio_{selected_gakubu}_{selected_kyoka}" # 選択肢が変わったらキーも変えてリセット
+                    key=f"radio_{selected_gakubu}_{selected_kyoka}"
                 )
 
                 if selected_dankai:
                     dankai_data = kyoka_data[selected_dankai]
-                    with st.container(border=True, key=f"container_{selected_dankai}"):
+                    
+                    # 段階ごとの内容を表示（ここも枠線で囲む）
+                    st.markdown(f"#### 【{selected_dankai}】")
+                    with st.container(border=True):
                         if "目標" in dankai_data:
-                            st.markdown("#### **目標**")
+                            st.markdown("##### **目標**")
                             st.markdown(format_guideline_text(dankai_data["目標"]), unsafe_allow_html=True)
                         if "内容" in dankai_data:
-                            st.markdown("#### **内容**")
+                            st.markdown("##### **内容**")
                             st.markdown(format_guideline_text(dankai_data["内容"]), unsafe_allow_html=True)
 
             if "指導計画の作成と内容の取扱い" in kyoka_data:
@@ -266,4 +270,3 @@ if st.session_state.get('show_results', False):
             if overall_plan_key:
                  with st.expander(f"**{overall_plan_key}**"):
                     st.markdown(format_guideline_text(kyoka_data[overall_plan_key]), unsafe_allow_html=True)
-# --- ▲▲▲【ロジック修正ここまで】▲▲▲ ---
