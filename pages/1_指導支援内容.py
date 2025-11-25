@@ -2,7 +2,164 @@ import streamlit as st
 import json
 from pathlib import Path
 
-# --- ▼ 外部JSONデータを読み込む関数 (この部分を丸ごと置き換える) ▼ ---
+# ==========================================
+# 0. ページ設定
+# ==========================================
+st.set_page_config(
+    page_title="Mirairo - 指導支援内容", 
+    page_icon="📚", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ==========================================
+# 1. デザイン定義 (Mirairo共通・白枠・アニメーション)
+# ==========================================
+def load_css():
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+    
+    css = """
+    <style>
+        /* --- 全体 --- */
+        html, body, [class*="css"] {
+            font-family: 'Noto Sans JP', sans-serif !important;
+        }
+
+        /* --- 背景 (黒) --- */
+        [data-testid="stAppViewContainer"] {
+            background-color: #000000;
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* --- 文字色 (白・影付き) --- */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stSelectbox label {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
+        }
+
+        /* --- サイドバー (半透明・すりガラス) --- */
+        [data-testid="stSidebar"] {
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
+
+        /* --- 機能カード (白枠・アニメーション) --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        [data-testid="stBorderContainer"] {
+            background-color: #151515 !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        
+        [data-testid="stBorderContainer"]:hover {
+            border-color: #4a90e2 !important;
+            background-color: #000000 !important;
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
+            transition: all 0.3s ease;
+        }
+
+        /* --- ボタン --- */
+        .stButton > button {
+            width: 100%;
+            background-color: #000000 !important;
+            border: 2px solid #ffffff !important;
+            color: #4a90e2 !important;
+            font-weight: bold !important;
+            border-radius: 30px !important;
+            transition: all 0.3s ease !important;
+        }
+        .stButton > button:hover {
+            border-color: #4a90e2 !important;
+            color: #ffffff !important;
+            background-color: #4a90e2 !important;
+        }
+        
+        /* Primaryボタン */
+        .stButton > button[kind="primary"] {
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
+        }
+        .stButton > button[kind="primary"]:hover {
+            background-color: #ffffff !important;
+            color: #4a90e2 !important;
+        }
+
+        /* --- セレクトボックス (黒背景に) --- */
+        div[data-baseweb="select"] > div {
+            background-color: #222 !important;
+            color: #fff !important;
+            border-color: #555 !important;
+        }
+        div[data-baseweb="popover"] div {
+            background-color: #111 !important;
+            color: #fff !important;
+        }
+        
+        /* --- エキスパンダー --- */
+        .streamlit-expanderHeader {
+            background-color: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+            border: 1px solid #555;
+        }
+        .streamlit-expanderContent {
+            background-color: rgba(0,0,0,0.5) !important;
+            border: 1px solid #444;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* --- infoボックス --- */
+        [data-testid="stAlert"] {
+            background-color: rgba(74, 144, 226, 0.1) !important;
+            border: 1px solid #4a90e2 !important;
+            color: #fff !important;
+        }
+
+        /* --- 戻るボタン --- */
+        .back-link a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #fff;
+            border-radius: 20px;
+            color: #fff !important;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .back-link a:hover {
+            background: #fff;
+            color: #000 !important;
+        }
+        
+        hr { border-color: #666; }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+load_css()
+
+# ==========================================
+# 2. データ読み込み (パス自動解決版)
+# ==========================================
 @st.cache_data
 def load_guidance_data():
     """指導データをJSONファイルから読み込む（パス自動解決つき）"""
@@ -18,249 +175,36 @@ def load_guidance_data():
             return json.load(f)
 
     except FileNotFoundError:
-        # もしファイルが見つからなかった場合に、アプリ画面に親切なエラーを表示
         st.error(
             f"""
             **【エラー】 `guidance_data.json` が見つかりません！**
-
-            プログラムは以下の場所からファイルを探そうとしました：
-            `{json_path}`
-
-            **▼ 確認してください ▼**
-            1.  `guidance_data.json` という名前のファイルが存在しますか？ (スペルは正しいですか？)
-            2.  そのファイルは **`pages` フォルダの外（同じ階層）** に置いてありますか？
-
-            **正しいフォルダ構成（例）：**
-            ```
-            - あなたのアプリのフォルダ/
-              ├─ guidance_data.json  <-- ★ここに配置
-              ├─ Home.py (メインのpyファイル)
-              └─ pages/
-                 └─ 1_指導支援内容.py
-            ```
-            """
-        )
-        st.stop() # エラーがあったら、ここで処理を停止する
-    except json.JSONDecodeError:
-        # もしJSONファイルの中身が壊れていた場合に、アプリ画面に親切なエラーを表示
-        st.error(
-            """
-            **【エラー】 `guidance_data.json` ファイルの中身が正しくありません！**
-
-            ファイルを開いて、以下の点を確認してください。
-
-            - 全体が `{` で始まり、`}` で終わっていますか？
-            - 項目の間のカンマ `,` が抜けていたり、最後の項目に余分なカンマが付いていませんか？
-            - 文字列はすべてダブルクォーテーション `"` で囲まれていますか？
+            パス: `{json_path}`
+            `pages` フォルダの外（Home.pyと同じ階層）にファイルを配置してください。
             """
         )
         st.stop()
-# --- ▼ 共通CSSの読み込み (変更なし) ▼ ---
-def load_css():
-    """カスタムCSSを読み込む関数"""
-    css = """
-    <style>
-        /* --- 背景画像の設定 --- */
-        [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            /* メインコンテンツのみに最大幅を適用し中央寄せ */
-            max-width: 1500px; /* 必要に応じて調整 */
-            margin: auto;
-        }
-        
-        /* stAppViewContainer 自体はフル幅を使用 */
-        [data-testid="stAppViewContainer"] {
-            /* 最大幅とマージンを削除 */
-            padding-left: 20px;
-            padding-right: 20px;
-        }
+    except json.JSONDecodeError:
+        st.error("**【エラー】 JSONファイルの形式が正しくありません。**")
+        st.stop()
 
-
-        /* サイドバーの背景を少し透過 */
-        [data-testid="stSidebar"] {
-            background-color: rgba(240, 242, 246, 0.9);
-        }
-                /* --- ▼ サイドバーの閉じるボタンをカスタマイズ（最終版）▼ --- */
-        [data-testid="stSidebarNavCollapseButton"] {
-            position: relative !important;
-            width: 2rem !important;
-            height: 2rem !important;
-        }
-        /* 元のアイコンを完全に非表示にする */
-        [data-testid="stSidebarNavCollapseButton"] * {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        /* カスタムアイコン「«」を疑似要素として追加 */
-        [data-testid="stSidebarNavCollapseButton"]::before {
-            content: '«' !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            position: absolute !important;
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
-            color: #31333F !important;
-            transition: background-color 0.2s, color 0.2s !important;
-            border-radius: 0.5rem;
-        }
-        [data-testid="stSidebarNavCollapseButton"]:hover::before {
-            background-color: #F0F2F6 !important;
-            color: #8A2BE2 !important;
-        }
-        /* --- ▲ サイドバーのカスタマイズここまで ▲ --- */
-
-
-        /* --- 見出しのスタイル --- */
-        h1 {
-            color: #2c3e50; /* ダークブルー */
-            text-align: center;
-            padding-bottom: 20px;
-            font-weight: bold;
-        }
-        h2 {
-            color: #34495e; /* 少し明るいダークブルー */
-            border-left: 6px solid #8A2BE2; /* 紫のアクセント */
-            padding-left: 12px;
-            margin-top: 40px;
-        }
-        h3 {
-            color: #34495e;
-            border-bottom: 2px solid #4a90e2; /* 青のアクセント */
-            padding-bottom: 8px;
-            margin-top: 30px;
-        }
-
-        /* --- カードデザイン (st.container(border=True)のスタイル) --- */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 1.5em 1.5em;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
-            margin-bottom: 20px; /* カード間の余白 */
-        }
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0:hover {
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.2);
-            transform: translateY(-5px);
-        }
-        
-        /* --- ボタンのスタイル --- */
-        .stButton>button {
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            color: #4a90e2;
-            background-color: #ffffff;
-            padding: 10px 24px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        .stButton>button:hover {
-            border-color: #8A2BE2;
-            color: white;
-            background-color: #8A2BE2;
-            transform: scale(1.05);
-        }
-        /* Primaryボタン */
-        .stButton>button[kind="primary"] {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-        }
-        .stButton>button[kind="primary"]:hover {
-            background-color: #357ABD;
-            border-color: #357ABD;
-            transform: scale(1.05);
-        }
-
-        /* --- st.infoのカスタムスタイル --- */
-        .st-emotion-cache-1wivap1 {
-             background-color: rgba(232, 245, 253, 0.7);
-             border-left: 5px solid #4a90e2;
-             border-radius: 8px;
-        }
-        
-        /* --- ▼▼▼ この部分を新しいコードに置き換える ▼▼▼ --- */
-        /* st.expanderのデフォルトアイコン（文字化けしているもの）を非表示にする */
-        [data-testid="stExpanderToggleIcon"] {
-            display: none;
-        }
-        /* --- ▲▲▲ ここまで ▲▲▲ --- */
-
-        /* --- フッターの区切り線 --- */
-        .footer-hr {
-            border: none;
-            height: 3px;
-            background: linear-gradient(to right, #4a90e2, #8A2BE2);
-            margin-top: 40px;
-            margin-bottom: 20px;
-        }
-        /* --- 戻るボタンのスタイル (位置調整) --- */
-        .back-button-container {
-            position: relative; /* relativeにして通常のフローで配置 */
-            padding-bottom: 20px; /* 下に余白 */
-            margin-bottom: -50px; /* 上の要素との重なりを調整 */
-        }
-        .back-button-container .stButton > button {
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #6a1b9a;
-            border: 1px solid #6a1b9a;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .back-button-container .stButton > button:hover {
-            background-color: #6a1b9a;
-            color: white;
-            border-color: #6a1b9a;
-            transform: scale(1.05);
-        }
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
-# --- ▲ 共通CSSの読み込み ▲ ---
-
-# --- Home.py の set_page 関数をそのまま使用 ---
-# (Home.pyで st.session_state.page_to_visit を設定し、
-# Home.pyで st.switch_page を実行するロジックを想定)
-def set_page(page):
-    st.session_state.page_to_visit = page
-
-
-# --- アプリケーション本体 ---
-st.set_page_config(page_title="指導支援内容", page_icon="📚", layout="wide")
-
-# CSSを適用
-load_css()
-
-# データを読み込む
 guidance_data = load_guidance_data()
 
-# --- ▼ 戻るボタンの配置 (メインコンテンツの左上) ▼ ---
-# st.columnsを使って、左端に配置する
-col_back, _ = st.columns([0.15, 0.85]) # ボタン用に狭いカラムを確保
-with col_back:
-    # `st.page_link` を使用すると、直接ページに遷移できてより確実です。
-    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
-# --- ▲ 戻るボタンの配置 ▲ ---
+# ==========================================
+# 3. メインコンテンツ
+# ==========================================
 
+# --- 戻るボタン ---
+st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 st.title("📚 指導支援内容の参照")
-st.write("ここでは、日常生活における実態や障害の状況から適した指導支援の方法を探すことができます。")
+st.markdown("""
+<div style="background: rgba(255,255,255,0.05); border: 1px solid #fff; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+    日常生活における実態や障害の状況から、適した指導支援の方法を探すことができます。
+</div>
+""", unsafe_allow_html=True)
 
 
-# --- ▼ 選択UI部分 (ロジックはほぼ同じ) ▼ ---
+# --- ▼ 選択UI部分 (白枠カード) ▼ ---
 with st.container(border=True):
     st.info("下のメニューから順番に選択して、適した支援方法を見つけましょう。")
     
@@ -271,20 +215,20 @@ with st.container(border=True):
     with cols[0]:
         # ステップ1: カテゴリー選択
         categories = list(guidance_data.keys())
-        selected_category = st.selectbox("**ステップ1：** カテゴリーを選択", categories, help="大まかな分類を選びます。")
+        selected_category = st.selectbox("**ステップ1：** カテゴリー", categories, help="大まかな分類を選びます。")
     
     with cols[1]:
         # ステップ2: 項目選択
         if selected_category:
             subcategories = list(guidance_data[selected_category].keys())
-            selected_subcategory = st.selectbox("**ステップ2：** 項目を選択", subcategories, help="具体的な困りごとを選びます。")
+            selected_subcategory = st.selectbox("**ステップ2：** 項目", subcategories, help="具体的な困りごとを選びます。")
     
     with cols[2]:
         # ステップ3: 詳細選択
         if selected_category and selected_subcategory:
             detail_items = list(guidance_data[selected_category][selected_subcategory].keys())
             selected_detail_key = st.selectbox(
-                "**ステップ3：** 詳細を選択",
+                "**ステップ3：** 詳細",
                 detail_items,
                 help="さらに詳しい支援内容を選びます。"
             )
@@ -294,13 +238,15 @@ with st.container(border=True):
 # --- ▲ 選択UI部分 ▲ ---
 
 
-# --- ▼ 表示ボタンと結果表示 (ロジックを修正) ▼ ---
+# --- ▼ 表示ボタンと結果表示 ▼ ---
+st.markdown("<br>", unsafe_allow_html=True)
+
 if st.button("💡 適した指導・支援を表示", type="primary", use_container_width=True):
     if detail_data:
-        st.markdown('<hr class="footer-hr">', unsafe_allow_html=True)
+        st.markdown("---")
         st.header(f"📌 「{selected_detail_key}」に適した指導・支援")
 
-        # 指導内容の表示
+        # 指導内容の表示 (白枠カード)
         with st.container(border=True):
             # detail_data は {"items": [...], "image": {...}} という形式
             items_list = detail_data.get("items", [])
@@ -317,14 +263,11 @@ if st.button("💡 適した指導・支援を表示", type="primary", use_conta
                     # 単純な文字列のリストの場合
                     st.write(f"✓ {item}")
 
-        # 関連画像の表示 (データから動的に取得)
+        # 関連画像の表示
         image_info = detail_data.get("image")
-        st.subheader("🖼️ 関連教材・イメージ")
-        with st.container(border=True):
-            if image_info and image_info.get("url"):
+        if image_info and image_info.get("url"):
+            st.subheader("🖼️ 関連教材・イメージ")
+            with st.container(border=True):
                 st.image(image_info["url"], caption=image_info.get("caption"), use_container_width=True)
-            else:
-                st.write("この項目に関連する画像は現在ありません。")
     else:
         st.warning("表示するデータがありません。選択内容を確認してください。")
-# --- ▲ 表示ボタンと結果表示 ▲ ---
