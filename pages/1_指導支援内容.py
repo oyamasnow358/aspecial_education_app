@@ -194,7 +194,7 @@ guidance_data = load_guidance_data()
 # ==========================================
 
 # --- 戻るボタン ---
-st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
 
 st.title("📚 指導支援内容の参照")
 st.markdown("""
