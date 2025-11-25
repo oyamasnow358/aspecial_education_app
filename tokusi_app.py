@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 画像処理 (ロゴ用) ---
+# --- 画像処理 ---
 def get_img_as_base64(file):
     try:
         with open(file, "rb") as f:
@@ -24,7 +24,7 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (枠線復活・ロゴ巨大化) ---
+# --- 2. CSSデザイン (枠線明確化 & ヌルっとアニメーション) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- フォント設定 --- */
+        /* --- 全体フォント --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
         }}
@@ -40,128 +40,150 @@ def load_css():
         /* --- 背景設定 --- */
         [data-testid="stAppViewContainer"] {{
             background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
         }}
 
-        /* --- 文字色を強制的に白にする --- */
-        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, .stCaptionContainer, div {{
+        /* --- 文字色: 白固定 & 影付き --- */
+        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
+        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, 
+        .stCaptionContainer, div {{
             color: #ffffff !important;
-            text-shadow: 0 2px 4px rgba(0,0,0, 0.8) !important;
+            text-shadow: 0 2px 5px rgba(0,0,0, 0.9) !important;
         }}
 
         /* --- サイドバー --- */
         [data-testid="stSidebar"] {{
-            background-color: #111111 !important;
-            border-right: 1px solid #666;
+            background-color: #080808 !important;
+            border-right: 1px solid #333;
         }}
         [data-testid="stSidebar"] * {{
             color: #ffffff !important;
         }}
 
-        /* --- ★機能カードの枠線 (ここを修正) --- */
+        /* 
+           =========================================
+           ★ ここが修正ポイント！機能カードのデザイン ★
+           =========================================
+        */
         [data-testid="stBorderContainer"] {{
-            background-color: rgba(0, 0, 0, 0.85) !important;
-            /* 枠線を「白の実線」で強制的に表示 */
-            border: 2px solid #ffffff !important; 
-            border-radius: 12px !important;
-            padding: 20px !important;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            /* 背景: 濃い黒で塗りつぶす */
+            background-color: rgba(20, 20, 20, 0.95) !important;
+            
+            /* 枠線: 白く太くして境界をはっきりさせる */
+            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+            
+            /* 形と影 */
+            border-radius: 16px !important;
+            padding: 25px !important;
+            margin-bottom: 25px; /* 下のカードとの間隔 */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* 濃い影で浮き上がらせる */
+            
+            /* ヌルっと動くための設定 */
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            
+            /* 出現アニメーション */
+            animation: slideUp 0.8s ease-out forwards;
+            opacity: 0; /* アニメーション前は透明 */
         }}
-        /* ホバー時に枠線を青く光らせる */
+
+        /* ホバー時のヌルっとした動き */
         [data-testid="stBorderContainer"]:hover {{
-            border-color: #4a90e2 !important;
-            box-shadow: 0 0 15px #4a90e2;
+            border-color: #4a90e2 !important; /* 青く光る */
+            transform: translateY(-8px) scale(1.02); /* ふわっと浮く */
+            box-shadow: 0 20px 40px rgba(74, 144, 226, 0.3); /* 青い光の影 */
+            background-color: #000000 !important;
         }}
-        
-        /* --- ヘッダーアニメーション --- */
+
+        /* --- アニメーション定義 (下からヌルっと出る) --- */
+        @keyframes slideUp {{
+            from {{ opacity: 0; transform: translateY(40px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* 要素ごとに出現タイミングをずらす (疑似的なStagger効果) */
+        div.element-container:nth-child(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
+        div.element-container:nth-child(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.2s; }}
+        div.element-container:nth-child(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
+        div.element-container:nth-child(4) [data-testid="stBorderContainer"] {{ animation-delay: 0.4s; }}
+
+        /* --- ヘッダー (ゆらゆら) --- */
         @keyframes float {{
             0% {{ transform: translateY(0px); }}
-            50% {{ transform: translateY(-8px); }}
+            50% {{ transform: translateY(-10px); }}
             100% {{ transform: translateY(0px); }}
         }}
         .header-container {{
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 30px; /* ロゴと文字の間隔 */
-            padding: 50px 0;
+            gap: 30px;
+            padding: 60px 0;
             animation: float 6s ease-in-out infinite;
         }}
-        
-        /* --- ★ロゴサイズ (2倍に変更) --- */
         .logo-img {{
-            width: 180px; /* 90px -> 180px に変更 */
+            width: 180px;
             height: auto;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.8));
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));
         }}
-        
-        /* --- タイトル --- */
         .main-title {{
             font-size: 5rem;
             font-weight: 900;
             line-height: 1;
             margin: 0;
             color: #ffffff !important;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-            background: none !important;
-            -webkit-text-fill-color: #ffffff !important;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.7);
         }}
-        
         .sub-title {{
             font-size: 1.2rem;
             color: #ffffff !important;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.2em;
             margin-top: 10px;
             font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
         }}
 
-        /* --- 説明文用のプレート --- */
+        /* --- 説明文プレート --- */
         .glass-container {{
             background-color: rgba(0, 0, 0, 0.8);
-            /* ここも枠線を白くはっきりさせる */
-            border: 2px solid #ffffff;
+            border: 2px solid #4a90e2;
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 40px;
             color: #ffffff !important;
-        }}
-        .glass-container p {{
-            font-size: 1.1rem;
-            font-weight: 500;
-            line-height: 1.8;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            
+            /* これもヌルっと出す */
+            animation: slideUp 1s ease-out forwards;
         }}
 
-        /* --- ボタンデザイン --- */
+        /* --- ボタン --- */
         .stButton > button {{
             width: 100%;
-            background-color: #000000 !important;
+            background-color: transparent !important;
             border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
             font-weight: 900 !important;
-            border-radius: 8px !important;
+            border-radius: 30px !important; /* 丸くしてモダンに */
+            padding: 10px 20px !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(74, 144, 226, 0.6);
+            transform: scale(1.05);
         }}
 
-        /* --- リンク --- */
-        a {{
-            color: #63b3ed !important; 
-            font-weight: 700;
-            text-decoration: none;
-        }}
-        a:hover {{
-            text-decoration: underline;
-            color: #ffffff !important;
+        /* --- 見出しの線 --- */
+        h3 {{
+            border-bottom: 2px solid #fff;
+            padding-bottom: 10px;
+            margin-bottom: 20px !important;
         }}
         
-        hr {{ border-color: #888; }}
+        hr {{ border-color: #666; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -253,16 +275,16 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文エリア (枠線を白く強調)
+# 説明文エリア
 st.markdown("""
 <div class="glass-container">
     <h3>ようこそ！</h3>
-    <p>
+    <p style="font-size: 1.1rem; line-height: 1.8;">
         このアプリは、特別支援教育に関わる先生方をサポートするための統合ツールです。<br>
         子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
         発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。
     </p>
-    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px;">
+    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px; font-size: 1rem;">
         ▼ 下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。
     </p>
 </div>
@@ -270,7 +292,8 @@ st.markdown("""
 
 st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト (枠線強化版) ---
+# --- 3カラムレイアウト ---
+# st.container(border=True) がCSSで強力にカスタマイズされています
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -355,7 +378,7 @@ with col3:
 # --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-# リンク集 (枠線強化)
+# リンク集
 st.markdown("""
 <div class="glass-container" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff;">
     <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
