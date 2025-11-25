@@ -1,6 +1,5 @@
 import streamlit as st
 import base64
-import os
 
 # --- 1. ページ設定 ---
 st.set_page_config(
@@ -24,10 +23,10 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (枠線明確化 & ヌルっとアニメーション) ---
+# --- 2. CSSデザイン (枠線・アニメーション・視認性の完全修正) ---
 def load_css():
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
     css = f"""
@@ -37,125 +36,131 @@ def load_css():
             font-family: 'Noto Sans JP', sans-serif !important;
         }}
 
-        /* --- 背景設定 --- */
+        /* --- 背景 (黒) --- */
         [data-testid="stAppViewContainer"] {{
             background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
-            background-position: center center;
             background-attachment: fixed;
         }}
 
-        /* --- 文字色: 白固定 & 影付き --- */
-        .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
-        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, .stMarkdown li, 
-        .stCaptionContainer, div {{
+        /* --- 文字色 (白・影付きで最強に見やすく) --- */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {{
             color: #ffffff !important;
-            text-shadow: 0 2px 5px rgba(0,0,0, 0.9) !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
         }}
 
         /* --- サイドバー --- */
         [data-testid="stSidebar"] {{
-            background-color: #080808 !important;
-            border-right: 1px solid #333;
-        }}
-        [data-testid="stSidebar"] * {{
-            color: #ffffff !important;
+            background-color: #111111 !important;
+            border-right: 1px solid #555;
         }}
 
         /* 
-           =========================================
-           ★ ここが修正ポイント！機能カードのデザイン ★
-           =========================================
+           ================================================================
+           ★ 枠線とアニメーションの修正 (ここが今回の肝) ★
+           ================================================================
         */
+        
+        /* アニメーション定義: 下からフワッと出る */
+        @keyframes slideUpFade {{
+            0% {{ opacity: 0; transform: translateY(30px); }}
+            100% {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* 機能カード (st.container) のデザイン */
         [data-testid="stBorderContainer"] {{
-            /* 背景: 濃い黒で塗りつぶす */
-            background-color: rgba(20, 20, 20, 0.95) !important;
+            /* 背景: 濃いグレーで黒背景と差別化 */
+            background-color: rgba(40, 40, 40, 0.9) !important;
             
-            /* 枠線: 白く太くして境界をはっきりさせる */
-            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+            /* 枠線: 白くて太い線 (2px) を強制適用 */
+            border: 2px solid rgba(255, 255, 255, 0.8) !important;
             
-            /* 形と影 */
+            /* 角丸と影 */
             border-radius: 16px !important;
             padding: 25px !important;
-            margin-bottom: 25px; /* 下のカードとの間隔 */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); /* 濃い影で浮き上がらせる */
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             
-            /* ヌルっと動くための設定 */
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            
-            /* 出現アニメーション */
-            animation: slideUp 0.8s ease-out forwards;
-            opacity: 0; /* アニメーション前は透明 */
+            /* 全てのカードにアニメーション適用 */
+            animation: slideUpFade 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            transition: all 0.3s ease !important; /* ホバー時の動きをなめらかに */
         }}
 
-        /* ホバー時のヌルっとした動き */
+        /* ホバー時: 浮き上がって青く光る */
         [data-testid="stBorderContainer"]:hover {{
-            border-color: #4a90e2 !important; /* 青く光る */
-            transform: translateY(-8px) scale(1.02); /* ふわっと浮く */
-            box-shadow: 0 20px 40px rgba(74, 144, 226, 0.3); /* 青い光の影 */
-            background-color: #000000 !important;
+            border-color: #4a90e2 !important; /* 青枠に変化 */
+            transform: translateY(-5px) scale(1.01) !important;
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.5) !important;
+            background-color: rgba(50, 50, 50, 1) !important;
         }}
 
-        /* --- アニメーション定義 (下からヌルっと出る) --- */
-        @keyframes slideUp {{
-            from {{ opacity: 0; transform: translateY(40px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
+        /* カード内の説明文を少し明るいグレーにして読みやすく */
+        [data-testid="stBorderContainer"] p {{
+            font-size: 1.05rem !important;
+            line-height: 1.6 !important;
+            font-weight: 500 !important;
+        }}
+        
+        /* カード内の小さい文字 (Caption) */
+        [data-testid="stCaptionContainer"] {{
+            color: #dddddd !important;
+            font-size: 0.95rem !important;
         }}
 
-        /* 要素ごとに出現タイミングをずらす (疑似的なStagger効果) */
-        div.element-container:nth-child(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
-        div.element-container:nth-child(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.2s; }}
-        div.element-container:nth-child(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
-        div.element-container:nth-child(4) [data-testid="stBorderContainer"] {{ animation-delay: 0.4s; }}
-
-        /* --- ヘッダー (ゆらゆら) --- */
+        /* --- ヘッダー (ロゴとタイトル) --- */
         @keyframes float {{
             0% {{ transform: translateY(0px); }}
             50% {{ transform: translateY(-10px); }}
             100% {{ transform: translateY(0px); }}
         }}
-        .header-container {{
+        
+        .header-wrapper {{
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 30px;
+            align-items: center;
             padding: 60px 0;
-            animation: float 6s ease-in-out infinite;
+            animation: float 6s ease-in-out infinite; /* 全体がゆらゆら */
         }}
+        
         .logo-img {{
-            width: 180px;
+            width: 180px; /* デカく */
             height: auto;
             filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));
+            margin-right: 30px;
         }}
+        
+        .title-group {{
+            display: flex;
+            flex-direction: column;
+        }}
+        
         .main-title {{
-            font-size: 5rem;
+            font-size: 6rem; /* デカく */
             font-weight: 900;
             line-height: 1;
             margin: 0;
             color: #ffffff !important;
-            text-shadow: 0 0 25px rgba(255, 255, 255, 0.7);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.6); /* 白く発光 */
         }}
+        
         .sub-title {{
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             color: #ffffff !important;
             letter-spacing: 0.2em;
-            margin-top: 10px;
             font-weight: 700;
+            margin-top: 10px;
         }}
 
         /* --- 説明文プレート --- */
-        .glass-container {{
-            background-color: rgba(0, 0, 0, 0.8);
+        .glass-plate {{
+            background-color: rgba(20, 20, 20, 0.9);
             border: 2px solid #4a90e2;
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 40px;
-            color: #ffffff !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            
-            /* これもヌルっと出す */
-            animation: slideUp 1s ease-out forwards;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            animation: slideUpFade 1s ease-out forwards; /* これも動く */
         }}
 
         /* --- ボタン --- */
@@ -164,24 +169,19 @@ def load_css():
             background-color: transparent !important;
             border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
-            font-weight: 900 !important;
-            border-radius: 30px !important; /* 丸くしてモダンに */
-            padding: 10px 20px !important;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            font-weight: bold !important;
+            border-radius: 30px !important;
+            transition: all 0.3s ease !important;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
-            box-shadow: 0 0 15px rgba(74, 144, 226, 0.6);
-            transform: scale(1.05);
+            box-shadow: 0 0 15px #4a90e2;
         }}
 
-        /* --- 見出しの線 --- */
-        h3 {{
-            border-bottom: 2px solid #fff;
-            padding-bottom: 10px;
-            margin-bottom: 20px !important;
-        }}
+        /* リンク */
+        a {{ color: #63b3ed !important; font-weight: bold; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
         
         hr {{ border-color: #666; }}
     </style>
@@ -264,27 +264,27 @@ if 'show_create_form' not in st.session_state:
   
 # --- 5. メインコンテンツ ---
 
-# ヘッダー (アニメーション)
+# ヘッダー (ロゴ+タイトルをHTMLで一体化してアニメーションさせる)
 st.markdown(f"""
-    <div class="header-container">
+    <div class="header-wrapper">
         {logo_html}
-        <div class="title-box">
+        <div class="title-group">
             <h1 class="main-title">Mirairo</h1>
             <div class="sub-title">Data-Driven Education Platform</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文エリア
+# 説明文エリア (濃い背景プレート)
 st.markdown("""
-<div class="glass-container">
+<div class="glass-plate">
     <h3>ようこそ！</h3>
     <p style="font-size: 1.1rem; line-height: 1.8;">
         このアプリは、特別支援教育に関わる先生方をサポートするための統合ツールです。<br>
         子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
         発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。
     </p>
-    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px; font-size: 1rem;">
+    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px;">
         ▼ 下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。
     </p>
 </div>
@@ -292,12 +292,10 @@ st.markdown("""
 
 st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト ---
-# st.container(border=True) がCSSで強力にカスタマイズされています
+# --- 3カラムレイアウト (枠線と背景をCSSで強化済み) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    # 1. 指導支援内容
     with st.container(border=True):
         st.markdown("### 📚 指導支援内容")
         st.markdown("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
@@ -306,7 +304,6 @@ with col1:
         with c_pop.popover("📖"):
             st.markdown(manuals["guidance"])
 
-    # 2. 分析方法
     with st.container(border=True):
         st.markdown("### 📈 分析方法")
         st.markdown("教育学や心理学に基づいた分析手法の解説とツールです。")
@@ -315,7 +312,6 @@ with col1:
         with c_pop.popover("📖"):
             st.markdown(manuals["analysis"])
     
-    # 3. 授業カード
     with st.container(border=True):
         st.markdown("### 🃏 授業カード") 
         st.markdown("先生方の授業アイデアを共有・検索できるライブラリです。")
@@ -325,7 +321,6 @@ with col1:
             st.markdown(manuals["lesson_card_library"])
 
 with col2:
-    # 4. 発達チャート
     with st.container(border=True):
         st.markdown("### 📊 発達チャート")
         st.markdown("発達段階を記録し、レーダーチャートで可視化・保存します。")
@@ -334,7 +329,6 @@ with col2:
         with c_pop.popover("📖"):
             st.markdown(manuals["chart"])
     
-    # 5. AI計画作成
     with st.container(border=True):
         st.markdown("### 🤖 AI計画作成")
         st.markdown("個別の支援・指導計画作成用のプロンプトを簡単に生成します。")
@@ -343,7 +337,6 @@ with col2:
         with c_pop.popover("📖"):
             st.markdown(manuals["plan_creation"])
 
-    # 9. AIによる指導案作成
     with st.container(border=True):
         st.markdown("### 📝 AI指導案作成")
         st.markdown("基本情報を入力するだけで、AIを活用して学習指導案を自動生成します。")
@@ -353,7 +346,6 @@ with col2:
             st.markdown(manuals["lesson_plan_ai"])
 
 with col3:
-    # 6. 学習指導要領
     with st.container(border=True):
         st.markdown("### 📜 指導要領早引き")
         st.markdown("学部・段階ごとの学習指導要領の内容を素早く検索できます。")
@@ -362,13 +354,11 @@ with col3:
         with c_pop.popover("📖"):
             st.markdown(manuals["guideline_page"])
 
-    # 7. 動画ギャラリー
     with st.container(border=True):
         st.markdown("### ▶️ 動画ギャラリー")
         st.markdown("特別支援教育に関する動画と解説をまとめています。")
         st.button("見る ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery")
 
-    # 10. フィードバック
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
         st.markdown("アプリの改善やご意見をお待ちしています。")
@@ -378,9 +368,9 @@ with col3:
 # --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
-# リンク集
+# リンク集 (ここも枠線付きで見やすく)
 st.markdown("""
-<div class="glass-container" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff;">
+<div class="glass-plate" style="padding: 20px; margin-bottom: 20px;">
     <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
 </div>
 """, unsafe_allow_html=True)
@@ -406,7 +396,7 @@ st.markdown("---")
 
 # アンケート
 st.markdown("""
-<div class="glass-container" style="text-align: center;">
+<div class="glass-plate" style="text-align: center;">
     <h5 style="color: #fff;">🗨️ ご意見・ご感想</h5>
     <p>自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください。<br>
     (埼玉県の学校教育関係者のみＳＴアカウントで回答できます)</p>
