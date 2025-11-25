@@ -8,43 +8,162 @@ import os
 import re
 
 # ==========================================
-# 0. ページ設定 & デザイン・CSS定義
+# 0. ページ設定 & デザイン定義 (Mirairo共通)
 # ==========================================
 st.set_page_config(
-    page_title="指導案作成エージェント",
+    page_title="Mirairo - 指導案作成",
     page_icon="📝",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# おしゃれにするためのカスタムCSS
-st.markdown("""
-<style>
-    .stButton>button {
-        font-weight: bold;
-        border-radius: 10px;
-        height: 3em;
-    }
-    .big-font {
-        font-size: 20px !important;
-        font-weight: bold;
-    }
-    .header-box {
-        background-color: #f0f2f6;
-        padding: 15px;
-        border-radius: 10px;
-        border-left: 5px solid #4CAF50;
-        margin-bottom: 20px;
-    }
-    .step-header {
-        color: #2c3e50;
-        border-bottom: 2px solid #eee;
-        padding-bottom: 10px;
-        margin-top: 30px;
-        font-weight: bold;
-    }
-</style>
-""", unsafe_allow_html=True)
+def load_css():
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+    
+    css = """
+    <style>
+        /* --- 全体 --- */
+        html, body, [class*="css"] {
+            font-family: 'Noto Sans JP', sans-serif !important;
+        }
+
+        /* --- 背景 (黒) --- */
+        [data-testid="stAppViewContainer"] {
+            background-color: #000000;
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* --- 文字色 (白・影付き) --- */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
+        }
+
+        /* --- サイドバー --- */
+        [data-testid="stSidebar"] {
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
+
+        /* --- 機能カード (白枠・アニメーション) --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        [data-testid="stBorderContainer"], .header-box {
+            background-color: #151515 !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        
+        [data-testid="stBorderContainer"]:hover, .header-box:hover {
+            border-color: #4a90e2 !important;
+            background-color: #000000 !important;
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
+            transition: all 0.3s ease;
+        }
+
+        /* --- ボタン --- */
+        .stButton > button {
+            width: 100%;
+            background-color: #000000 !important;
+            border: 2px solid #ffffff !important;
+            color: #4a90e2 !important;
+            font-weight: bold !important;
+            border-radius: 30px !important;
+            transition: all 0.3s ease !important;
+            height: 3em !important;
+        }
+        .stButton > button:hover {
+            border-color: #4a90e2 !important;
+            color: #ffffff !important;
+            background-color: #4a90e2 !important;
+        }
+        
+        /* Primaryボタン */
+        .stButton > button[kind="primary"] {
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
+        }
+        .stButton > button[kind="primary"]:hover {
+            background-color: #ffffff !important;
+            color: #4a90e2 !important;
+        }
+
+        /* --- 入力フォーム --- */
+        .stTextInput input, .stTextArea textarea {
+            background-color: #222 !important;
+            color: #fff !important;
+            border-color: #555 !important;
+        }
+
+        /* --- エキスパンダー --- */
+        .streamlit-expanderHeader {
+            background-color: rgba(255,255,255,0.1) !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+            border: 1px solid #555;
+        }
+        .streamlit-expanderContent {
+            background-color: rgba(0,0,0,0.5) !important;
+            border: 1px solid #444;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* --- ステップヘッダー --- */
+        .step-header {
+            color: #4a90e2 !important;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 10px;
+            margin-top: 40px;
+            font-weight: bold;
+            font-size: 1.5em;
+            text-shadow: none !important;
+        }
+
+        /* --- 戻るボタン --- */
+        .back-link a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #fff;
+            border-radius: 20px;
+            color: #fff !important;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .back-link a:hover {
+            background: #fff;
+            color: #000 !important;
+        }
+        
+        /* コードブロック */
+        code {
+            background-color: #222 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        hr { border-color: #666; }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+load_css()
 
 # ==========================================
 # 1. ユーティリティ関数（Excelエラー回避用）
@@ -56,8 +175,6 @@ def safe_write(ws, cell_address, value):
     try:
         if value is None:
             value = ""
-        
-        # 値を文字列化（念のため）
         value = str(value)
 
         if isinstance(ws[cell_address], MergedCell):
@@ -165,18 +282,15 @@ def create_excel(template_path, json_data):
     current_row = 13
     
     for item in flow_list:
-        safe_write(ws, f'A{current_row}', item.get('time', '')) # 時間
-        safe_write(ws, f'B{current_row}', item.get('activity', '')) # 学習内容
-        safe_write(ws, f'K{current_row}', item.get('notes', '')) # 留意点
-        
-        # 次の項目へ（2行空ける設定：13→16→19...）
+        safe_write(ws, f'A{current_row}', item.get('time', ''))
+        safe_write(ws, f'B{current_row}', item.get('activity', ''))
+        safe_write(ws, f'K{current_row}', item.get('notes', ''))
         current_row += 2
 
     # --- ⑤ 準備物 (N13) ---
     safe_write(ws, 'N13', json_data.get('materials', ''))
 
     # --- ⑥ 備考 (B33) ---
-    # 仕様：B33:N35統合セル -> 左上のB33に書き込む
     safe_write(ws, 'B33', json_data.get('remarks', ''))
 
     # 保存処理
@@ -189,26 +303,31 @@ def create_excel(template_path, json_data):
 # 4. メイン画面 UI
 # ==========================================
 
+# --- 戻るボタン ---
+st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+
 # --- ヘッダーエリア ---
 st.markdown("<div class='header-box'>", unsafe_allow_html=True)
 st.title("📝 指導案作成 AIエージェント")
 st.markdown("入力情報を元にプロンプトを作成し、AIとの連携で指導案Excelを完成させます。")
 st.markdown("</div>", unsafe_allow_html=True)
 
-# --- AIリンクボタン ---
-st.markdown("### 🔗 まずはAIを開く")
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
-    st.link_button("🤖 ChatGPT を開く", "https://chat.openai.com/", use_container_width=True)
-with col_btn2:
-    st.link_button("✨ Gemini を開く", "https://gemini.google.com/", use_container_width=True)
+# --- AIリンクボタン (白枠カード内) ---
+with st.container(border=True):
+    st.markdown("### 🔗 まずはAIを開く")
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        st.link_button("🤖 ChatGPT を開く ↗", "https://chat.openai.com/", type="primary", use_container_width=True)
+    with col_btn2:
+        st.link_button("✨ Gemini を開く ↗", "https://gemini.google.com/", type="primary", use_container_width=True)
 
 st.markdown("---")
 
 # --- Step 1: 情報入力 ---
 st.markdown("<h3 class='step-header'>Step 1. 基本情報を入力</h3>", unsafe_allow_html=True)
 
-with st.container():
+# 白枠コンテナで囲む
+with st.container(border=True):
     c1, c2, c3 = st.columns(3)
     with c1:
         in_grade = st.text_input("🎓 学部学年", "小学部 5年")
@@ -220,6 +339,7 @@ with st.container():
         in_time = st.text_input("⏰ 時間", "45分")
         in_content = st.text_input("📝 本時の内容", "模擬店の商品作り")
 
+    st.markdown("---")
     # 詳細設定（アコーディオン）
     with st.expander("⚙️ 詳細設定（目標・評価・備考など） ※空欄でもAIが補完します", expanded=False):
         col_ex1, col_ex2 = st.columns(2)
@@ -241,59 +361,62 @@ input_data = {
 # --- Step 2: プロンプト生成 ---
 st.markdown("<h3 class='step-header'>Step 2. プロンプトをコピー</h3>", unsafe_allow_html=True)
 
-if st.button("📋 プロンプトを作成する", type="primary", use_container_width=True):
-    prompt_text = generate_prompt_text(input_data)
-    st.code(prompt_text, language="text")
-    st.success("👆 右上のアイコンでコピーし、ChatGPTやGeminiに貼り付けてください。")
-else:
-    st.info("上のボタンを押すと、AIへの指令文が表示されます。")
+with st.container(border=True):
+    if st.button("📋 プロンプトを作成する", type="primary", use_container_width=True):
+        prompt_text = generate_prompt_text(input_data)
+        st.code(prompt_text, language="text")
+        st.success("👆 右上のアイコンでコピーし、ChatGPTやGeminiに貼り付けてください。")
+    else:
+        st.info("上のボタンを押すと、AIへの指令文が表示されます。")
 
 # --- Step 3: AI出力貼り付け & Excel生成 ---
 st.markdown("<h3 class='step-header'>Step 3. AIの回答を貼り付けてExcel作成</h3>", unsafe_allow_html=True)
 
-json_input_str = st.text_area("ここにAIからの回答（JSONコード）を貼り付け", height=300, placeholder='{\n  "basic_info": { ... },\n  "goals": [ ... ]\n}')
+with st.container(border=True):
+    json_input_str = st.text_area("ここにAIからの回答（JSONコード）を貼り付け", height=300, placeholder='{\n  "basic_info": { ... },\n  "goals": [ ... ]\n}')
 
-if st.button("🚀 指導案Excelを出力する", type="primary", use_container_width=True):
-    if not json_input_str.strip():
-        st.error("⚠️ AIの回答が貼り付けられていません。")
-    else:
-        try:
-            # 1. JSONクリーニング
-            clean_json = re.sub(r"```json\s*|\s*```", "", json_input_str).strip()
-            start_idx = clean_json.find('{')
-            end_idx = clean_json.rfind('}') + 1
-            if start_idx != -1 and end_idx != -1:
-                clean_json = clean_json[start_idx:end_idx]
-            
-            data_dict = json.loads(clean_json)
-            
-            # 2. テンプレート検索（階層対応）
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            base_dir = os.path.dirname(current_dir)
-            template_file = os.path.join(base_dir, "指導案.xlsx") # 親フォルダ検索
-            
-            if not os.path.exists(template_file):
-                template_file = os.path.join(current_dir, "指導案.xlsx") # 現フォルダ検索
+    if st.button("🚀 指導案Excelを出力する", type="primary", use_container_width=True):
+        if not json_input_str.strip():
+            st.error("⚠️ AIの回答が貼り付けられていません。")
+        else:
+            try:
+                # 1. JSONクリーニング
+                clean_json = re.sub(r"```json\s*|\s*```", "", json_input_str).strip()
+                start_idx = clean_json.find('{')
+                end_idx = clean_json.rfind('}') + 1
+                if start_idx != -1 and end_idx != -1:
+                    clean_json = clean_json[start_idx:end_idx]
+                
+                data_dict = json.loads(clean_json)
+                
+                # 2. テンプレート検索
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                base_dir = os.path.dirname(current_dir)
+                template_file = os.path.join(base_dir, "指導案.xlsx") # 親フォルダ検索
+                
+                if not os.path.exists(template_file):
+                    template_file = os.path.join(current_dir, "指導案.xlsx") # 現フォルダ検索
 
-            if not os.path.exists(template_file):
-                st.error(f"❌ エラー: テンプレートファイルが見つかりません。\n{base_dir} または {current_dir} に '指導案.xlsx' を配置してください。")
-            else:
-                # 3. Excel生成
-                excel_data, err = create_excel(template_file, data_dict)
-                if err:
-                    st.error(err)
+                if not os.path.exists(template_file):
+                    st.error(f"❌ エラー: テンプレートファイルが見つかりません。\n{base_dir} または {current_dir} に '指導案.xlsx' を配置してください。")
                 else:
-                    st.balloons()
-                    st.success("✨ 指導案Excelが完成しました！")
-                    st.download_button(
-                        label="📥 完成した指導案をダウンロード",
-                        data=excel_data,
-                        file_name="完成_指導案.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        use_container_width=True
-                    )
-                    
-        except json.JSONDecodeError:
-            st.error("❌ JSON解析エラー: 貼り付けたテキストが正しいJSON形式か確認してください。")
-        except Exception as e:
-            st.error(f"❌ 予期せぬエラー: {e}")
+                    # 3. Excel生成
+                    excel_data, err = create_excel(template_file, data_dict)
+                    if err:
+                        st.error(err)
+                    else:
+                        st.balloons()
+                        st.success("✨ 指導案Excelが完成しました！")
+                        st.download_button(
+                            label="📥 完成した指導案をダウンロード",
+                            data=excel_data,
+                            file_name="完成_指導案.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            type="primary"
+                        )
+                        
+            except json.JSONDecodeError:
+                st.error("❌ JSON解析エラー: 貼り付けたテキストが正しいJSON形式か確認してください。")
+            except Exception as e:
+                st.error(f"❌ 予期せぬエラー: {e}")
