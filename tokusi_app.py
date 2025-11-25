@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 画像処理 ---
+# --- 画像処理 (ロゴ用) ---
 def get_img_as_base64(file):
     try:
         with open(file, "rb") as f:
@@ -24,7 +24,7 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (視認性強化版) ---
+# --- 2. CSSデザイン (視認性・可読性 特化版) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -32,52 +32,80 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- 全体フォント・色 --- */
+        /* --- 基本設定 --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #f0f0f0 !important; /* 真っ白より少し目に優しい白 */
         }}
 
-        /* --- 背景設定 (画像を暗く保ちつつ表示) --- */
+        /* --- 背景設定 --- */
         [data-testid="stAppViewContainer"] {{
             background-color: #000000;
-            /* 背景画像を少し暗くして文字を目立たせる */
-            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+            /* 背景画像の設定 */
+            background-image: url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
         }}
-        
-        /* --- サイドバー --- */
-        [data-testid="stSidebar"] {{
-            background-color: rgba(10, 10, 10, 0.95);
-            border-right: 1px solid #333;
+        /* 背景の上に黒いフィルターを重ねて全体を少し暗くする */
+        [data-testid="stAppViewContainer"]::before {{
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* ここで暗さを調整 */
+            z-index: 0;
+            pointer-events: none;
         }}
 
-        /* --- 見やすさ強化: テキスト用プレート (ガラス風) --- */
-        .text-plate {{
-            background-color: rgba(20, 20, 20, 0.75); /* 半透明の黒 */
-            backdrop-filter: blur(8px); /* すりガラス効果 */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        /* --- サイドバー (完全に不透明な黒にして文字を見やすく) --- */
+        [data-testid="stSidebar"] {{
+            background-color: #0a0a0a !important; /* 真っ黒に近い色 */
+            border-right: 1px solid #333;
+            z-index: 1;
+        }}
+        /* サイドバー内の文字色を白に強制 */
+        [data-testid="stSidebar"] h1, 
+        [data-testid="stSidebar"] h2, 
+        [data-testid="stSidebar"] h3, 
+        [data-testid="stSidebar"] span, 
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] label {{
+            color: #ffffff !important;
+        }}
+
+        /* --- 説明文用の「濃い」ガラスプレート --- */
+        /* ここがポイント：文字の背景に濃い色を敷く */
+        .glass-container {{
+            background-color: rgba(20, 20, 20, 0.85); /* ほぼ不透明な黒 */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            color: #ffffff; /* 文字色 */
+            line-height: 1.8; /* 行間を広げて読みやすく */
+            font-size: 1.05rem;
         }}
         
-        /* --- 機能カード (枠線をより明確に) --- */
+        /* --- 機能カード (st.container) --- */
         [data-testid="stBorderContainer"] {{
-            background-color: rgba(30, 30, 30, 0.85) !important; /* カード内は濃い黒 */
-            border: 1px solid rgba(100, 100, 100, 0.5) !important; /* グレーの枠線で見やすく */
+            background-color: rgba(30, 30, 30, 0.9) !important; /* カード内も濃い黒 */
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
             border-radius: 12px !important;
             padding: 20px !important;
-            transition: all 0.3s ease;
         }}
-        
-        [data-testid="stBorderContainer"]:hover {{
-            border-color: #4a90e2 !important; /* ホバーで青く発光 */
-            box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
-            transform: translateY(-2px);
+        /* カード内の文字色 */
+        [data-testid="stBorderContainer"] p, 
+        [data-testid="stBorderContainer"] h3 {{
+            color: #ffffff !important;
+        }}
+        /* カードのキャプション(説明文) */
+        [data-testid="stBorderContainer"] div[data-testid="stCaptionContainer"] {{
+            color: #cccccc !important; /* 薄いグレー */
+            font-size: 0.9rem !important;
         }}
 
         /* --- ヘッダーアニメーション --- */
@@ -86,7 +114,6 @@ def load_css():
             50% {{ transform: translateY(-8px); }}
             100% {{ transform: translateY(0px); }}
         }}
-        
         .header-container {{
             display: flex;
             align-items: center;
@@ -94,63 +121,56 @@ def load_css():
             gap: 20px;
             padding: 50px 0;
             animation: float 6s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
         }}
-        
         .logo-img {{
             width: 90px;
             height: auto;
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
         }}
-        
         .main-title {{
             font-size: 4.5rem;
             font-weight: 900;
             line-height: 1;
             margin: 0;
-            color: #ffffff;
-            text-shadow: 0 0 20px rgba(165, 180, 252, 0.6); /* タイトルを発光させる */
+            color: #ffffff; /* タイトルは真っ白 */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* 白く発光 */
         }}
-        
         .sub-title {{
             font-size: 1.1rem;
             color: #cbd5e0;
             letter-spacing: 0.15em;
             margin-top: 8px;
             font-weight: 500;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }}
 
-        /* --- ボタンデザイン --- */
+        /* --- ボタン --- */
         .stButton > button {{
             width: 100%;
-            background-color: rgba(0, 0, 0, 0.6) !important;
+            background-color: #000000 !important;
             border: 1px solid #4a90e2 !important;
             color: #4a90e2 !important;
             border-radius: 8px !important;
             font-weight: 700 !important;
-            transition: all 0.2s ease !important;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
-            color: #fff !important;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+            color: #ffffff !important;
         }}
 
-        /* --- 小見出し --- */
-        h3 {{
-            color: #fff !important;
-            border-bottom: 2px solid #444;
-            padding-bottom: 8px;
-            margin-bottom: 15px !important;
-            font-weight: 700 !important;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        /* --- その他 --- */
+        h1, h2, h3 {{
+            color: #ffffff !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }}
-        
-        /* --- リンク --- */
         a {{ color: #63b3ed !important; font-weight: bold; }}
+        hr {{ border-color: #555; }}
         
-        /* --- フッター --- */
-        hr {{ border-color: #444; }}
+        /* サイドバーの閉じるボタン */
+        [data-testid="stSidebarCollapseButton"] {{
+            color: #ffffff !important;
+        }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -162,7 +182,6 @@ manuals = {
     "guidance": """
     ### 📚 指導支援内容 マニュアル
     お子さんの日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索します。
-    
     **使い方:**
     1.  **3つのステップで選択**: 画面のドロップダウンを左から順に選びます。
     2.  **表示ボタン**: 「💡 適した指導・支援を表示」をクリック。
@@ -171,7 +190,6 @@ manuals = {
     "chart": """
     ### 📊 発達チャート作成 マニュアル
     発達段階を記録し、レーダーチャートで可視化・保存します。
-    
     **使い方:**
     1.  **入力**: 12のカテゴリーで現在の状況を選択します。
     2.  **作成**: 「📊 チャートを作成」ボタンをクリック。
@@ -180,7 +198,6 @@ manuals = {
     "analysis": """
     ### 📈 分析方法 マニュアル
     教育学・心理学に基づいた分析手法の解説です。
-    
     **使い方:**
     *   **方法A**: サイドバーから手法（ABAなど）を直接選択。
     *   **方法B**: メインエリアでお子さんの状況を選んで検索。
@@ -188,7 +205,6 @@ manuals = {
     "plan_creation": """
     ### 🤖 計画作成サポート マニュアル
     個別の支援・指導計画作成用のプロンプト（AIへの命令文）を作成します。
-    
     **使い方:**
     1.  プロンプトの種類を選択。
     2.  実態や課題を入力。
@@ -197,7 +213,6 @@ manuals = {
     "lesson_plan_ai": """
     ### 📝 AI指導案作成 マニュアル
     基本情報から学習指導案を自動生成します。
-    
     **使い方:**
     1.  学部・単元などの基本情報を入力。
     2.  プロンプトを作成し、AIに入力。
@@ -206,14 +221,12 @@ manuals = {
     "guideline_page": """
     ### 📜 指導要領早引き マニュアル
     学習指導要領の内容を素早く検索します。
-    
     **使い方:**
     *   学部、障害種別、教科を選択して「表示」をクリック。
     """,
     "lesson_card_library": """
     ### 🃏 授業カード マニュアル
     授業のアイデアを共有・検索するライブラリです。
-    
     **使い方:**
     *   検索バーやハッシュタグで実践事例を探せます。
     """
@@ -238,7 +251,7 @@ if 'show_create_form' not in st.session_state:
   
 # --- 5. メインコンテンツ ---
 
-# ヘッダー (一体化アニメーション)
+# ヘッダー (アニメーション)
 st.markdown(f"""
     <div class="header-container">
         {logo_html}
@@ -249,114 +262,108 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文エリア (ここが見にくかったので、半透明プレート「text-plate」で囲む)
+# ▼▼▼ 修正ポイント：説明文を「glass-container」クラスで囲む ▼▼▼
+# これにより、背景に濃い色のプレートが敷かれ、文字が白くはっきりと表示されます。
 st.markdown("""
-<div class="text-plate">
+<div class="glass-container">
     <h3>ようこそ！</h3>
-    <p style="line-height: 1.8; font-size: 1.05rem;">
+    <p>
         このアプリは、特別支援教育に関わる先生方をサポートするための統合ツールです。<br>
         子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
-        発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。<br><br>
-        <strong>下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。</strong>
+        発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。
+    </p>
+    <p style="color: #4a90e2; font-weight: bold; margin-top: 10px;">
+        ▼ 下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### 📂 各機能の紹介")
+st.subheader("📂 各機能の紹介")
 
-# --- 3カラムレイアウト (カード背景を濃くして文字を見やすく) ---
+# --- 3カラムレイアウト (カード内の文字も見やすく調整済み) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    # 1. 指導支援内容
     with st.container(border=True):
         st.markdown("### 📚 指導支援内容")
-        st.write("困りごとに応じた具体的な指導・支援のアイデアを検索します。")
+        st.caption("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance")
         with c_pop.popover("📖"):
             st.markdown(manuals["guidance"])
 
-    # 2. 分析方法
     with st.container(border=True):
         st.markdown("### 📈 分析方法")
-        st.write("教育学や心理学に基づいた分析手法の解説とツールです。")
+        st.caption("教育学や心理学に基づいた分析手法の解説とツールです。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/3_分析方法.py",), key="btn_analysis")
         with c_pop.popover("📖"):
             st.markdown(manuals["analysis"])
     
-    # 3. 授業カード
     with st.container(border=True):
         st.markdown("### 🃏 授業カード") 
-        st.write("先生方の授業アイデアを共有・検索できるライブラリです。")
+        st.caption("先生方の授業アイデアを共有・検索できるライブラリです。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/8_授業カードライブラリー.py",), key="btn_lesson_card_library")
         with c_pop.popover("📖"):
             st.markdown(manuals["lesson_card_library"])
 
 with col2:
-    # 4. 発達チャート
     with st.container(border=True):
         st.markdown("### 📊 発達チャート")
-        st.write("発達段階を記録し、レーダーチャートで可視化・保存します。")
+        st.caption("発達段階を記録し、レーダーチャートで視覚的に確認・保存できます。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/2_発達チャート.py",), key="btn_chart")
         with c_pop.popover("📖"):
             st.markdown(manuals["chart"])
     
-    # 5. AI計画作成
     with st.container(border=True):
         st.markdown("### 🤖 AI計画作成")
-        st.write("個別の支援・指導計画作成用のプロンプトを生成します。")
+        st.caption("個別の支援・指導計画作成用のプロンプトを簡単に生成します。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/4_AIによる支援,指導計画作成.py",), key="btn_plan_creation")
         with c_pop.popover("📖"):
             st.markdown(manuals["plan_creation"])
 
-    # 9. AIによる指導案作成
     with st.container(border=True):
         st.markdown("### 📝 AI指導案作成")
-        st.write("基本情報を入力するだけで学習指導案を自動生成します。")
+        st.caption("基本情報を入力するだけで、AIを活用して学習指導案を自動生成します。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/9_AIによる指導案作成.py",), key="btn_lesson_plan_ai")
         with c_pop.popover("📖"):
             st.markdown(manuals["lesson_plan_ai"])
 
 with col3:
-    # 6. 学習指導要領
     with st.container(border=True):
         st.markdown("### 📜 指導要領早引き")
-        st.write("学部・段階ごとの指導要領の内容を素早く検索できます。")
+        st.caption("学部・段階ごとの学習指導要領の内容を素早く検索できます。")
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/6_知的段階_早引き学習指導要領.py",), key="btn_guideline_page")
         with c_pop.popover("📖"):
             st.markdown(manuals["guideline_page"])
 
-    # 7. 動画ギャラリー
     with st.container(border=True):
         st.markdown("### ▶️ 動画ギャラリー")
-        st.write("特別支援教育に関する動画と解説をまとめています。")
+        st.caption("特別支援教育に関する動画と解説をまとめています。")
         st.button("見る ➡", on_click=set_page, args=("pages/7_動画ギャラリー.py",), key="btn_youtube_gallery")
 
-    # 10. フィードバック
     with st.container(border=True):
         st.markdown("### 📝 フィードバック")
-        st.write("アプリの改善やご意見をお待ちしています。")
+        st.caption("アプリの改善やご意見をお待ちしています。")
         st.button("送る ➡", on_click=set_page, args=("pages/10_フィードバック.py",), key="btn_feedback")
 
 
-# --- ▼ 関連ツール＆リンク (プレートで囲って見やすく) ▼ ---
+# --- ▼ 関連ツール＆リンク ▼ ---
 st.markdown("<br>", unsafe_allow_html=True)
 
+# リンク集のエリアもglass-containerで囲んで見やすく
 st.markdown("""
-<div class="text-plate">
-    <h3>🔗 研究・分析ツール (External Links)</h3>
-    <p>研究論文作成やデータ分析に活用できる外部ツール集です。</p>
+<div class="glass-container">
+    <h3 style="border-bottom:none;">🔗 研究・分析ツール (External Links)</h3>
+    <p style="margin-bottom:0;">研究論文作成やデータ分析に活用できる外部ツール集です。</p>
 </div>
 """, unsafe_allow_html=True)
 
-# リンク集もカード化して見やすく
 c1, c2 = st.columns(2)
 with c1:
     with st.container(border=True):
@@ -376,14 +383,14 @@ with c2:
 
 st.markdown("---")
 
-# アンケートと注意書きもプレートに入れる
+# アンケートと注意書きも同様にプレート化
 st.markdown("""
-<div class="text-plate" style="text-align: center;">
-    <h5>🗨️ ご意見・ご感想</h5>
+<div class="glass-container" style="text-align: center;">
+    <h5 style="color: #fff;">🗨️ ご意見・ご感想</h5>
     <p>自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください。<br>
     (埼玉県の学校教育関係者のみＳＴアカウントで回答できます)</p>
     <a href="https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview" target="_blank" 
-       style="display: inline-block; background: #4a90e2; color: white !important; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; margin-top: 10px;">
+       style="display: inline-block; background: #4a90e2; color: white !important; padding: 12px 30px; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 15px;">
        アンケートフォームを開く 📝
     </a>
 </div>
