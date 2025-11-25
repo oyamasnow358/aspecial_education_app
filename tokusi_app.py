@@ -20,11 +20,10 @@ def get_img_as_base64(file):
 
 logo_path = "mirairo.png"
 logo_b64 = get_img_as_base64(logo_path)
-# ロゴがない場合は星アイコンを表示
-logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div style="font-size:100px;">🌟</div>'
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (強制適用モード) ---
+# --- 2. CSSデザイン (アニメーション・境界線・視認性 完成版) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -32,141 +31,163 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- ベースのリセット --- */
+        /* --- 基本設定 --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #ffffff !important;
         }}
 
         /* --- 背景 (黒) --- */
         [data-testid="stAppViewContainer"] {{
-            background-color: #000000 !important;
+            background-color: #000000;
             background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* --- テキスト視認性 (影付き白文字) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label {{
+        /* --- 文字色 (白・影付き) --- */
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {{
             color: #ffffff !important;
-            text-shadow: 0 2px 4px #000000 !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
         }}
 
         /* --- サイドバー --- */
         [data-testid="stSidebar"] {{
             background-color: #0a0a0a !important;
-            border-right: 1px solid #333 !important;
+            border-right: 1px solid #444;
         }}
 
         /* 
            ================================================================
-           ★ カードデザイン (ここが修正の肝) ★
-           枠線を「stBorderContainer」に対して強制適用
+           ★ アニメーション定義 (下からヌルっと)
+           ================================================================
+        */
+        @keyframes slideUpFade {{
+            0% {{ opacity: 0; transform: translateY(40px); }}
+            100% {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* 
+           ================================================================
+           ★ 機能カードの境界線と動き (ここを修正)
            ================================================================
         */
         [data-testid="stBorderContainer"] {{
-            /* 背景: 完全に不透明な黒っぽいグレー */
-            background-color: #1a1a1a !important;
+            /* 背景: ほぼ真っ黒で塗りつぶして背景画像と分離 */
+            background-color: #111111 !important;
             
-            /* 枠線: 2pxの白線 (これで見えないはずがない) */
-            border: 2px solid rgba(255, 255, 255, 0.8) !important;
+            /* 枠線: 「白」ではっきり区切る (太さ2px) */
+            border: 2px solid rgba(255, 255, 255, 0.5) !important;
             
-            /* 角丸と影 */
-            border-radius: 15px !important;
+            /* 形 */
+            border-radius: 16px !important;
             padding: 25px !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            margin-bottom: 25px !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8) !important;
             
-            /* 動きの設定 (0.3秒かけてヌルっと変化) */
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            /* アニメーション適用 (初期状態は透明) */
+            opacity: 0;
+            animation: slideUpFade 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }}
 
-        /* --- マウスを乗せたときの動き (ホバーエフェクト) --- */
+        /* ホバー時の動き */
         [data-testid="stBorderContainer"]:hover {{
             border-color: #4a90e2 !important; /* 青く光る */
-            transform: translateY(-10px) scale(1.02) !important; /* 上に浮いて少し拡大 */
-            background-color: #000000 !important; /* 背景を真っ黒に */
-            box-shadow: 0 0 25px rgba(74, 144, 226, 0.6) !important; /* 青い光の影 */
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 0 25px rgba(74, 144, 226, 0.4) !important;
             z-index: 10;
         }}
 
-        /* カード内の文字調整 */
-        [data-testid="stBorderContainer"] h3 {{
-            border-bottom: 1px solid #555 !important;
-            padding-bottom: 10px !important;
-            margin-bottom: 15px !important;
-        }}
-        [data-testid="stBorderContainer"] p {{
-            color: #eeeeee !important;
-            line-height: 1.6 !important;
+        /* 
+           ★ 時間差アニメーション (順番に出現させる)
+           これによりスクロールしているようなリズム感を出します
+        */
+        /* カラム1のカード */
+        div[data-testid="column"]:nth-of-type(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
+        /* カラム2のカード */
+        div[data-testid="column"]:nth-of-type(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
+        /* カラム3のカード */
+        div[data-testid="column"]:nth-of-type(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.5s; }}
+        
+        /* リンク集などの下のコンテナはさらに遅らせる */
+        div.block-container > div:nth-last-child(n+1) [data-testid="stBorderContainer"] {{
+             animation-delay: 0.7s;
         }}
 
-        /* --- ヘッダーアニメーション (CSSで完結させる) --- */
+
+        /* --- ヘッダーアニメーション --- */
         @keyframes float {{
             0% {{ transform: translateY(0px); }}
-            50% {{ transform: translateY(-15px); }}
+            50% {{ transform: translateY(-10px); }}
             100% {{ transform: translateY(0px); }}
         }}
         
-        /* ロゴとタイトルを包むコンテナ */
-        .mirairo-hero {{
+        .header-wrapper {{
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             padding: 60px 0;
-            animation: float 5s ease-in-out infinite; /* ここで動かす */
+            animation: float 6s ease-in-out infinite;
         }}
         
-        .mirairo-logo img {{
-            width: 160px;
+        .logo-img {{
+            width: 180px;
             height: auto;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));
             margin-right: 30px;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));
         }}
         
-        .mirairo-text h1 {{
-            font-size: 5rem !important;
-            font-weight: 900 !important;
-            margin: 0 !important;
-            line-height: 1 !important;
-            text-shadow: 0 0 20px rgba(255,255,255,0.8) !important;
+        .main-title {{
+            font-size: 6rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 0;
+            color: #ffffff !important;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
         }}
         
-        .mirairo-text p {{
-            font-size: 1.2rem !important;
-            letter-spacing: 0.2em !important;
-            margin-top: 10px !important;
-            color: #cccccc !important;
+        .sub-title {{
+            font-size: 1.5rem;
+            color: #ffffff !important;
+            letter-spacing: 0.2em;
+            font-weight: 700;
+            margin-top: 10px;
         }}
 
-        /* --- ボタンデザイン --- */
+        /* --- 「ようこそ」のプレート (青枠・アニメーション付き) --- */
+        .glass-plate {{
+            background-color: rgba(20, 20, 20, 0.9);
+            border: 2px solid #4a90e2; /* ここは青枠 */
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            /* 出現アニメーション */
+            opacity: 0;
+            animation: slideUpFade 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation-delay: 0.2s; /* ヘッダーの直後に出る */
+        }}
+
+        /* --- ボタン --- */
         .stButton > button {{
             width: 100%;
             background-color: transparent !important;
             border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
-            border-radius: 50px !important;
+            border-radius: 30px !important;
             transition: all 0.3s ease !important;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
-            box-shadow: 0 0 15px #4a90e2 !important;
+            box-shadow: 0 0 15px #4a90e2;
         }}
 
-        /* --- 説明文のプレート --- */
-        .glass-box {{
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 40px;
-            backdrop-filter: blur(5px);
-        }}
-
-        hr {{ border-color: #555 !important; }}
-        a {{ color: #63b3ed !important; text-decoration: none; font-weight: bold; }}
+        /* リンク */
+        a {{ color: #63b3ed !important; font-weight: bold; text-decoration: none; }}
         a:hover {{ text-decoration: underline; color: #fff !important; }}
+        
+        hr {{ border-color: #666; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -247,29 +268,27 @@ if 'show_create_form' not in st.session_state:
   
 # --- 5. メインコンテンツ ---
 
-# ▼ ロゴとタイトルのアニメーション (HTML構造で一体化)
+# ▼ ヘッダー (ロゴ+タイトル)
 st.markdown(f"""
-    <div class="mirairo-hero">
-        <div class="mirairo-logo">
-            {logo_html}
-        </div>
-        <div class="mirairo-text">
-            <h1>Mirairo</h1>
-            <p>Data-Driven Education Platform</p>
+    <div class="header-wrapper">
+        {logo_html}
+        <div class="title-group">
+            <h1 class="main-title">Mirairo</h1>
+            <div class="sub-title">Data-Driven Education Platform</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文 (ガラス風プレートで見やすく)
+# ▼ 説明文エリア (青枠プレート・アニメーション復活)
 st.markdown("""
-<div class="glass-box">
+<div class="glass-plate">
     <h3>ようこそ！</h3>
     <p style="font-size: 1.1rem; line-height: 1.8;">
         このアプリは、特別支援教育に関わる先生方をサポートするための統合ツールです。<br>
         子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
         発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。
     </p>
-    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px;">
+    <p style="color: #4a90e2 !important; font-weight: bold; margin-top: 15px; font-size: 1rem;">
         ▼ 下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。
     </p>
 </div>
@@ -277,7 +296,7 @@ st.markdown("""
 
 st.markdown("### 📂 各機能の紹介")
 
-# --- 3カラムレイアウト (枠線をCSSで強力に適用済み) ---
+# --- 3カラムレイアウト (白い枠線・時間差アニメーション適用済み) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -285,7 +304,6 @@ with col1:
     with st.container(border=True):
         st.markdown("### 📚 指導支援内容")
         st.markdown("日常生活の困りごとに応じた、具体的な指導・支援のアイデアを検索できます。")
-        # ボタン類
         c_btn, c_pop = st.columns([2, 1])
         c_btn.button("使う ➡", on_click=set_page, args=("pages/1_指導支援内容.py",), key="btn_guidance")
         with c_pop.popover("📖"):
@@ -364,8 +382,8 @@ with col3:
 st.markdown("<br>", unsafe_allow_html=True)
 
 st.markdown("""
-<div class="glass-box" style="padding: 15px; margin-bottom: 20px;">
-    <h3 style="margin: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
+<div class="glass-plate" style="padding: 15px; margin-bottom: 20px; border-color: #ffffff;">
+    <h3 style="margin-bottom: 0 !important; border: none;">🔗 研究・分析ツール (External Links)</h3>
 </div>
 """, unsafe_allow_html=True)
 
@@ -391,7 +409,7 @@ st.markdown("---")
 
 # アンケート
 st.markdown("""
-<div class="glass-box" style="text-align: center;">
+<div class="glass-plate" style="text-align: center;">
     <h5 style="color: #fff;">🗨️ ご意見・ご感想</h5>
     <p>自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください。<br>
     (埼玉県の学校教育関係者のみＳＴアカウントで回答できます)</p>
