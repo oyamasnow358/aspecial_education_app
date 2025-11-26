@@ -1,4 +1,6 @@
 import streamlit as st
+import base64
+import os
 
 # ==========================================
 # 0. ページ設定
@@ -11,7 +13,23 @@ st.set_page_config(
 )
 
 # ==========================================
-# 1. デザイン定義 (視認性特化・ライトモード)
+# 1. 画像処理 (ロゴ読み込み)
+# ==========================================
+def get_img_as_base64(file):
+    try:
+        with open(file, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
+
+logo_path = "mirairo.png"
+logo_b64 = get_img_as_base64(logo_path)
+# ロゴ画像がない場合はプレースホルダーを表示
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div style="font-size:50px;">🌟</div>'
+
+# ==========================================
+# 2. デザイン定義 (白ベース・視認性重視 + ロゴアニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
@@ -23,11 +41,11 @@ def load_css():
         /* --- 全体フォント --- */
         html, body, [class*="css"] {
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #1a1a1a !important; /* 文字色はくっきり黒 */
+            color: #1a1a1a !important;
             line-height: 1.6 !important;
         }
 
-        /* --- 背景 (白95%透過で背景画像を極薄にする) --- */
+        /* --- 背景 (白95%透過) --- */
         [data-testid="stAppViewContainer"] {
             background-color: #ffffff;
             background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
@@ -35,20 +53,51 @@ def load_css():
             background-attachment: fixed;
         }
 
-        /* --- 見出し (濃紺) --- */
+        /* --- 見出し --- */
         h1, h2, h3, h4, h5, h6 {
             color: #0f172a !important;
             font-weight: 700 !important;
             text-shadow: none !important;
         }
         
-        /* 本文 */
-        p, span, div, label, .stMarkdown {
-            color: #333333 !important;
-            text-shadow: none !important;
+        /* --- ヘッダーアニメーション (ロゴとタイトル) --- */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 30px;
+            animation: float 6s ease-in-out infinite; /* ゆらゆら動く */
+        }
+        
+        .logo-img {
+            width: 80px; /* ロゴサイズ */
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
+        }
+        
+        .page-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+            font-weight: 500;
         }
 
-        /* --- サイドバー (白) --- */
+        /* --- サイドバー --- */
         [data-testid="stSidebar"] {
             background-color: #ffffff !important;
             border-right: 1px solid #e2e8f0;
@@ -68,7 +117,6 @@ def load_css():
             padding: 25px !important;
             margin-bottom: 25px !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-            
             animation: fadeInUp 0.6s ease-out forwards;
         }
         
@@ -79,16 +127,12 @@ def load_css():
             transition: all 0.3s ease;
         }
 
-        /* --- タブのデザイン調整 (ライトモード用) --- */
+        /* --- タブ --- */
         .stTabs [data-testid="stTab"] {
             background-color: transparent;
             border-bottom: 2px solid #e2e8f0;
-            color: #64748b; /* グレー */
+            color: #64748b;
             font-weight: 600;
-            transition: all 0.3s;
-        }
-        .stTabs [data-testid="stTab"]:hover {
-            color: #4a90e2;
         }
         .stTabs [data-testid="stTab"][aria-selected="true"] {
             color: #4a90e2;
@@ -119,20 +163,6 @@ def load_css():
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             margin-bottom: 25px;
             color: #0c4a6e;
-        }
-
-        /* --- エキスパンダー --- */
-        .streamlit-expanderHeader {
-            background-color: #f8fafc !important;
-            color: #334155 !important;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-        }
-        .streamlit-expanderContent {
-            background-color: #ffffff !important;
-            border: 1px solid #e2e8f0;
-            border-top: none;
-            color: #333 !important;
         }
 
         /* --- 戻るボタン --- */
@@ -166,9 +196,19 @@ load_css()
 st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 # ==========================================
-# 2. メインコンテンツ
+# 3. メインコンテンツ (ロゴ入りヘッダー)
 # ==========================================
-st.title("▶️ YouTube動画ギャラリー")
+
+# st.title の代わりにカスタムHTMLヘッダーを使用
+st.markdown(f"""
+    <div class="header-container">
+        {logo_html}
+        <div>
+            <h1 class="page-title">YouTube動画ギャラリー</h1>
+            <div class="page-subtitle">Mirairo Video Library</div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 <div class="info-box">
@@ -178,7 +218,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. データ定義
+# 4. データ定義
 # ==========================================
 youtube_data = {
     "ダウン症": {
@@ -234,7 +274,7 @@ youtube_data = {
 }
 
 # ==========================================
-# 4. タブ表示エリア
+# 5. タブ表示エリア
 # ==========================================
 
 # available=True の項目のみをタブとして表示
@@ -267,7 +307,7 @@ else:
 st.markdown("---")
 
 # ==========================================
-# 5. フッター (リンク集)
+# 6. フッター (リンク集)
 # ==========================================
 with st.expander("🔗 関連ツール＆リンク"):
     with st.container(border=True):
