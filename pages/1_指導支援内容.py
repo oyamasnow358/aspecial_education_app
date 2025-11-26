@@ -18,7 +18,7 @@ st.set_page_config(
 # ==========================================
 def get_img_as_base64(file):
     try:
-        # 画像パスを絶対パスで解決 (pagesフォルダの親にあると仮定)
+        # 画像パスを絶対パスで解決
         script_path = Path(__file__)
         app_root = script_path.parent.parent
         img_path = app_root / file
@@ -29,7 +29,6 @@ def get_img_as_base64(file):
     except:
         return None
 
-# ロゴ画像 (★ご指定のファイル名に変更)
 logo_path = "mirairo2.png" 
 logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
@@ -156,7 +155,7 @@ def load_css():
             color: #fff !important;
         }}
 
-        /* --- 戻るボタン --- */
+        /* --- 戻るボタン (ご指定のデザイン) --- */
         .back-link a {{
             display: inline-block;
             padding: 8px 16px;
@@ -200,24 +199,15 @@ load_css()
 def load_guidance_data():
     """指導データをJSONファイルから読み込む（パス自動解決つき）"""
     try:
-        # このスクリプトファイル自身の絶対パスを取得
         script_path = Path(__file__)
-        # アプリのルートディレクトリのパスを構築 (pagesフォルダの親)
         app_root = script_path.parent.parent
-        # 読み込むべきJSONファイルの絶対パスを決定
         json_path = app_root / "guidance_data.json"
 
         with open(json_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
     except FileNotFoundError:
-        st.error(
-            f"""
-            **【エラー】 `guidance_data.json` が見つかりません！**
-            パス: `{json_path}`
-            `pages` フォルダの外（Home.pyと同じ階層）にファイルを配置してください。
-            """
-        )
+        st.error(f"**【エラー】 `guidance_data.json` が見つかりません！** Path: `{json_path}`")
         st.stop()
     except json.JSONDecodeError:
         st.error("**【エラー】 JSONファイルの形式が正しくありません。**")
@@ -229,8 +219,8 @@ guidance_data = load_guidance_data()
 # 4. メインコンテンツ
 # ==========================================
 
-# --- 戻るボタン (★正しいリンクに変更済み) ---
-st.page_link("https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/", label="« TOPページに戻る", icon="🏠")
+# --- ▼ 戻るボタン (HTML形式・指定URL) ▼ ---
+st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 # ヘッダー (ロゴ + タイトル)
 st.markdown(f"""
@@ -275,7 +265,6 @@ with st.container(border=True):
                 detail_items,
                 help="さらに詳しい支援内容を選びます。"
             )
-            # 選択された詳細データを取得
             detail_data = guidance_data[selected_category][selected_subcategory].get(selected_detail_key)
 
 # --- ▲ 選択UI部分 ▲ ---
@@ -291,19 +280,16 @@ if st.button("💡 適した指導・支援を表示", type="primary", use_conta
 
         # 指導内容の表示 (白枠カード)
         with st.container(border=True):
-            # detail_data は {"items": [...], "image": {...}} という形式
             items_list = detail_data.get("items", [])
             if not items_list:
                 st.write("この項目には詳細な支援内容が登録されていません。")
 
             for item in items_list:
                 if isinstance(item, dict):
-                   # titleとdetailsを持つオブジェクトの場合
                    with st.expander(f"**{item.get('title', 'タイトルなし')}**"):
                         for detail in item.get('details', []):
                             st.write(f"✓ {detail}")
                 else:
-                    # 単純な文字列のリストの場合
                     st.write(f"✓ {item}")
 
         # 関連画像の表示
