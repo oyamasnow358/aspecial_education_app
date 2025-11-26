@@ -7,7 +7,9 @@ from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
 import os
 
-# --- ▼ ページ設定 ▼ ---
+# ==========================================
+# 0. ページ設定
+# ==========================================
 st.set_page_config(
     page_title="Mirairo - 発達チャート", 
     page_icon="📊", 
@@ -15,7 +17,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ▼ デザイン定義 (Mirairo共通デザイン) ▼ ---
+# ==========================================
+# 1. デザイン定義 (Mirairo共通・白枠線・ヌルっとアニメーション)
+# ==========================================
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -23,15 +27,15 @@ def load_css():
     
     css = """
     <style>
-        /* --- 全体フォント --- */
+        /* --- 全体 --- */
         html, body, [class*="css"] {
             font-family: 'Noto Sans JP', sans-serif !important;
         }
 
-        /* --- 背景 (黒ベース + 画像) --- */
+        /* --- 背景 (黒) --- */
         [data-testid="stAppViewContainer"] {
             background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }
@@ -46,27 +50,25 @@ def load_css():
         [data-testid="stSidebar"] {
             background-color: rgba(0, 0, 0, 0.6) !important;
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
+        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
 
-        /* --- サイドバー開閉ボタン --- */
-        [data-testid="stSidebarNavCollapseButton"] {
-            color: #fff !important;
+        /* 
+           ================================================================
+           ★ アニメーション定義 (下からヌルっと)
+           ================================================================
+        */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* 
            ================================================================
-           ★ 機能カードのデザイン (白枠・アニメーション) ★
+           ★ 機能カードのデザイン (白枠・アニメーション適用) 
            ================================================================
         */
-        
-        /* アニメーション定義 */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         [data-testid="stBorderContainer"] {
             background-color: #151515 !important;
             border: 2px solid #ffffff !important;
@@ -75,20 +77,27 @@ def load_css():
             margin-bottom: 20px !important;
             box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
             
-            /* アニメーション適用 */
+            /* アニメーション設定 */
+            opacity: 0;
             animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
+        
+        /* 時間差表示 (Stagger) のための遅延設定 */
+        /* Streamlitの構造上、厳密なnth-child指定は難しいが、ある程度効かせる */
+        div[data-testid="column"]:nth-of-type(1) [data-testid="stBorderContainer"] { animation-delay: 0.1s; }
+        div[data-testid="column"]:nth-of-type(2) [data-testid="stBorderContainer"] { animation-delay: 0.3s; }
+        div[data-testid="column"]:nth-of-type(3) [data-testid="stBorderContainer"] { animation-delay: 0.5s; }
 
         /* ホバー時の動き */
         [data-testid="stBorderContainer"]:hover {
             border-color: #4a90e2 !important;
-            transform: translateY(-5px);
             background-color: #000000 !important;
+            transform: translateY(-5px);
             box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
             transition: all 0.3s ease;
         }
 
-        /* --- ボタンのデザイン --- */
+        /* --- ボタン --- */
         .stButton > button {
             width: 100%;
             background-color: #000000 !important;
@@ -104,7 +113,7 @@ def load_css():
             background-color: #4a90e2 !important;
         }
         
-        /* Primaryボタン (実行ボタンなど) */
+        /* Primaryボタン */
         .stButton > button[kind="primary"] {
             background-color: #4a90e2 !important;
             color: #ffffff !important;
@@ -115,21 +124,21 @@ def load_css():
             color: #4a90e2 !important;
         }
 
-        /* --- ラジオボタンのスタイル調整 --- */
+        /* --- ラジオボタン --- */
         div[role="radiogroup"] label {
-            background-color: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.2s;
+            background-color: rgba(255,255,255,0.05) !important;
+            padding: 10px !important;
+            border-radius: 8px !important;
+            margin-bottom: 5px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            transition: all 0.2s !important;
         }
         div[role="radiogroup"] label:hover {
-            background-color: rgba(74, 144, 226, 0.2);
-            border-color: #4a90e2;
+            background-color: rgba(74, 144, 226, 0.2) !important;
+            border-color: #4a90e2 !important;
         }
 
-        /* --- エキスパンダー (目安を見る) --- */
+        /* --- エキスパンダー --- */
         .streamlit-expanderHeader {
             background-color: rgba(255,255,255,0.1) !important;
             color: #fff !important;
@@ -143,14 +152,19 @@ def load_css():
             border-radius: 0 0 8px 8px;
         }
 
-        /* --- infoボックス --- */
-        [data-testid="stAlert"] {
-            background-color: rgba(74, 144, 226, 0.1) !important;
-            border: 1px solid #4a90e2 !important;
-            color: #fff !important;
+        /* --- 説明文プレート (アニメーション付き) --- */
+        .glass-plate {
+            background-color: rgba(20, 20, 20, 0.95);
+            border: 2px solid #4a90e2;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            opacity: 0;
+            animation: fadeInUp 1s ease-in-out forwards;
         }
 
-        /* --- 戻るボタンコンテナ --- */
+        /* --- 戻るボタン --- */
         .back-link a {
             display: inline-block;
             padding: 8px 16px;
@@ -166,6 +180,8 @@ def load_css():
             background: #fff;
             color: #000 !important;
         }
+        
+        hr { border-color: #666; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -177,7 +193,9 @@ load_css()
 st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 
-# --- ▼ データ処理関数 (キャッシュ) ▼ ---
+# ==========================================
+# 2. データ処理関数
+# ==========================================
 @st.cache_data(ttl=600)
 def load_guidance_data(_sheets_service, spreadsheet_id, sheet_name):
     try:
@@ -192,14 +210,12 @@ def load_guidance_data(_sheets_service, spreadsheet_id, sheet_name):
         headers = [h.strip() for h in sheet_data[0]]
         data_map = {key: {} for key in headers}
         for row in sheet_data[1:]:
-            # Age Step列 (V列, インデックス21) が存在し、数値であるか確認
             if len(row) > 21 and row[21].isdigit():
                 age_step = int(row[21])
                 for j, key in enumerate(headers):
                     if j < len(row):
                         data_map[key][age_step] = row[j]
             elif len(row) > 21:
-                 # データはあるがAge Stepが不正な場合（警告は省略）
                  pass
             
         return data_map
@@ -207,7 +223,9 @@ def load_guidance_data(_sheets_service, spreadsheet_id, sheet_name):
         st.error(f"データ読み込みエラー: {e}")
         return None
 
-# --- ▼ Google API セットアップ ▼ ---
+# ==========================================
+# 3. Google API セットアップ
+# ==========================================
 sheets_service = None
 drive_service = None
 SPREADSHEET_ID_UNDER7 = "1yXSXSjYBaV2jt2BNO638Y2YZ6U7rdOCv5ScozlFq_EE"
@@ -217,8 +235,6 @@ try:
     secret_file_path = "/etc/secrets/GOOGLE_SHEETS_CREDENTIALS"
 
     if not os.path.exists(secret_file_path):
-        # ローカル開発用フォールバック (必要なければ削除可)
-        # st.warning("Secret file not found. Checking local secrets.")
         pass
     
     with open(secret_file_path, "r") as f:
@@ -241,11 +257,15 @@ except Exception as e:
     st.stop()
 
 
-# --- ▼ メインコンテンツ ▼ ---
+# ==========================================
+# 4. メインコンテンツ
+# ==========================================
 
 st.title("📊 発達チャート作成")
+
+# 説明文 (アニメーション付きプレート)
 st.markdown("""
-<div style="background: rgba(255,255,255,0.05); border: 1px solid #fff; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+<div class="glass-plate">
     お子さんの現在の発達段階を選択し、状態と次のステップをまとめたチャートを作成・保存します。
 </div>
 """, unsafe_allow_html=True)
