@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import os
+from pathlib import Path
 
 # ==========================================
 # 0. ページ設定
@@ -17,189 +18,240 @@ st.set_page_config(
 # ==========================================
 def get_img_as_base64(file):
     try:
-        with open(file, "rb") as f:
+        # 画像パスを絶対パスで解決
+        script_path = Path(__file__)
+        app_root = script_path.parent.parent
+        img_path = app_root / file
+        
+        with open(img_path, "rb") as f:
             data = f.read()
         return base64.b64encode(data).decode()
     except:
         return None
 
-logo_path = "mirairo.png"
+logo_path = "mirairo2.png"
 logo_b64 = get_img_as_base64(logo_path)
-# ロゴ画像がない場合はプレースホルダーを表示
-logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div style="font-size:50px;">🌟</div>'
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">▶️</div>'
 
 # ==========================================
-# 2. デザイン定義 (白ベース・視認性重視 + ロゴアニメーション)
+# 2. デザイン定義 (白ベース・視認性重視 + アニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
-    css = """
+    css = f"""
     <style>
         /* --- 全体フォント --- */
-        html, body, [class*="css"] {
+        html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
             color: #1a1a1a !important;
             line-height: 1.6 !important;
-        }
+        }}
 
-        /* --- 背景 (白95%透過) --- */
-        [data-testid="stAppViewContainer"] {
+        /* --- 背景 (白92%透過・画像あり) --- */
+        [data-testid="stAppViewContainer"] {{
             background-color: #ffffff;
-            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
-        }
+            padding-left: 20px;
+            padding-right: 20px;
+        }}
 
-        /* --- 見出し --- */
-        h1, h2, h3, h4, h5, h6 {
+        /* --- 見出し (濃紺・くっきり) --- */
+        h1, h2, h3, h4, h5, h6 {{
             color: #0f172a !important;
             font-weight: 700 !important;
             text-shadow: none !important;
-        }
+        }}
+        p, span, div, label, .stMarkdown {{
+            color: #333333 !important;
+            text-shadow: none !important;
+        }}
         
-        /* --- ヘッダーアニメーション (ロゴとタイトル) --- */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-            100% { transform: translateY(0px); }
-        }
+        /* --- ヘッダーアニメーション --- */
+        @keyframes float {{
+            0% {{ transform: translateY(0px); }}
+            50% {{ transform: translateY(-10px); }}
+            100% {{ transform: translateY(0px); }}
+        }}
         
-        .header-container {
+        .header-container {{
             display: flex;
             align-items: center;
+            justify-content: center; /* 中央寄せ */
             gap: 20px;
-            padding-bottom: 20px;
+            padding: 40px 0;
             border-bottom: 2px solid #f1f5f9;
             margin-bottom: 30px;
-            animation: float 6s ease-in-out infinite; /* ゆらゆら動く */
-        }
+            animation: float 6s ease-in-out infinite;
+        }}
         
-        .logo-img {
-            width: 80px; /* ロゴサイズ */
+        .logo-img {{
+            width: 80px;
             height: auto;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-        }
+        }}
+        .logo-placeholder {{
+            font-size: 4rem;
+            margin-right: 15px;
+            animation: float 6s ease-in-out infinite;
+        }}
         
-        .page-title {
-            font-size: 2.2rem;
+        .page-title {{
+            font-size: 3rem;
             font-weight: 900;
             color: #0f172a;
             margin: 0;
             line-height: 1.2;
-        }
+        }}
         
-        .page-subtitle {
-            font-size: 1rem;
-            color: #64748b;
-            font-weight: 500;
-        }
+        .page-subtitle {{
+            font-size: 1.2rem;
+            color: #475569;
+            font-weight: bold;
+            margin-top: 5px;
+        }}
 
-        /* --- サイドバー --- */
-        [data-testid="stSidebar"] {
+        /* --- サイドバー (すりガラス効果) --- */
+        [data-testid="stSidebar"] {{
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid #e2e8f0 !important;
+        }}
+        [data-testid="stSidebar"] * {{
+            color: #333333 !important;
+        }}
+
+        /* --- 機能カード (白背景・影付き・ぬるっと出現) --- */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(40px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        [data-testid="stBorderContainer"] {{
             background-color: #ffffff !important;
-            border-right: 1px solid #e2e8f0;
-        }
-        [data-testid="stSidebarNavCollapseButton"] { color: #333 !important; }
-
-        /* --- 機能カード (白背景・影付き) --- */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        [data-testid="stBorderContainer"] {
-            background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 12px !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 15px !important;
             padding: 25px !important;
             margin-bottom: 25px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            
+            opacity: 0; 
+            animation-name: fadeInUp;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }}
         
-        [data-testid="stBorderContainer"]:hover {
+        [data-testid="stBorderContainer"]:hover {{
             border-color: #4a90e2 !important;
-            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
-            transform: translateY(-2px);
+            background-color: #f8fafc !important;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15) !important;
             transition: all 0.3s ease;
-        }
+        }}
 
         /* --- タブ --- */
-        .stTabs [data-testid="stTab"] {
+        .stTabs [data-testid="stTab"] {{
             background-color: transparent;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid transparent;
             color: #64748b;
-            font-weight: 600;
-        }
-        .stTabs [data-testid="stTab"][aria-selected="true"] {
+            font-weight: bold;
+            transition: all 0.3s;
+        }}
+        .stTabs [data-testid="stTab"]:hover {{
             color: #4a90e2;
-            border-bottom: 2px solid #4a90e2;
-        }
+        }}
+        .stTabs [data-testid="stTab"][aria-selected="true"] {{
+            color: #4a90e2;
+            border-bottom: 3px solid #4a90e2;
+        }}
         
         /* --- ボタン --- */
-        .stButton > button {
+        .stButton > button {{
             width: 100%;
             background-color: #ffffff !important;
-            border: 2px solid #4a90e2 !important;
+            border: 2px solid #e2e8f0 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
+            padding: 10px !important;
             transition: all 0.3s ease !important;
-        }
-        .stButton > button:hover {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        }}
+        .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
-        }
+            border-color: #4a90e2 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(74, 144, 226, 0.2) !important;
+        }}
 
         /* --- 説明文ボックス --- */
-        .info-box {
+        .info-box {{
             background-color: #f0f9ff;
-            border-left: 6px solid #4a90e2;
+            border: 2px solid #4a90e2;
             padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(74,144,226,0.1);
             margin-bottom: 25px;
             color: #0c4a6e;
-        }
+            animation: fadeInUp 0.8s ease-out forwards;
+        }}
 
-        /* --- 戻るボタン --- */
-        .back-link a {
+        /* --- 戻るボタン (指定デザイン) --- */
+        .back-link {{
+            margin-bottom: 20px;
+        }}
+        .back-link a {{
             display: inline-block;
             padding: 10px 20px;
             background: #ffffff;
-            border: 1px solid #4a90e2;
+            border: 2px solid #e2e8f0;
             border-radius: 25px;
             color: #4a90e2 !important;
             text-decoration: none;
-            margin-bottom: 20px;
-            transition: all 0.3s;
             font-weight: bold;
+            transition: all 0.3s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .back-link a:hover {
+        }}
+        .back-link a:hover {{
             background: #4a90e2;
             color: #ffffff !important;
-            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
-        }
+            border-color: #4a90e2;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+        }}
         
-        hr { border-color: #cbd5e1; }
+        /* エキスパンダー */
+        .streamlit-expanderHeader {{
+            background-color: #f8fafc !important;
+            border-radius: 8px !important;
+            font-weight: bold !important;
+            color: #0f172a !important;
+        }}
+        .streamlit-expanderContent {{
+            background-color: #ffffff !important;
+            color: #333333 !important;
+        }}
+        
+        hr {{ border-color: #cbd5e1; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 load_css()
 
-# --- ▼ 戻るボタン ▼ ---
-st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+# --- ▼ 戻るボタン (★正しいリンクに変更済み) ▼ ---
+st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 # ==========================================
 # 3. メインコンテンツ (ロゴ入りヘッダー)
 # ==========================================
 
-# st.title の代わりにカスタムHTMLヘッダーを使用
 st.markdown(f"""
     <div class="header-container">
         {logo_html}
@@ -212,7 +264,7 @@ st.markdown(f"""
 
 st.markdown("""
 <div class="info-box">
-    <strong>使い方：</strong><br>
+    <strong>🎯 使い方：</strong><br>
     気になるトピックのタブを選んで、関連する動画と解説をご覧ください。
 </div>
 """, unsafe_allow_html=True)
@@ -292,7 +344,7 @@ else:
         with tabs[i]:
             topic_data = youtube_data[topic_name]
             
-            # カードデザインで表示 (白背景・影付き)
+            # ぬるっと動く白枠カードで表示
             with st.container(border=True):
                 st.subheader(topic_name)
                 st.write(topic_data["description"])
@@ -310,6 +362,7 @@ st.markdown("---")
 # 6. フッター (リンク集)
 # ==========================================
 with st.expander("🔗 関連ツール＆リンク"):
+    # リンク集もカードデザインで
     with st.container(border=True):
         c1, c2 = st.columns(2)
         with c1:
