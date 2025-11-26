@@ -39,12 +39,15 @@ def get_img_as_base64(file):
     try:
         # 画像パスを絶対パスで解決
         script_path = Path(__file__)
-        app_root = script_path.parent
-        img_path = app_root / file
+        # カレントディレクトリ(parent)と親ディレクトリ(parent.parent)の両方を探すように変更
+        possible_paths = [script_path.parent / file, script_path.parent.parent / file]
         
-        with open(img_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
+        for img_path in possible_paths:
+            if img_path.exists():
+                with open(img_path, "rb") as f:
+                    data = f.read()
+                return base64.b64encode(data).decode()
+        return None
     except:
         return None
 
