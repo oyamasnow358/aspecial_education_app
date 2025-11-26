@@ -251,11 +251,11 @@ def load_css():
             box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
         }}
 
-        /* --- ヘッダーレイアウト (修正: 中央寄せを追加) --- */
+        /* --- ヘッダーレイアウト (修正済み) --- */
         .header-container {{
             display: flex;
             align-items: center;
-            justify-content: center; /* ★ここを追加しました */
+            justify-content: center; /* 中央寄せを追加 */
             gap: 20px;
             margin-bottom: 30px;
             padding-bottom: 20px;
