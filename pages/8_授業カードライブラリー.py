@@ -172,10 +172,11 @@ def load_css():
         /* --- 授業カードグリッド --- */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            grid-template-columns: repeat(2, 1fr); /* ★ 2列固定 */
             gap: 30px;
             padding: 25px 0;
-        }
+            max-width: 800px;     /* ★ 全体横幅を制限（必要に応じて調整） */
+            margin: 0 auto;
 
         /* --- 授業カード (Mirairo風カードデザイン) --- */
         .lesson-card {
