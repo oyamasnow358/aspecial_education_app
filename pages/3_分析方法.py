@@ -18,11 +18,9 @@ st.set_page_config(
 # ==========================================
 def get_img_as_base64(file):
     try:
-        # 画像パスを絶対パスで解決
         script_path = Path(__file__)
         app_root = script_path.parent.parent
         img_path = app_root / file
-        
         with open(img_path, "rb") as f:
             data = f.read()
         return base64.b64encode(data).decode()
@@ -35,7 +33,7 @@ logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if 
 
 
 # ==========================================
-# 2. デザイン定義 (白背景・ライトモード固定)
+# 2. デザイン定義 (白背景 + 強力なヌルっとアニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
@@ -47,7 +45,7 @@ def load_css():
         /* --- 全体フォント --- */
         html, body, [class*="css"] {
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #1a1a1a !important; /* くっきり黒文字 */
+            color: #1a1a1a !important;
             line-height: 1.6 !important;
         }
 
@@ -59,13 +57,13 @@ def load_css():
             background-attachment: fixed;
         }
 
-        /* --- 文字色 (黒・視認性重視) --- */
+        /* --- 文字色 --- */
         h1, h2, h3, h4, h5, h6 {
-            color: #0f172a !important; /* 濃紺 */
+            color: #0f172a !important;
             font-weight: 700 !important;
             text-shadow: none !important;
         }
-        p, span, div, label, .stMarkdown, .stSelectbox label {
+        p, span, div, label, .stMarkdown {
             color: #333333 !important;
             text-shadow: none !important;
         }
@@ -78,12 +76,21 @@ def load_css():
         }
         [data-testid="stSidebarNavCollapseButton"] { color: #333 !important; }
 
-        /* --- 機能カード (白背景・影付き) --- */
+        /* 
+           ================================================================
+           ★ アニメーション定義 (下からヌルっと)
+           ================================================================
+        */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(40px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 
+           ================================================================
+           ★ 機能カード (白背景・影付き・時間差アニメーション)
+           ================================================================
+        */
         [data-testid="stBorderContainer"] {
             background-color: #ffffff !important;
             border: 1px solid #cbd5e1 !important;
@@ -92,13 +99,22 @@ def load_css():
             margin-bottom: 20px !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
             
-            animation: fadeInUp 0.6s ease-out forwards;
+            /* 初期状態は透明 */
+            opacity: 0;
+            /* ヌルっと動く設定 */
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
         
+        /* カラムごとに表示タイミングをずらす (これで波打つように見えます) */
+        div[data-testid="column"]:nth-of-type(1) [data-testid="stBorderContainer"] { animation-delay: 0.1s; }
+        div[data-testid="column"]:nth-of-type(2) [data-testid="stBorderContainer"] { animation-delay: 0.2s; }
+        div[data-testid="column"]:nth-of-type(3) [data-testid="stBorderContainer"] { animation-delay: 0.3s; }
+
+        /* ホバー時の動き */
         [data-testid="stBorderContainer"]:hover {
             border-color: #4a90e2 !important;
-            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
-            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15) !important;
+            transform: translateY(-5px);
             transition: all 0.3s ease;
         }
 
@@ -128,14 +144,14 @@ def load_css():
             color: #ffffff !important;
         }
 
-        /* --- セレクトボックス (白背景) --- */
+        /* --- セレクトボックス --- */
         div[data-baseweb="select"] > div {
             background-color: #ffffff !important;
             border-color: #cbd5e1 !important;
             color: #333 !important;
         }
         
-        /* --- 説明文プレート --- */
+        /* --- 説明文プレート (ここもアニメーション) --- */
         .glass-plate {
             background-color: #f0f9ff;
             border-left: 6px solid #4a90e2;
@@ -144,6 +160,9 @@ def load_css():
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             margin-bottom: 30px;
             color: #0c4a6e;
+            
+            opacity: 0;
+            animation: fadeInUp 1s ease-in-out forwards;
         }
 
         /* --- 戻るボタン --- */
@@ -166,7 +185,12 @@ def load_css():
             box-shadow: 0 4px 8px rgba(74, 144, 226, 0.2);
         }
         
-        /* --- ヘッダー (ロゴ) --- */
+        /* --- ヘッダー (ロゴとタイトル) --- */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
         .header-container {
             display: flex;
             align-items: center;
@@ -174,6 +198,7 @@ def load_css():
             margin-bottom: 20px;
             padding-bottom: 20px;
             border-bottom: 2px solid #f1f5f9;
+            animation: float 6s ease-in-out infinite; /* ゆらゆら動く */
         }
         .logo-img {
             width: 80px;
@@ -198,7 +223,7 @@ load_css()
 # 3. メインコンテンツ
 # ==========================================
 
-# --- 戻るボタン (指定URL) ---
+# --- 戻るボタン ---
 st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 # ヘッダー (ロゴ + タイトル)
@@ -220,7 +245,7 @@ st.markdown("""
 
 st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析ツールを開く", icon="🔗")
 
-# イメージ画像
+# イメージ画像 (少し遅れて表示させることで動きをつける)
 st.image("https://i.imgur.com/ASnp6PS.png", caption="データ分析をサポートするツール群", use_container_width=True)
 
 
@@ -283,12 +308,13 @@ if st.session_state.show_analysis_methods:
     st.subheader("分析方法の一覧")
     st.caption("気になる分析方法をクリックして詳細をご覧ください。")
 
-    # 3列グリッド (白枠カード)
+    # 3列グリッド (白枠カード・時間差出現)
     cols_count = 3
     cols = st.columns(cols_count)
     
     for i, (method_name, method_info) in enumerate(methods.items()):
         with cols[i % cols_count]:
+            # st.container(border=True) を使うことで、CSSの animation: fadeInUp が適用される
             with st.container(border=True):
                 st.markdown(f"**{method_name}**")
                 st.caption(f"{method_info['description']}")
@@ -406,10 +432,4 @@ with st.expander("🔗 全ての統計学ツールリンクを表示"):
         st.page_link("https://soukan-jlhkdhkradbnxssy29aqte.streamlit.app/", label="相関分析", icon="🔗")
         st.page_link("https://kaikiapp-tjtcczfvlg2pyhd9bjxwom.streamlit.app/", label="多変量回帰分析", icon="🔗")
         st.page_link("https://tkentei-flhmnqnq6dti6oyy9xnktr.streamlit.app/", label="t検定", icon="🔗")
-        st.page_link("https://rojisthik-buklkg5zeh6oj2gno746ix.streamlit.app/", label="ロジスティック回帰", icon="🔗")
-        st.page_link("https://nonparametoric-nkk2awu6yv9xutzrjmrsxv.streamlit.app/", label="ノンパラメトリック", icon="🔗")
-
-st.markdown("---")
-st.page_link("https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview", label="🗨️ ご意見・ご感想 (アンケートフォーム)", icon="📝")
-
-st.warning("【利用上の注意】無断での転記・利用を禁じます。研究発表等での利用は管理者までご相談ください。")
+        st.page_link("
