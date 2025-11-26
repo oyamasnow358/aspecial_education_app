@@ -172,15 +172,29 @@ def load_css():
             margin-top: 5px;
         }
 
-        /* --- 授業カードグリッド (3列狙い設定) --- */
+        /* --- 授業カードグリッド (レスポンシブ対応 1列->2列->3列) --- */
         .lesson-card-grid {
             display: grid;
-            /* 280px以上で自動折り返し。PCなら3列、狭い画面なら2列 */
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 25px;
             padding: 25px 0;
-            /* 中央寄せ */
             justify-content: center;
+            
+            /* デフォルト（スマホ等）は1列 */
+            grid-template-columns: 1fr;
+        }
+
+        /* タブレットサイズ以上で2列 */
+        @media (min-width: 640px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* PCサイズ以上で強制的に3列 */
+        @media (min-width: 1024px) {
+            .lesson-card-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         /* --- 授業カード (Mirairo風カードデザイン・修正版) --- */
@@ -193,11 +207,11 @@ def load_css():
             display: flex;
             flex-direction: column;
             
-            /* ★修正点: カードの最大幅を350pxに制限し、中央寄せにする */
+            /* カードの最大幅を350pxに制限し、中央寄せ */
             max-width: 350px; 
             width: 100%;
             margin: 0 auto; 
-            height: 100%; /* 高さを揃える */
+            height: 100%;
 
             /* アニメーション適用 */
             opacity: 0; 
@@ -222,14 +236,14 @@ def load_css():
             border-bottom: 1px solid #e2e8f0;
         }
         
-        /* カード内容エリア (ボタン位置修正) */
+        /* カード内容エリア (上詰め配置) */
         .lesson-card-content {
             padding: 20px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             
-            /* ★修正点: コンテンツを上詰め(flex-start)にして、ボタンが下に沈まないようにする */
+            /* 上詰め配置にしてボタンがコンテンツ直下に来るようにする */
             justify-content: flex-start;
             gap: 12px;
         }
@@ -313,7 +327,8 @@ def load_css():
             padding: 10px !important;
             transition: all 0.3s ease !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-            margin-top: 0; /* マージンリセット */
+            margin-top: auto; /* コンテンツが少ない場合でもボタンを一番下に配置したければここを有効化、今回は上詰め希望なのでauto削除 */
+            margin-top: 0;
         }
         .stButton > button:hover {
             background-color: #4a90e2 !important;
