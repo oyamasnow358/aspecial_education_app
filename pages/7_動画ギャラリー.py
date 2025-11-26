@@ -11,119 +11,151 @@ st.set_page_config(
 )
 
 # ==========================================
-# 1. デザイン定義 (Mirairo共通・白枠線・アニメーション)
+# 1. デザイン定義 (視認性特化・ライトモード)
 # ==========================================
 def load_css():
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
     css = """
     <style>
-        /* --- 全体 --- */
+        /* --- 全体フォント --- */
         html, body, [class*="css"] {
             font-family: 'Noto Sans JP', sans-serif !important;
+            color: #1a1a1a !important; /* 文字色はくっきり黒 */
+            line-height: 1.6 !important;
         }
 
-        /* --- 背景 (黒) --- */
+        /* --- 背景 (白95%透過で背景画像を極薄にする) --- */
         [data-testid="stAppViewContainer"] {
-            background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+            background-color: #ffffff;
+            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }
 
-        /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stRadio label {
-            color: #ffffff !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
+        /* --- 見出し (濃紺) --- */
+        h1, h2, h3, h4, h5, h6 {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            text-shadow: none !important;
+        }
+        
+        /* 本文 */
+        p, span, div, label, .stMarkdown {
+            color: #333333 !important;
+            text-shadow: none !important;
         }
 
-        /* --- サイドバー --- */
+        /* --- サイドバー (白) --- */
         [data-testid="stSidebar"] {
-            background-color: rgba(0, 0, 0, 0.6) !important;
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
         }
-        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
+        [data-testid="stSidebarNavCollapseButton"] { color: #333 !important; }
 
-        /* --- 機能カード (白枠・アニメーション) --- */
+        /* --- 機能カード (白背景・影付き) --- */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         [data-testid="stBorderContainer"] {
-            background-color: #151515 !important;
-            border: 2px solid #ffffff !important;
-            border-radius: 16px !important;
-            padding: 20px !important;
-            margin-bottom: 20px !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
-            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
+            padding: 25px !important;
+            margin-bottom: 25px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            
+            animation: fadeInUp 0.6s ease-out forwards;
         }
         
         [data-testid="stBorderContainer"]:hover {
             border-color: #4a90e2 !important;
-            background-color: #000000 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
+            transform: translateY(-2px);
             transition: all 0.3s ease;
         }
 
+        /* --- タブのデザイン調整 (ライトモード用) --- */
+        .stTabs [data-testid="stTab"] {
+            background-color: transparent;
+            border-bottom: 2px solid #e2e8f0;
+            color: #64748b; /* グレー */
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .stTabs [data-testid="stTab"]:hover {
+            color: #4a90e2;
+        }
+        .stTabs [data-testid="stTab"][aria-selected="true"] {
+            color: #4a90e2;
+            border-bottom: 2px solid #4a90e2;
+        }
+        
         /* --- ボタン --- */
         .stButton > button {
             width: 100%;
-            background-color: #000000 !important;
-            border: 2px solid #ffffff !important;
+            background-color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
             transition: all 0.3s ease !important;
         }
         .stButton > button:hover {
-            border-color: #4a90e2 !important;
-            color: #ffffff !important;
             background-color: #4a90e2 !important;
+            color: #ffffff !important;
         }
 
-        /* --- タブのデザイン調整 --- */
-        .stTabs [data-testid="stTab"] {
-            background-color: transparent;
-            border: 1px solid #555;
-            border-bottom: none;
-            color: #ccc;
-            border-radius: 5px 5px 0 0;
+        /* --- 説明文ボックス --- */
+        .info-box {
+            background-color: #f0f9ff;
+            border-left: 6px solid #4a90e2;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            color: #0c4a6e;
         }
-        .stTabs [data-testid="stTab"][aria-selected="true"] {
-            background-color: #4a90e2;
-            color: #fff;
-            border: none;
+
+        /* --- エキスパンダー --- */
+        .streamlit-expanderHeader {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
         }
-        .stTabs [data-testid="stVerticalBlock"] {
-            background-color: transparent;
-            border: none;
-            box-shadow: none;
+        .streamlit-expanderContent {
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            color: #333 !important;
         }
 
         /* --- 戻るボタン --- */
         .back-link a {
             display: inline-block;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #fff;
-            border-radius: 20px;
-            color: #fff !important;
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 1px solid #4a90e2;
+            border-radius: 25px;
+            color: #4a90e2 !important;
             text-decoration: none;
             margin-bottom: 20px;
             transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .back-link a:hover {
-            background: #fff;
-            color: #000 !important;
+            background: #4a90e2;
+            color: #ffffff !important;
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
         }
         
-        hr { border-color: #666; }
+        hr { border-color: #cbd5e1; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -133,15 +165,20 @@ load_css()
 # --- ▼ 戻るボタン ▼ ---
 st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
+# ==========================================
+# 2. メインコンテンツ
+# ==========================================
 st.title("▶️ YouTube動画ギャラリー")
+
 st.markdown("""
-<div style="background: rgba(255,255,255,0.05); border: 1px solid #fff; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-    気になるトピックを選んで、関連する動画と解説をご覧ください。
+<div class="info-box">
+    <strong>使い方：</strong><br>
+    気になるトピックのタブを選んで、関連する動画と解説をご覧ください。
 </div>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. データ定義
+# 3. データ定義
 # ==========================================
 youtube_data = {
     "ダウン症": {
@@ -197,7 +234,7 @@ youtube_data = {
 }
 
 # ==========================================
-# 3. メインコンテンツ (タブ表示)
+# 4. タブ表示エリア
 # ==========================================
 
 # available=True の項目のみをタブとして表示
@@ -215,7 +252,7 @@ else:
         with tabs[i]:
             topic_data = youtube_data[topic_name]
             
-            # カードデザインで表示
+            # カードデザインで表示 (白背景・影付き)
             with st.container(border=True):
                 st.subheader(topic_name)
                 st.write(topic_data["description"])
@@ -230,7 +267,7 @@ else:
 st.markdown("---")
 
 # ==========================================
-# 4. フッター (リンク集)
+# 5. フッター (リンク集)
 # ==========================================
 with st.expander("🔗 関連ツール＆リンク"):
     with st.container(border=True):
