@@ -31,163 +31,215 @@ def get_img_as_base64(file):
 
 logo_path = "mirairo2.png" 
 logo_b64 = get_img_as_base64(logo_path)
-logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">📈</div>'
 
 
 # ==========================================
-# 2. デザイン定義 (白背景・ライトモード固定)
+# 2. デザイン定義 (Mirairoスタイル・アニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
-    css = """
+    css = f"""
     <style>
         /* --- 全体フォント --- */
-        html, body, [class*="css"] {
+        html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #1a1a1a !important; /* くっきり黒文字 */
-            line-height: 1.6 !important;
-        }
+            color: #333333 !important;
+        }}
 
-        /* --- 背景 (白95%透過) --- */
-        [data-testid="stAppViewContainer"] {
+        /* --- 背景 (白92%透過・画像あり) --- */
+        [data-testid="stAppViewContainer"] {{
             background-color: #ffffff;
-            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
-        }
+            padding-left: 20px;
+            padding-right: 20px;
+        }}
 
-        /* --- 文字色 (黒・視認性重視) --- */
-        h1, h2, h3, h4, h5, h6 {
-            color: #0f172a !important; /* 濃紺 */
+        /* --- 文字色 (濃紺・くっきり) --- */
+        h1, h2, h3, h4, h5, h6 {{
+            color: #0f172a !important; /* 濃いネイビーブラック */
             font-weight: 700 !important;
             text-shadow: none !important;
-        }
-        p, span, div, label, .stMarkdown, .stSelectbox label {
+        }}
+        p, span, div, label, .stMarkdown, .stSelectbox label {{
             color: #333333 !important;
             text-shadow: none !important;
-        }
+        }}
 
-        /* --- サイドバー (白半透明) --- */
-        [data-testid="stSidebar"] {
-            background-color: rgba(255, 255, 255, 0.9) !important;
+        /* --- サイドバー (すりガラス効果) --- */
+        [data-testid="stSidebar"] {{
+            background-color: rgba(255, 255, 255, 0.85) !important;
             backdrop-filter: blur(20px);
-            border-right: 1px solid #e2e8f0;
-        }
-        [data-testid="stSidebarNavCollapseButton"] { color: #333 !important; }
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid #e2e8f0 !important;
+        }}
+        [data-testid="stSidebar"] * {{
+            color: #333333 !important;
+        }}
 
-        /* --- 機能カード (白背景・影付き) --- */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* 
+           ================================================================
+           ★ アニメーション定義
+           ================================================================
+        */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(40px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
 
-        [data-testid="stBorderContainer"] {
+        @keyframes float {{
+            0% {{ transform: translateY(0px); }}
+            50% {{ transform: translateY(-10px); }}
+            100% {{ transform: translateY(0px); }}
+        }}
+
+        /* 
+           ================================================================
+           ★ コンテナデザイン (白背景・影付き・アニメーション)
+           ================================================================
+        */
+        [data-testid="stBorderContainer"] {{
             background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 12px !important;
-            padding: 20px !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 15px !important;
+            padding: 25px !important;
             margin-bottom: 20px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
             
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
+            /* アニメーション適用 */
+            opacity: 0; 
+            animation-name: fadeInUp;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }}
         
-        [data-testid="stBorderContainer"]:hover {
+        /* コンテナの出現タイミングをずらす */
+        div.element-container:nth-of-type(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
+        div.element-container:nth-of-type(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.2s; }}
+        div.element-container:nth-of-type(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
+        div.element-container:nth-of-type(4) [data-testid="stBorderContainer"] {{ animation-delay: 0.4s; }}
+
+        [data-testid="stBorderContainer"]:hover {{
             border-color: #4a90e2 !important;
-            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
-            transform: translateY(-2px);
+            background-color: #f8fafc !important;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15) !important;
             transition: all 0.3s ease;
-        }
+        }}
 
         /* --- ボタン --- */
-        .stButton > button {
+        .stButton > button {{
             width: 100%;
             background-color: #ffffff !important;
-            border: 2px solid #4a90e2 !important;
+            border: 2px solid #e2e8f0 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
+            padding: 10px !important;
             transition: all 0.3s ease !important;
-        }
-        .stButton > button:hover {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        }}
+        .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
-        }
+            border-color: #4a90e2 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(74, 144, 226, 0.2) !important;
+        }}
         
         /* Primaryボタン */
-        .stButton > button[kind="primary"] {
+        .stButton > button[kind="primary"] {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
             border: 2px solid #4a90e2 !important;
-        }
-        .stButton > button[kind="primary"]:hover {
+        }}
+        .stButton > button[kind="primary"]:hover {{
             background-color: #2563eb !important;
-            color: #ffffff !important;
-        }
+            border-color: #2563eb !important;
+        }}
 
-        /* --- セレクトボックス (白背景) --- */
-        div[data-baseweb="select"] > div {
+        /* --- セレクトボックス --- */
+        div[data-baseweb="select"] > div {{
             background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 10px !important;
             color: #333 !important;
-        }
+        }}
+        div[data-baseweb="select"] > div:hover {{
+            border-color: #4a90e2 !important;
+        }}
         
         /* --- 説明文プレート --- */
-        .glass-plate {
+        .glass-plate {{
             background-color: #f0f9ff;
-            border-left: 6px solid #4a90e2;
+            border: 2px solid #4a90e2;
             padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(74,144,226,0.1);
             margin-bottom: 30px;
             color: #0c4a6e;
-        }
+            animation: fadeInUp 0.8s ease-out forwards;
+        }}
 
-        /* --- 戻るボタン --- */
-        .back-link a {
+        /* --- 戻るボタン (指定デザイン) --- */
+        .back-link {{
+            margin-bottom: 20px;
+        }}
+        .back-link a {{
             display: inline-block;
             padding: 10px 20px;
             background: #ffffff;
-            border: 1px solid #4a90e2;
+            border: 2px solid #e2e8f0;
             border-radius: 25px;
             color: #4a90e2 !important;
             text-decoration: none;
-            margin-bottom: 20px;
-            transition: all 0.3s;
             font-weight: bold;
+            transition: all 0.3s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .back-link a:hover {
+        }}
+        .back-link a:hover {{
             background: #4a90e2;
             color: #ffffff !important;
-            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.2);
-        }
+            border-color: #4a90e2;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+        }}
         
-        /* --- ヘッダー (ロゴ) --- */
-        .header-container {
+        /* --- ヘッダーレイアウト --- */
+        .header-container {{
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 20px;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
+            margin-bottom: 40px;
+            padding: 40px 0;
             border-bottom: 2px solid #f1f5f9;
-        }
-        .logo-img {
-            width: 80px;
+            animation: float 6s ease-in-out infinite;
+        }}
+        .logo-img {{
+            width: 100px;
             height: auto;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-        }
-        .page-title {
-            font-size: 2.2rem;
+        }}
+        .logo-placeholder {{
+            font-size: 4rem;
+            margin-right: 15px;
+            animation: float 6s ease-in-out infinite;
+        }}
+        .page-title {{
+            font-size: 3rem;
             font-weight: 900;
             color: #0f172a;
             margin: 0;
-        }
+            line-height: 1.2;
+        }}
         
-        hr { border-color: #cbd5e1; }
+        hr {{ border-color: #cbd5e1; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -198,27 +250,28 @@ load_css()
 # 3. メインコンテンツ
 # ==========================================
 
-# --- 戻るボタン (指定URL) ---
+# --- 戻るボタン (★指定されたHTMLコード) ---
 st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
 # ヘッダー (ロゴ + タイトル)
 st.markdown(f"""
     <div class="header-container">
         {logo_html}
-        <h1 class="page-title">📈 分析方法</h1>
+        <h1 class="page-title">分析方法</h1>
     </div>
 """, unsafe_allow_html=True)
 
 # --- 推奨ツールエリア ---
 st.markdown("""
 <div class="glass-plate">
-    <h4 style="color: #0c4a6e !important; margin-top: 0;">✨ 特にオススメ！アンケート分析ツール</h4>
-    <p>Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！<br>
+    <h4 style="color: #0c4a6e !important; margin-top: 0; border: none; font-weight: 900;">✨ 特にオススメ！アンケート分析ツール</h4>
+    <p style="margin-bottom: 10px;">Google FormsやMicrosoft Formsアンケートをグラフ化したり、統計学的に分析するツールです！<br>
     アンケートをまとめたい人、研究論文や課題研究を行っている人にはご活用ください。</p>
 </div>
 """, unsafe_allow_html=True)
 
-st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析ツールを開く", icon="🔗")
+with st.container(border=True):
+    st.page_link("https://annketo12345py-edm3ajzwtsmmuxbm8qbamr.streamlit.app/", label="📝 アンケートデータ、総合統計分析ツールを開く", icon="🔗")
 
 # イメージ画像
 st.image("https://i.imgur.com/ASnp6PS.png", caption="データ分析をサポートするツール群", use_container_width=True)
