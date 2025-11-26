@@ -172,15 +172,16 @@ def load_css():
             margin-top: 5px;
         }
 
-        /* --- 授業カードグリッド --- */
+        /* --- 授業カードグリッド (修正版) --- */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
+            /* 最小幅を260pxにして列数を確保しやすくする */
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
             padding: 25px 0;
         }
 
-        /* --- 授業カード (Mirairo風カードデザイン) --- */
+        /* --- 授業カード (Mirairo風カードデザイン・修正版) --- */
         .lesson-card {
             background-color: #ffffff;
             border: 2px solid #e2e8f0;
@@ -190,6 +191,11 @@ def load_css():
             display: flex;
             flex-direction: column;
             
+            /* ★ここを追加：最大幅を350pxに制限し、中央寄せにする */
+            max-width: 350px;
+            width: 100%;
+            margin: 0 auto;
+
             /* アニメーション適用 */
             opacity: 0; 
             animation-name: fadeInUp;
@@ -208,82 +214,82 @@ def load_css():
 
         .lesson-card-image {
             width: 100%;
-            height: 200px;
+            height: 180px; /* 高さを少し調整 */
             object-fit: cover; 
             border-bottom: 1px solid #e2e8f0;
         }
         .lesson-card-content {
-            padding: 22px;
+            padding: 20px; /* パディングを少し調整 */
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         .lesson-card-title {
-            font-size: 1.3em;
+            font-size: 1.2em; /* フォントサイズを微調整 */
             font-weight: 900;
             color: #0f172a;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             line-height: 1.4;
         }
         .lesson-card-catchcopy {
-            font-size: 0.95em;
+            font-size: 0.9em;
             color: #64748b !important;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             line-height: 1.5;
-            min-height: 3em;
+            min-height: 2.8em;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
         .lesson-card-goal {
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #334155 !important;
             margin-bottom: 12px;
             background-color: #f1f5f9;
             padding: 10px;
             border-radius: 8px;
             line-height: 1.5;
-            min-height: 60px;
+            min-height: 55px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
         .lesson-card-meta {
-            font-size: 0.85em;
+            font-size: 0.8em;
             color: #475569;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
-            margin-top: 10px;
-            margin-bottom: 15px;
+            margin-top: 8px;
+            margin-bottom: 12px;
         }
         .lesson-card-meta span {
             background-color: #ffffff;
-            padding: 4px 10px;
-            border-radius: 20px;
+            padding: 3px 8px;
+            border-radius: 15px;
             border: 1px solid #e2e8f0;
             color: #475569 !important;
             font-weight: bold;
         }
         .lesson-card-tags {
-            font-size: 0.8em;
-            margin-top: 10px;
-            min-height: 35px; 
+            font-size: 0.75em;
+            margin-top: 8px;
+            min-height: 30px; 
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
         }
         .tag-badge {
             display: inline-block;
             background-color: #e0f2fe;
             color: #0284c7 !important;
-            border-radius: 12px;
-            padding: 4px 10px;
+            border-radius: 10px;
+            padding: 3px 8px;
             font-size: 0.75em;
             font-weight: bold;
         }
