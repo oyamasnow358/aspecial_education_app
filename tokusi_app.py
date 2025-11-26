@@ -24,7 +24,7 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (サイドバー半透明化・他は維持) ---
+# --- 2. CSSデザイン (サイドバー半透明化・修正版) ---
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -53,22 +53,32 @@ def load_css():
 
         /* 
            ================================================================
-           ★ サイドバーのデザイン (ここを半透明に変更) ★
+           ★ サイドバーのデザイン (確実に半透明にする修正) ★
            ================================================================
         */
         [data-testid="stSidebar"] {{
-            /* 背景: 半透明の黒 (60%不透明) */
+            /* 背景色を透過させる */
             background-color: rgba(0, 0, 0, 0.6) !important;
             
-            /* すりガラス効果 (背景をぼかす) */
+            /* すりガラス効果 */
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             
-            /* 境界線: うっすら白く */
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            /* 境界線 */
+            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
         }}
         
-        /* サイドバー内の文字も見やすく */
+        /* サイドバー内の要素の背景も透明にする必要がある場合への対策 */
+        [data-testid="stSidebar"] > div {{
+            background-color: transparent !important;
+        }}
+
+        /* サイドバーの閉じるボタン */
+        [data-testid="stSidebarNavCollapseButton"] {{
+            color: #ffffff !important;
+        }}
+        
+        /* サイドバー内の文字 */
         [data-testid="stSidebar"] * {{
             color: #ffffff !important;
             text-shadow: 0 1px 3px #000000 !important;
