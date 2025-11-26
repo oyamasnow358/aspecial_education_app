@@ -204,7 +204,7 @@ def load_css():
         }
 
         .lesson-card-image {
-            width: 100%;
+            width: 50%;
             height: 200px;
             object-fit: cover; 
             border-bottom: 1px solid #e2e8f0;
