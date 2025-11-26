@@ -6,9 +6,11 @@ import json
 import io
 import os
 import re
+import base64
+from pathlib import Path
 
 # ==========================================
-# 0. ページ設定 & デザイン定義 (Mirairo共通)
+# 0. ページ設定
 # ==========================================
 st.set_page_config(
     page_title="Mirairo - 指導案作成",
@@ -17,148 +19,219 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# ==========================================
+# 1. 画像処理 (ロゴ読み込み)
+# ==========================================
+def get_img_as_base64(file):
+    try:
+        # 画像パスを絶対パスで解決
+        script_path = Path(__file__)
+        app_root = script_path.parent.parent
+        img_path = app_root / file
+        
+        with open(img_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
+
+logo_path = "mirairo2.png" 
+logo_b64 = get_img_as_base64(logo_path)
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
+
+
+# ==========================================
+# 2. デザイン定義 (白背景・視認性特化・アニメーション)
+# ==========================================
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
-    css = """
+    css = f"""
     <style>
-        /* --- 全体 --- */
-        html, body, [class*="css"] {
+        /* --- 全体フォント --- */
+        html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-        }
+            color: #1a1a1a !important; /* くっきり黒 */
+            line-height: 1.6 !important;
+        }}
 
-        /* --- 背景 (黒) --- */
-        [data-testid="stAppViewContainer"] {
-            background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+        /* --- 背景 (白95%透過) --- */
+        [data-testid="stAppViewContainer"] {{
+            background-color: #ffffff;
+            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
-        }
+        }}
 
-        /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {
-            color: #ffffff !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
-        }
+        /* --- 文字色 --- */
+        h1, h2, h3, h4, h5, h6 {{
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            text-shadow: none !important;
+        }}
+        p, span, div, label, .stMarkdown {{
+            color: #333333 !important;
+            text-shadow: none !important;
+        }}
 
         /* --- サイドバー --- */
-        [data-testid="stSidebar"] {
-            background-color: rgba(0, 0, 0, 0.6) !important;
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
+        [data-testid="stSidebar"] {{
+            background-color: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
+        }}
+        [data-testid="stSidebarNavCollapseButton"] {{ color: #333 !important; }}
 
-        /* --- 機能カード (白枠・アニメーション) --- */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* 
+           ================================================================
+           ★ アニメーション定義 (下からフワッと)
+           ================================================================
+        */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(40px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
 
-        [data-testid="stBorderContainer"], .header-box {
-            background-color: #151515 !important;
-            border: 2px solid #ffffff !important;
-            border-radius: 16px !important;
+        /* 
+           ================================================================
+           ★ 機能カード (白背景・影付き・時間差アニメーション)
+           ================================================================
+        */
+        [data-testid="stBorderContainer"] {{
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
             padding: 20px !important;
             margin-bottom: 20px !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            
+            /* アニメーション設定 */
+            opacity: 0;
             animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
+        }}
         
-        [data-testid="stBorderContainer"]:hover, .header-box:hover {
+        /* 遅延設定 (上から順に出るように) */
+        div.element-container:nth-child(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
+        div.element-container:nth-child(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
+        div.element-container:nth-child(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.5s; }}
+
+        [data-testid="stBorderContainer"]:hover {{
             border-color: #4a90e2 !important;
-            background-color: #000000 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
+            transform: translateY(-2px);
             transition: all 0.3s ease;
-        }
+        }}
 
         /* --- ボタン --- */
-        .stButton > button {
+        .stButton > button {{
             width: 100%;
-            background-color: #000000 !important;
-            border: 2px solid #ffffff !important;
+            background-color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
             transition: all 0.3s ease !important;
             height: 3em !important;
-        }
-        .stButton > button:hover {
-            border-color: #4a90e2 !important;
-            color: #ffffff !important;
+        }}
+        .stButton > button:hover {{
             background-color: #4a90e2 !important;
-        }
+            color: #ffffff !important;
+        }}
         
         /* Primaryボタン */
-        .stButton > button[kind="primary"] {
+        .stButton > button[kind="primary"] {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
             border: 2px solid #4a90e2 !important;
-        }
-        .stButton > button[kind="primary"]:hover {
-            background-color: #ffffff !important;
-            color: #4a90e2 !important;
-        }
+        }}
+        .stButton > button[kind="primary"]:hover {{
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+        }}
 
-        /* --- 入力フォーム --- */
-        .stTextInput input, .stTextArea textarea {
-            background-color: #222 !important;
-            color: #fff !important;
-            border-color: #555 !important;
-        }
+        /* --- 入力フォーム (白背景) --- */
+        .stTextInput input, .stTextArea textarea {{
+            background-color: #ffffff !important;
+            color: #1a1a1a !important;
+            border-color: #cbd5e1 !important;
+        }}
 
         /* --- エキスパンダー --- */
-        .streamlit-expanderHeader {
-            background-color: rgba(255,255,255,0.1) !important;
-            color: #fff !important;
+        .streamlit-expanderHeader {{
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
             border-radius: 8px !important;
-            border: 1px solid #555;
-        }
-        .streamlit-expanderContent {
-            background-color: rgba(0,0,0,0.5) !important;
-            border: 1px solid #444;
+            border: 1px solid #e2e8f0;
+        }}
+        .streamlit-expanderContent {{
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0;
             border-top: none;
             border-radius: 0 0 8px 8px;
-        }
+            color: #333 !important;
+        }}
 
         /* --- ステップヘッダー --- */
-        .step-header {
+        .step-header {{
             color: #4a90e2 !important;
             border-bottom: 2px solid #4a90e2;
             padding-bottom: 10px;
             margin-top: 40px;
-            font-weight: bold;
+            font-weight: 900;
             font-size: 1.5em;
             text-shadow: none !important;
-        }
+        }}
 
         /* --- 戻るボタン --- */
-        .back-link a {
+        .back-link a {{
             display: inline-block;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #fff;
-            border-radius: 20px;
-            color: #fff !important;
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 1px solid #4a90e2;
+            border-radius: 25px;
+            color: #4a90e2 !important;
             text-decoration: none;
             margin-bottom: 20px;
             transition: all 0.3s;
-        }
-        .back-link a:hover {
-            background: #fff;
-            color: #000 !important;
-        }
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }}
+        .back-link a:hover {{
+            background: #4a90e2;
+            color: #ffffff !important;
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.2);
+        }}
         
         /* コードブロック */
-        code {
-            background-color: #222 !important;
-            color: #e0e0e0 !important;
-        }
+        code {{
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0;
+        }}
         
-        hr { border-color: #666; }
+        /* --- ヘッダー (ロゴ) --- */
+        .header-container {{
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+        }}
+        .logo-img {{
+            width: 70px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }}
+        .page-title {{
+            font-size: 2rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+        }}
+        
+        hr {{ border-color: #cbd5e1; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -166,12 +239,10 @@ def load_css():
 load_css()
 
 # ==========================================
-# 1. ユーティリティ関数（Excelエラー回避用）
+# 3. ユーティリティ関数
 # ==========================================
 def safe_write(ws, cell_address, value):
-    """
-    結合セルエラー（MergedCell...read-only）を回避して書き込む関数。
-    """
+    """結合セルエラーを回避して書き込む関数"""
     try:
         if value is None:
             value = ""
@@ -191,9 +262,6 @@ def safe_write(ws, cell_address, value):
     except Exception as e:
         st.warning(f"⚠️ セル {cell_address} への書き込み中に警告: {e}")
 
-# ==========================================
-# 2. プロンプト生成ロジック
-# ==========================================
 def generate_prompt_text(data):
     prompt = f"""
 あなたは特別支援学校および公立学校における【熟練の教員】です。
@@ -209,7 +277,7 @@ def generate_prompt_text(data):
 ・場所: {data['place']}
 ・本時の内容: {data['content']}
 
-[任意項目（ユーザー入力があれば反映、なければ教育的観点で補完）]
+[任意項目]
 ・目標: {data['goals_in'] if data['goals_in'] else "未定（文脈に合わせて最大3つ生成せよ）"}
 ・評価の基準: {data['eval_in'] if data['eval_in'] else "未定（3観点：知識・技能、思考判断表現、主体的態度を含めて生成せよ）"}
 ・学習内容のメモ: {data['flow_in'] if data['flow_in'] else "未定（自然な流れで構成せよ）"}
@@ -246,9 +314,6 @@ def generate_prompt_text(data):
 """
     return prompt
 
-# ==========================================
-# 3. Excel出力ロジック
-# ==========================================
 def create_excel(template_path, json_data):
     try:
         wb = openpyxl.load_workbook(template_path)
@@ -256,7 +321,7 @@ def create_excel(template_path, json_data):
     except Exception as e:
         return None, f"テンプレート読み込みエラー: {e}"
 
-    # --- ① 基本情報 ---
+    # データ書き込み
     bi = json_data.get('basic_info', {})
     safe_write(ws, 'C2', bi.get('grade', ''))
     safe_write(ws, 'I2', bi.get('subject', ''))
@@ -265,35 +330,25 @@ def create_excel(template_path, json_data):
     safe_write(ws, 'N3', bi.get('place', ''))
     safe_write(ws, 'C4', bi.get('content', ''))
 
-    # --- ② 目標 (C5, C6, C7) ---
     goals = json_data.get('goals', [])
-    if len(goals) > 0: safe_write(ws, 'C5', f"・{goals[0]}")
-    if len(goals) > 1: safe_write(ws, 'C6', f"・{goals[1]}")
-    if len(goals) > 2: safe_write(ws, 'C7', f"・{goals[2]}")
+    for i in range(min(len(goals), 3)):
+        safe_write(ws, f'C{5+i}', f"・{goals[i]}")
 
-    # --- ③ 評価の基準 (C8, C9, C10) ---
     evals = json_data.get('evaluation', [])
-    if len(evals) > 0: safe_write(ws, 'C8', f"・{evals[0]}")
-    if len(evals) > 1: safe_write(ws, 'C9', f"・{evals[1]}")
-    if len(evals) > 2: safe_write(ws, 'C10', f"・{evals[2]}")
+    for i in range(min(len(evals), 3)):
+        safe_write(ws, f'C{8+i}', f"・{evals[i]}")
 
-    # --- ④ 本時の展開 (A13～ 2行空け) ---
     flow_list = json_data.get('flow', [])
     current_row = 13
-    
     for item in flow_list:
         safe_write(ws, f'A{current_row}', item.get('time', ''))
         safe_write(ws, f'B{current_row}', item.get('activity', ''))
         safe_write(ws, f'K{current_row}', item.get('notes', ''))
         current_row += 2
 
-    # --- ⑤ 準備物 (N13) ---
     safe_write(ws, 'N13', json_data.get('materials', ''))
-
-    # --- ⑥ 備考 (B33) ---
     safe_write(ws, 'B33', json_data.get('remarks', ''))
 
-    # 保存処理
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
@@ -304,13 +359,18 @@ def create_excel(template_path, json_data):
 # ==========================================
 
 # --- 戻るボタン ---
-st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
-# --- ヘッダーエリア ---
-st.markdown("<div class='header-box'>", unsafe_allow_html=True)
-st.title("📝 指導案作成 AIエージェント")
-st.markdown("入力情報を元にプロンプトを作成し、AIとの連携で指導案Excelを完成させます。")
-st.markdown("</div>", unsafe_allow_html=True)
+# --- ヘッダーエリア (ロゴ入り) ---
+st.markdown(f"""
+    <div class="header-container">
+        {logo_html}
+        <div>
+            <h1 class="page-title">📝 指導案作成 AIエージェント</h1>
+            <p style="color:#64748b; margin:0;">入力情報を元にプロンプトを作成し、AIとの連携で指導案Excelを完成させます。</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- AIリンクボタン (白枠カード内) ---
 with st.container(border=True):
@@ -380,7 +440,7 @@ with st.container(border=True):
             st.error("⚠️ AIの回答が貼り付けられていません。")
         else:
             try:
-                # 1. JSONクリーニング
+                # JSONクリーニング
                 clean_json = re.sub(r"```json\s*|\s*```", "", json_input_str).strip()
                 start_idx = clean_json.find('{')
                 end_idx = clean_json.rfind('}') + 1
@@ -389,18 +449,18 @@ with st.container(border=True):
                 
                 data_dict = json.loads(clean_json)
                 
-                # 2. テンプレート検索
+                # テンプレート検索
                 current_dir = os.path.dirname(os.path.abspath(__file__))
                 base_dir = os.path.dirname(current_dir)
-                template_file = os.path.join(base_dir, "指導案.xlsx") # 親フォルダ検索
+                template_file = os.path.join(base_dir, "指導案.xlsx")
                 
                 if not os.path.exists(template_file):
-                    template_file = os.path.join(current_dir, "指導案.xlsx") # 現フォルダ検索
+                    template_file = os.path.join(current_dir, "指導案.xlsx")
 
                 if not os.path.exists(template_file):
                     st.error(f"❌ エラー: テンプレートファイルが見つかりません。\n{base_dir} または {current_dir} に '指導案.xlsx' を配置してください。")
                 else:
-                    # 3. Excel生成
+                    # Excel生成
                     excel_data, err = create_excel(template_file, data_dict)
                     if err:
                         st.error(err)

@@ -11,17 +11,7 @@ import re
 from io import BytesIO
 
 # ==========================================
-# 0. ページ設定
-# ==========================================
-st.set_page_config(
-    page_title="Mirairo - 支援計画作成",
-    page_icon="🤖", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# ==========================================
-# 1. ユーティリティ関数 (Excel書き込み用)
+# 0. ユーティリティ関数（Excel書き込み用）
 # ==========================================
 def safe_write(ws, cell_address, value):
     """
@@ -47,160 +37,72 @@ def safe_write(ws, cell_address, value):
         st.warning(f"⚠️ セル {cell_address} への書き込み中に警告: {e}")
 
 # ==========================================
-# 2. デザイン定義 (Mirairo共通・白枠線・アニメーション)
+# 1. ページ設定 & CSS
 # ==========================================
+st.set_page_config(page_title="個別の支援計画・指導計画作成サポート", layout="wide")
+
 def load_css():
-    st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
-    """, unsafe_allow_html=True)
-    
     css = """
     <style>
-        /* --- 全体 --- */
-        html, body, [class*="css"] {
-            font-family: 'Noto Sans JP', sans-serif !important;
-        }
-
-        /* --- 背景 (黒) --- */
-        [data-testid="stAppViewContainer"] {
-            background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+        /* 背景設定 */
+        [data-testid="stAppViewContainer"] > .main {
+            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }
-
-        /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stRadio label {
-            color: #ffffff !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
-        }
-
-        /* --- サイドバー --- */
-        [data-testid="stSidebar"] {
-            background-color: rgba(0, 0, 0, 0.6) !important;
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
-
-        /* --- 機能カード (白枠・アニメーション) --- */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        [data-testid="stBorderContainer"] {
-            background-color: #151515 !important;
-            border: 2px solid #ffffff !important;
-            border-radius: 16px !important;
-            padding: 20px !important;
-            margin-bottom: 20px !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
-            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
+        /* サイドバー背景 */
+        [data-testid="stSidebar"] { background-color: rgba(240, 242, 246, 0.9); }
         
-        [data-testid="stBorderContainer"]:hover {
-            border-color: #4a90e2 !important;
-            background-color: #000000 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
-            transition: all 0.3s ease;
-        }
+        /* 見出し */
+        h1 { color: #2c3e50; text-align: center; padding-bottom: 20px; font-weight: bold; }
+        h2 { color: #34495e; border-left: 6px solid #8A2BE2; padding-left: 12px; margin-top: 40px; }
+        h3 { color: #34495e; border-bottom: 2px solid #4a90e2; padding-bottom: 8px; margin-top: 30px; }
 
-        /* --- ボタン --- */
-        .stButton > button {
-            width: 100%;
-            background-color: #000000 !important;
-            border: 2px solid #ffffff !important;
-            color: #4a90e2 !important;
-            font-weight: bold !important;
-            border-radius: 30px !important;
-            transition: all 0.3s ease !important;
-        }
-        .stButton > button:hover {
-            border-color: #4a90e2 !important;
-            color: #ffffff !important;
-            background-color: #4a90e2 !important;
-        }
-        
-        /* Primaryボタン */
-        .stButton > button[kind="primary"] {
-            background-color: #4a90e2 !important;
-            color: #ffffff !important;
-            border: 2px solid #4a90e2 !important;
-        }
-        .stButton > button[kind="primary"]:hover {
-            background-color: #ffffff !important;
-            color: #4a90e2 !important;
-        }
-
-        /* --- ラジオボタン・チェックボックス --- */
-        div[role="radiogroup"] label, [data-testid="stCheckbox"] label {
-            background-color: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.2s;
-        }
-        div[role="radiogroup"] label:hover, [data-testid="stCheckbox"] label:hover {
-            background-color: rgba(74, 144, 226, 0.2);
-            border-color: #4a90e2;
-        }
-
-        /* --- エキスパンダー --- */
-        .streamlit-expanderHeader {
-            background-color: rgba(255,255,255,0.1) !important;
-            color: #fff !important;
-            border-radius: 8px !important;
-            border: 1px solid #555;
-        }
-        .streamlit-expanderContent {
-            background-color: rgba(0,0,0,0.5) !important;
-            border: 1px solid #444;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-        }
-
-        /* --- テキストエリア・入力欄 --- */
-        .stTextArea textarea, .stTextInput input {
-            background-color: #222 !important;
-            color: #fff !important;
-            border-color: #555 !important;
-        }
-
-        /* --- 戻るボタン --- */
-        .back-link a {
-            display: inline-block;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #fff;
-            border-radius: 20px;
-            color: #fff !important;
-            text-decoration: none;
+        /* カードデザイン */
+        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 1.5em;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
             margin-bottom: 20px;
-            transition: all 0.3s;
-        }
-        .back-link a:hover {
-            background: #fff;
-            color: #000 !important;
         }
         
-        /* コードブロック */
-        code {
-            background-color: #222 !important;
-            color: #e0e0e0 !important;
+        /* ボタン */
+        .stButton>button {
+            border: 2px solid #4a90e2; border-radius: 25px; color: #4a90e2; background-color: #ffffff;
+            font-weight: bold; transition: all 0.3s ease;
         }
-        
-        hr { border-color: #666; }
+        .stButton>button:hover {
+            background-color: #8A2BE2; border-color: #8A2BE2; color: white; transform: scale(1.05);
+        }
+        .stButton>button[kind="primary"] {
+            background-color: #4a90e2; color: white; border: none;
+        }
+        .stButton>button[kind="primary"]:hover {
+            background-color: #357ABD; transform: scale(1.05);
+        }
+
+        /* モード選択ラジオボタン */
+        div[role="radiogroup"] {
+            background-color: #f0f2f6;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #8A2BE2;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 load_css()
 
-# --- ▼ 戻るボタン ▼ ---
-st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+# --- 戻るボタン ---
+col_back, _ = st.columns([0.15, 0.85])
+with col_back:
+    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
 
 st.title("🤖 個別の支援計画・指導計画作成サポート")
 
@@ -227,14 +129,14 @@ else:
 
 st.markdown("---")
 
-# --- AIチャットへのリンク ---
+# --- AIチャットへのリンク (修正箇所: コンパクト化・横並び) ---
 with st.container(border=True):
     st.markdown("""
     <div style="text-align: center; margin-bottom: 10px;">
-        <h3 style="margin: 0; padding: 0; color: #fff; border: none; font-size: 1.4em;">
+        <h3 style="margin: 0; padding: 0; color: #2c3e50; border: none; font-size: 1.4em;">
             🚀 プロンプトをコピーしたら、AIチャットへ！
         </h3>
-        <p style="margin-top: 5px; color: #ccc; font-size: 0.95em;">
+        <p style="margin-top: 5px; color: #555; font-size: 0.95em;">
             下のボタンを押すと各AIチャットが開きます。コピーしたプロンプトを貼り付けてください。
         </p>
     </div>
@@ -573,7 +475,7 @@ with st.expander("プロンプト④【個別の指導計画：目標と手立�
    ・教育的で柔らかい表現にすること。
    ・「～できる」調にする。
    ・教科が「自立活動」の場合は、【教育活動全般】と【時間における指導】の二つから目標をそれぞれ設定する（例：【教育活動全般】自分の意見や考えを相手に正確に伝える。【時間における指導】・友達と意思の疎通を図りながら言葉のやりとりをしたり、ゲームをしたりすることができる。・友だちと協力して活動に取り組むことができる。・器具を使ってバランスを取ったり姿勢を保持したりすることができる。）。
-   ・各教科の例（美術：目標「・様々な素材や色から、好きなものを選び作品作りができる。・様々な道具を使って作品作りができる。・鑑賞を通して、自分の好きな作品を選べるようにする。」）
+   ・各教科の例（美術：目標「・様々な素材や色から、好きなものを選び作品作りができる。・様々な道具を使って作品作りができる。・鑑賞を通して、自分の好きな作品を選ぶことができる。」）
    
 2. 手立て（{num_items}つ）：
    ・教科が「自立活動」の場合は、【教育活動全般】と【時間における指導】の二つから手立てをそれぞれ目標に連動する形で設定する（例：【教育活動全般】・手話や文字カードや音声アプリの活用する。【時間における指導】・言葉でのやりとりなどで適切なコミュニケーションができた場合に称賛する。・色々な友達と活動できるようにする。・感覚刺激により協調運動の向上をはかる。）。
@@ -768,18 +670,16 @@ if is_excel_mode:
     
     # --- 左カラム：プロンプト①と② (プランA) ---
     with c_iwatsuki_1:
-        with st.container(border=True):
-            st.markdown("#### 📄 プロンプト①の結果 (プランA)")
-            json_input_1 = st.text_area("JSON貼り付け (needs, accommodations)", height=200, placeholder='{\n  "needs": "...",\n  "accommodations": "..."\n}')
+        st.markdown("#### 📄 プロンプト①の結果 (プランA)")
+        json_input_1 = st.text_area("JSON貼り付け (needs, accommodations)", height=200, placeholder='{\n  "needs": "...",\n  "accommodations": "..."\n}')
 
-            st.markdown("#### 📄 プロンプト②の結果 (プランA)")
-            json_input_2 = st.text_area("JSON貼り付け (goals, support)", height=200, placeholder='{\n  "goals": "...",\n  "support": "..."\n}')
+        st.markdown("#### 📄 プロンプト②の結果 (プランA)")
+        json_input_2 = st.text_area("JSON貼り付け (goals, support)", height=200, placeholder='{\n  "goals": "...",\n  "support": "..."\n}')
 
     # --- 右カラム：プロンプト③ (プランB) ---
     with c_iwatsuki_2:
-        with st.container(border=True):
-            st.markdown("#### 📄 プロンプト③の結果 (プランB)")
-            json_input_3 = st.text_area("JSON貼り付け (policy, status_1...)", height=500, placeholder='{\n  "policy": "...",\n  "status_1": "...",\n  ...\n}')
+        st.markdown("#### 📄 プロンプト③の結果 (プランB)")
+        json_input_3 = st.text_area("JSON貼り付け (policy, status_1...)", height=500, placeholder='{\n  "policy": "...",\n  "status_1": "...",\n  ...\n}')
 
     # --- Excel生成ボタン ---
     if st.button("🚀 Excelに書き出してダウンロード", type="primary", use_container_width=True):
