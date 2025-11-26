@@ -8,11 +8,44 @@ import json
 import io
 import os
 import re
+import base64
+from pathlib import Path
 from io import BytesIO
 
 # ==========================================
-# 0. ユーティリティ関数（Excel書き込み用）
+# 0. ページ設定
 # ==========================================
+st.set_page_config(
+    page_title="個別の支援計画・指導計画作成サポート",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ==========================================
+# 1. ユーティリティ関数（画像・Excel）
+# ==========================================
+
+# --- 画像処理 (ロゴ読み込み) ---
+def get_img_as_base64(file):
+    try:
+        # 画像パスを絶対パスで解決（同じディレクトリにあると仮定）
+        script_path = Path(__file__)
+        app_root = script_path.parent
+        img_path = app_root / file
+        
+        with open(img_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
+
+# ロゴファイル設定 (あれば表示、なければプレースホルダー)
+logo_path = "mirairo2.png" 
+logo_b64 = get_img_as_base64(logo_path)
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🤖</div>'
+
+# --- Excel書き込み用 ---
 def safe_write(ws, cell_address, value):
     """
     結合セルエラー（MergedCell...read-only）を回避して書き込む関数。
@@ -37,74 +70,240 @@ def safe_write(ws, cell_address, value):
         st.warning(f"⚠️ セル {cell_address} への書き込み中に警告: {e}")
 
 # ==========================================
-# 1. ページ設定 & CSS
+# 2. デザイン定義 (Mirairoスタイル)
 # ==========================================
-st.set_page_config(page_title="個別の支援計画・指導計画作成サポート", layout="wide")
-
 def load_css():
-    css = """
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+    
+    css = f"""
     <style>
-        /* 背景設定 */
-        [data-testid="stAppViewContainer"] > .main {
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+        /* --- 全体フォント --- */
+        html, body, [class*="css"] {{
+            font-family: 'Noto Sans JP', sans-serif !important;
+            color: #333333 !important;
+        }}
+
+        /* --- 背景 (白92%透過・画像あり) --- */
+        [data-testid="stAppViewContainer"] {{
+            background-color: #ffffff;
+            background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
-        }
-        /* サイドバー背景 */
-        [data-testid="stSidebar"] { background-color: rgba(240, 242, 246, 0.9); }
-        
-        /* 見出し */
-        h1 { color: #2c3e50; text-align: center; padding-bottom: 20px; font-weight: bold; }
-        h2 { color: #34495e; border-left: 6px solid #8A2BE2; padding-left: 12px; margin-top: 40px; }
-        h3 { color: #34495e; border-bottom: 2px solid #4a90e2; padding-bottom: 8px; margin-top: 30px; }
+        }}
 
-        /* カードデザイン */
-        div[data-testid="stVerticalBlock"] div.st-emotion-cache-1r6slb0 {
-            background-color: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 1.5em;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        /* --- 文字色 (濃紺・くっきり) --- */
+        h1, h2, h3, h4, h5, h6 {{
+            color: #0f172a !important; /* 濃いネイビーブラック */
+            text-shadow: none !important;
+        }}
+        p, span, div, label {{
+            color: #333333 !important;
+            text-shadow: none !important;
+        }}
+
+        /* --- サイドバー (すりガラス効果) --- */
+        [data-testid="stSidebar"] {{
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid #e2e8f0 !important;
+        }}
+        [data-testid="stSidebar"] * {{
+            color: #333333 !important;
+        }}
+
+        /* 
+           ================================================================
+           ★ アニメーション定義 (下からフワッと)
+           ================================================================
+        */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(40px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        /* 
+           ================================================================
+           ★ コンテナデザイン (白背景・影付き・アニメーション)
+           ================================================================
+           st.container(border=True) のスタイルをオーバーライド
+        */
+        [data-testid="stBorderContainer"] {{
+            background-color: #ffffff !important;
+            border: 2px solid #e2e8f0 !important; /* 薄いグレーの枠線 */
+            border-radius: 15px !important;
+            padding: 25px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            
+            /* アニメーション適用 */
+            opacity: 0; 
+            animation-name: fadeInUp;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }}
+        
+        /* コンテナの出現タイミングをずらす */
+        div.element-container:nth-of-type(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
+        div.element-container:nth-of-type(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.2s; }}
+        div.element-container:nth-of-type(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
+        div.element-container:nth-of-type(4) [data-testid="stBorderContainer"] {{ animation-delay: 0.4s; }}
+        div.element-container:nth-of-type(5) [data-testid="stBorderContainer"] {{ animation-delay: 0.5s; }}
+
+        [data-testid="stBorderContainer"]:hover {{
+            border-color: #4a90e2 !important;
+            background-color: #f8fafc !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15) !important;
+            transition: all 0.3s ease;
+        }}
+
+        /* --- ボタン --- */
+        .stButton > button {{
+            width: 100%;
+            background-color: #ffffff !important;
+            border: 2px solid #e2e8f0 !important;
+            color: #4a90e2 !important;
+            font-weight: bold !important;
+            border-radius: 30px !important; /* 丸みを強く */
+            padding: 10px !important;
+            transition: all 0.3s ease !important;
+        }}
+        .stButton > button:hover {{
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+            border-color: #4a90e2 !important;
+            transform: scale(1.02);
+        }}
+        
+        /* Primaryボタン (強調) */
+        .stButton > button[kind="primary"] {{
+            background-color: #4a90e2 !important;
+            color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
+        }}
+        .stButton > button[kind="primary"]:hover {{
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+        }}
+
+        /* --- 入力フォーム --- */
+        .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {{
+            background-color: #ffffff !important;
+            color: #333333 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+        }}
+        .stTextInput input:focus, .stTextArea textarea:focus {{
+            border-color: #4a90e2 !important;
+            box-shadow: 0 0 0 2px rgba(74,144,226,0.2) !important;
+        }}
+
+        /* --- ラジオボタン（モード選択） --- */
+        div[role="radiogroup"] {{
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #4a90e2;
             margin-bottom: 20px;
-        }
-        
-        /* ボタン */
-        .stButton>button {
-            border: 2px solid #4a90e2; border-radius: 25px; color: #4a90e2; background-color: #ffffff;
-            font-weight: bold; transition: all 0.3s ease;
-        }
-        .stButton>button:hover {
-            background-color: #8A2BE2; border-color: #8A2BE2; color: white; transform: scale(1.05);
-        }
-        .stButton>button[kind="primary"] {
-            background-color: #4a90e2; color: white; border: none;
-        }
-        .stButton>button[kind="primary"]:hover {
-            background-color: #357ABD; transform: scale(1.05);
-        }
+        }}
 
-        /* モード選択ラジオボタン */
-        div[role="radiogroup"] {
-            background-color: #f0f2f6;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #8A2BE2;
-            text-align: center;
+        /* --- エキスパンダー (アコーディオン) --- */
+        .streamlit-expanderHeader {{
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            font-weight: bold !important;
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0;
+        }}
+        .streamlit-expanderContent {{
+            border: none;
+            color: #333 !important;
+        }}
+
+        /* --- 戻るボタン (指定デザイン) --- */
+        .back-link {{
+            margin-bottom: 20px;
+        }}
+        .back-link a {{
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            color: #4a90e2 !important;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }}
+        .back-link a:hover {{
+            background: #4a90e2;
+            color: #ffffff !important;
+            border-color: #4a90e2;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+        }}
+
+        /* --- ヘッダーレイアウト --- */
+        .header-container {{
             display: flex;
-            justify-content: center;
-        }
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }}
+        .logo-img {{
+            width: 70px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }}
+        .logo-placeholder {{
+            font-size: 3rem;
+            margin-right: 15px;
+        }}
+        .page-title {{
+            font-size: 2rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
+        }}
+        
+        /* コードブロック */
+        code {{
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 load_css()
 
-# --- 戻るボタン ---
-col_back, _ = st.columns([0.15, 0.85])
-with col_back:
-    st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
+# ==========================================
+# 3. メインコンテンツ
+# ==========================================
 
-st.title("🤖 個別の支援計画・指導計画作成サポート")
+# --- 戻るボタン (★指定のHTML) ---
+st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+
+# --- ヘッダーエリア ---
+st.markdown(f"""
+    <div class="header-container">
+        {logo_html}
+        <div>
+            <h1 class="page-title">個別の支援計画・指導計画作成サポート</h1>
+            <p style="color:#475569; margin:0; font-weight:bold;">AIを活用して計画作成を効率化します</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 # ==========================================
 # ★ モード選択エリア
@@ -129,11 +328,11 @@ else:
 
 st.markdown("---")
 
-# --- AIチャットへのリンク (修正箇所: コンパクト化・横並び) ---
+# --- AIチャットへのリンク ---
 with st.container(border=True):
     st.markdown("""
     <div style="text-align: center; margin-bottom: 10px;">
-        <h3 style="margin: 0; padding: 0; color: #2c3e50; border: none; font-size: 1.4em;">
+        <h3 style="margin: 0; padding: 0; color: #0f172a; border: none; font-size: 1.4em;">
             🚀 プロンプトをコピーしたら、AIチャットへ！
         </h3>
         <p style="margin-top: 5px; color: #555; font-size: 0.95em;">
@@ -150,7 +349,6 @@ with st.container(border=True):
         st.link_button("Gemini を開く ↗", "https://gemini.google.com/", type="primary", use_container_width=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("---")
 
 # ==========================================
 # プロンプト①
