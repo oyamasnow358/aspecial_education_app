@@ -51,11 +51,11 @@ logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🃏</div>'
 
 # ==========================================
-# 4. CSSデザイン (機能復元版 + 3列グリッド)
+# 4. CSSデザイン (ぬるっと動くカード + ページネーション)
 # ==========================================
 def load_css():
     st.markdown(r"""
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- 全体フォント --- */
         html, body, [class*="css"] {
@@ -65,7 +65,7 @@ def load_css():
 
         /* --- 背景 --- */
         [data-testid="stAppViewContainer"] {
-            background-color: #ffffff;
+            background-color: #f8f9fa; /* 背景を少しグレーにしてカードを際立たせる */
             background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
@@ -84,69 +84,76 @@ def load_css():
         .page-title { font-size: 3rem; font-weight: 900; color: #0f172a !important; margin: 0; line-height: 1.2; }
         .page-subtitle { font-size: 1.2rem; color: #475569 !important; font-weight: bold; margin-top: 5px; }
 
-        /* --- ★重要: st.container(border=True) をカード化 --- */
-        /* これにより、Pythonのst.containerがCSSでカードデザインになります */
+        /* --- ★重要: カードデザイン (st.container) --- */
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background-color: #ffffff;
-            border-radius: 15px;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-            /* 内部のパディングを調整 */
-            padding: 0px !important; 
+            border-radius: 20px; /* 角丸を強く */
+            border: 2px solid #e5e7eb; /* デフォルトの枠線 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            /* ぬるっと動くアニメーション設定 */
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            padding: 0px !important;
             overflow: hidden;
             height: 100%;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         
-        /* ホバー時の動き */
+        /* ホバー時の動き: 浮き上がり + 枠線強調 + 影 */
         div[data-testid="stVerticalBlockBorderWrapper"] > div:hover {
             border-color: #4a90e2;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15);
-            background-color: #f8fafc;
+            transform: translateY(-8px) scale(1.01); /* 少し拡大して浮く */
+            box-shadow: 0 20px 40px rgba(74, 144, 226, 0.15);
+            background-color: #ffffff;
+            z-index: 10;
         }
 
-        /* カード内の画像エリア (コンテナのpaddingを無視して広げる) */
+        /* --- カード内要素 --- */
         .card-img-wrapper {
             width: calc(100% + 32px);
             margin-left: -16px;
             margin-top: -16px;
-            margin-bottom: 15px;
             height: 180px;
             overflow: hidden;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 2px solid #f3f4f6;
             position: relative;
         }
         .card-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        /* ホバー時に画像を少しズーム */
+        div[data-testid="stVerticalBlockBorderWrapper"] > div:hover .card-img {
+            transform: scale(1.05);
         }
 
-        /* カード内のテキストコンテンツ */
         .card-content {
-            padding: 0 5px 10px 5px;
+            padding: 5px 10px 15px 10px;
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         .subject-badge {
-            font-size: 0.75em;
-            color: #4a90e2;
+            font-size: 0.7em;
+            color: #ffffff;
             font-weight: 800;
-            background-color: #f0f9ff;
+            background: linear-gradient(135deg, #4a90e2, #00d2ff);
             padding: 4px 12px;
             border-radius: 15px;
-            border: 1px solid #bae6fd;
             display: inline-block;
             margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+            align-self: flex-start;
         }
 
         .card-title {
-            font-size: 1.2em;
+            font-size: 1.25em;
             font-weight: 900;
-            color: #0f172a;
+            color: #1e293b;
             margin-bottom: 8px;
             line-height: 1.4;
         }
@@ -155,7 +162,7 @@ def load_css():
             font-size: 0.9em;
             color: #64748b;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -167,9 +174,10 @@ def load_css():
             font-size: 0.85em;
             color: #334155;
             background-color: #f1f5f9;
+            border-left: 4px solid #cbd5e1;
             padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
@@ -180,16 +188,16 @@ def load_css():
         .card-badges {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 6px;
             margin-bottom: 10px;
         }
         
         .meta-badge {
             background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            color: #475569;
-            padding: 3px 8px;
-            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            padding: 4px 10px;
+            border-radius: 8px;
             font-size: 0.75em;
             font-weight: bold;
         }
@@ -198,7 +206,7 @@ def load_css():
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             min-height: 25px;
         }
         
@@ -206,7 +214,7 @@ def load_css():
             color: #0284c7;
             background-color: #e0f2fe;
             padding: 3px 8px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 0.75em;
             font-weight: bold;
         }
@@ -214,19 +222,124 @@ def load_css():
         /* --- ボタンカスタマイズ --- */
         .stButton > button {
             width: 100%;
-            border-radius: 25px;
+            border-radius: 12px;
             font-weight: bold;
-            border: 2px solid #4a90e2;
-            color: #4a90e2;
-            background: white;
-            padding: 8px 0;
-            transition: all 0.2s;
+            border: none;
+            background: linear-gradient(to right, #f1f5f9, #e2e8f0);
+            color: #475569;
+            padding: 10px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .stButton > button:hover {
+            background: linear-gradient(to right, #4a90e2, #3b82f6);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        /* Primary Button (詳細ページなど) */
+        .stButton > button[kind="primary"] {
             background: #4a90e2;
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.2);
+        }
+
+        /* --- ページネーション --- */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* ページネーションボタンの個別調整 */
+        div[data-testid="stHorizontalBlock"] button {
+            width: 45px !important;
+            height: 45px !important;
+            padding: 0 !important;
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: white !important;
+            color: #64748b !important;
+        }
+        div[data-testid="stHorizontalBlock"] button:hover {
+            border-color: #4a90e2 !important;
+            color: #4a90e2 !important;
+            background: #f8fafc !important;
+        }
+        /* アクティブなページ */
+        div[data-testid="stHorizontalBlock"] button[kind="primary"] {
+            background: #4a90e2 !important;
+            color: white !important;
+            border-color: #4a90e2 !important;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3) !important;
+        }
+
+        /* --- 詳細ページのデザイン --- */
+        .detail-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            margin-bottom: 30px;
+            border: 1px solid #f1f5f9;
+        }
+        .detail-header-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #1e293b;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        .detail-label {
+            font-size: 0.85em;
+            color: #94a3b8;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            font-size: 1.1em;
+            color: #334155;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        .flow-step {
+            background: #ffffff;
+            border-left: 4px solid #4a90e2;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .dl-btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .custom-dl-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .custom-dl-btn:hover {
+            transform: translateY(-3px);
+            opacity: 0.95;
         }
 
         /* --- 戻るボタン --- */
@@ -261,22 +374,6 @@ def load_css():
         .google-form-link-button:hover {
             background-color: #4a90e2;
             color: #ffffff;
-        }
-        
-        /* 詳細ページ: フローセクション */
-        .flow-section {
-            background-color: #f8fafc;
-            border-left: 5px solid #4a90e2;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 0 10px 10px 0;
-        }
-        
-        /* 詳細ページ: ヘッダー */
-        .detail-header {
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -319,7 +416,7 @@ def load_lesson_data():
                 'material_photos': lambda x: [url.strip() for url in x.split(';') if url.strip()] if pd.notna(x) else [],
             }
         )
-        # 欠損値処理と文字列変換 (カラムがない場合もエラーにしない)
+        # 欠損値処理と文字列変換
         str_cols = ['unit_name', 'unit_lesson_title', 'video_link', 'image', 'target_grade', 'ict_use', 
                     'subject', 'group_type', 'catch_copy', 'goal', 'disability_type', 'duration', 
                     'materials', 'developmental_stage', 'detail_word_url', 'detail_pdf_url', 
@@ -350,25 +447,25 @@ if 'current_lesson_id' not in st.session_state: st.session_state.current_lesson_
 if 'search_query' not in st.session_state: st.session_state.search_query = ""
 if 'selected_hashtags' not in st.session_state: st.session_state.selected_hashtags = []
 if 'selected_subject' not in st.session_state: st.session_state.selected_subject = "全て"
-if 'show_all_flow' not in st.session_state: st.session_state.show_all_flow = False
+if 'show_all_flow' not in st.session_state: st.session_state.show_all_flow = True # デフォルトでフロー表示ON
 if 'current_page' not in st.session_state: st.session_state.current_page = 1
 if 'authenticated' not in st.session_state: st.session_state.authenticated = False
 
 # ページ遷移関数
 def set_detail_page(lesson_id):
     st.session_state.current_lesson_id = lesson_id
-    st.session_state.show_all_flow = False
+    st.session_state.show_all_flow = True
 
 def back_to_list():
     st.session_state.current_lesson_id = None
-    st.session_state.show_all_flow = False
+    st.session_state.show_all_flow = True
 
 def toggle_all_flow_display():
     st.session_state.show_all_flow = not st.session_state.show_all_flow
 
 def set_page(page_num):
     st.session_state.current_page = page_num
-    st.rerun()
+    # st.rerun() # rerurnは不要な場合が多いが、動作が怪しい場合は有効化
 
 # ==========================================
 # 6. サイドバー (管理者機能 - 完全版)
@@ -396,26 +493,14 @@ with st.sidebar:
             st.rerun()
         st.markdown("---")
         
-        # ファイルテンプレートDL
-        st.subheader("ファイルテンプレート")
-        st.info("ExcelまたはCSVテンプレートをダウンロードし、入力後にアップロードしてデータを追加できます。")
+        st.subheader("ファイル操作")
         
-        # Excelテンプレート(マクロ付き) - ファイルがあれば
-        try:
-            if os.path.exists("授業カード.xlsm"):
-                with open("授業カード.xlsm", "rb") as f:
-                    st.download_button("⬇️ 授業カード 入力用（見本付き）", data=f, file_name="授業カード.xlsm", mime="application/vnd.ms-excel.sheet.macroEnabled.12")
-        except:
-            pass
-
-        # CSVテンプレートDL
         template_df = pd.DataFrame(columns=LESSON_CARD_COLUMNS)
         csv_buffer = io.BytesIO()
         template_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
-        st.download_button("⬇️ CSVテンプレートをダウンロード", data=csv_buffer.getvalue(), file_name="template.csv", mime="text/csv")
+        st.download_button("⬇️ CSVテンプレートDL", data=csv_buffer.getvalue(), file_name="template.csv", mime="text/csv")
 
-        # ファイルアップロード
-        uploaded_file = st.file_uploader("⬆️ ファイルをアップロード", type=["xlsx", "csv", "xlsm"])
+        uploaded_file = st.file_uploader("⬆️ ファイルアップロード", type=["xlsx", "csv", "xlsm"])
         if uploaded_file:
             try:
                 if uploaded_file.name.endswith('.csv'):
@@ -426,7 +511,6 @@ with st.sidebar:
                     except:
                         new_df = pd.read_excel(uploaded_file)
                 
-                # カラム補完処理 (省略せず実装)
                 for col in LESSON_CARD_COLUMNS:
                     if col not in new_df.columns:
                         if col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'hashtags', 'material_photos']:
@@ -434,7 +518,6 @@ with st.sidebar:
                         else:
                             new_df[col] = ''
                 
-                # 現在のデータとマージ
                 existing_ids = {d['id'] for d in st.session_state.lesson_data}
                 max_id = max(existing_ids) if existing_ids else 0
                 
@@ -449,17 +532,12 @@ with st.sidebar:
                     
                     lesson_dict = {col: row[col] for col in LESSON_CARD_COLUMNS if col in row}
                     lesson_dict['id'] = row_id
-                    
-                    # リスト変換などが必要な場合はここで行う（簡易実装のため省略するが、本来は必要）
-                    
                     new_entries.append(lesson_dict)
                     existing_ids.add(row_id)
                 
                 st.session_state.lesson_data.extend(new_entries)
                 
-                # 保存処理
                 df_to_save = pd.DataFrame(st.session_state.lesson_data)
-                # リストを文字列に戻す
                 for col in ['introduction_flow', 'activity_flow', 'reflection_flow', 'points', 'material_photos']:
                     df_to_save[col] = df_to_save[col].apply(lambda x: ';'.join(map(str, x)) if isinstance(x, list) else str(x))
                 if 'hashtags' in df_to_save.columns:
@@ -494,14 +572,14 @@ if st.session_state.current_lesson_id is None:
     # 検索フィルター
     c1, c2 = st.columns(2)
     with c1:
-        st.session_state.search_query = st.text_input("キーワード検索", st.session_state.search_query, placeholder="例: 買い物、小学部")
+        st.session_state.search_query = st.text_input("🔍 キーワード検索", st.session_state.search_query, placeholder="例: 買い物、小学部")
     with c2:
         all_tags = sorted(list(set(t for l in st.session_state.lesson_data for t in l.get('hashtags', []))))
-        st.session_state.selected_hashtags = st.multiselect("タグ絞り込み", all_tags, default=st.session_state.selected_hashtags)
+        st.session_state.selected_hashtags = st.multiselect("🏷️ タグ絞り込み", all_tags, default=st.session_state.selected_hashtags)
     
     all_subjects = ["全て"] + sorted(list(set(l.get('subject', '') for l in st.session_state.lesson_data if l.get('subject'))))
     def update_sub(): st.session_state.selected_subject = st.session_state.sub_select
-    st.selectbox("教科", all_subjects, index=0 if st.session_state.selected_subject not in all_subjects else all_subjects.index(st.session_state.selected_subject), key="sub_select", on_change=update_sub)
+    st.selectbox("📖 教科", all_subjects, index=0 if st.session_state.selected_subject not in all_subjects else all_subjects.index(st.session_state.selected_subject), key="sub_select", on_change=update_sub)
 
     # フィルタリング
     filtered = []
@@ -513,8 +591,8 @@ if st.session_state.current_lesson_id is None:
                 if st.session_state.selected_subject == "全て" or l.get('subject') == st.session_state.selected_subject:
                     filtered.append(l)
 
-    # ページネーション
-    PER_PAGE = 9 
+    # ページネーション設定 (12枚/ページ)
+    PER_PAGE = 12 
     total_pages = max(1, (len(filtered) + PER_PAGE - 1) // PER_PAGE)
     st.session_state.current_page = min(max(1, st.session_state.current_page), total_pages)
     
@@ -526,17 +604,17 @@ if st.session_state.current_lesson_id is None:
     if not display_items:
         st.info("該当する授業カードはありません。")
     else:
-        # ★★★ 3列グリッド処理 (ここが重要) ★★★
+        # ★★★ 3列グリッド (12枚表示) ★★★
         rows = [display_items[i:i + 3] for i in range(0, len(display_items), 3)]
 
         for row in rows:
-            cols = st.columns(3) # 常に3列作成
+            cols = st.columns(3) # 常に3列
             for i, lesson in enumerate(row):
                 with cols[i]:
-                    # border=Trueでカード枠を作成
+                    # border=Trueで枠線付きコンテナを作成 (CSSでリッチに装飾)
                     with st.container(border=True):
                         
-                        # 画像表示
+                        # 画像
                         img_url = lesson.get('image') if lesson.get('image') else 'https://via.placeholder.com/400x200?text=No+Image'
                         st.markdown(f"""
                             <div class="card-img-wrapper">
@@ -568,166 +646,182 @@ if st.session_state.current_lesson_id is None:
                         """
                         st.markdown(content_html, unsafe_allow_html=True)
                         
-                        # 詳細ボタン
-                        st.button("👇 詳細を見る", key=f"btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],))
+                        # 詳細ボタン (カードの下部に配置)
+                        st.button("👉 詳細を見る", key=f"btn_{lesson['id']}", on_click=set_detail_page, args=(lesson['id'],), use_container_width=True)
 
-    # ページネーションUI
-    st.markdown("---")
-    cols = st.columns([1, 8, 1])
-    if st.session_state.current_page > 1:
-        cols[0].button("◀", on_click=set_page, args=(st.session_state.current_page - 1,), key="prev_page")
-    cols[1].markdown(f"<div style='text-align:center; padding-top:10px;'>Page {st.session_state.current_page} / {total_pages}</div>", unsafe_allow_html=True)
-    if st.session_state.current_page < total_pages:
-        cols[2].button("▶", on_click=set_page, args=(st.session_state.current_page + 1,), key="next_page")
+    # ★★★ 拡張ページネーション (数字で指定可能) ★★★
+    st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True) # スペーサー
+    
+    if total_pages > 1:
+        # 中央寄せのためにカラムで調整
+        _, center_col, _ = st.columns([1, 6, 1])
+        
+        with center_col:
+            # ページネーションのロジック: 前、1, 2, ... 現在 ... 最後、次
+            pagination_cols = st.columns(min(total_pages + 2, 9)) # 最大9個のボタンを表示
+            col_idx = 0
+            
+            # 前へ
+            with pagination_cols[col_idx]:
+                if st.session_state.current_page > 1:
+                    st.button("◀", on_click=set_page, args=(st.session_state.current_page - 1,), key="pg_prev")
+            col_idx += 1
+            
+            # 表示するページ番号の範囲を決定 (現在のページを中心に5つ程度)
+            page_range_start = max(1, st.session_state.current_page - 2)
+            page_range_end = min(total_pages, page_range_start + 4)
+            if page_range_end - page_range_start < 4:
+                page_range_start = max(1, page_range_end - 4)
+                
+            # ページ番号ボタン
+            for p in range(page_range_start, page_range_end + 1):
+                with pagination_cols[col_idx]:
+                    is_current = (p == st.session_state.current_page)
+                    st.button(str(p), on_click=set_page, args=(p,), key=f"pg_{p}", type="primary" if is_current else "secondary")
+                col_idx += 1
+            
+            # 次へ
+            if col_idx < len(pagination_cols):
+                with pagination_cols[col_idx]:
+                    if st.session_state.current_page < total_pages:
+                        st.button("▶", on_click=set_page, args=(st.session_state.current_page + 1,), key="pg_next")
 
 else:
-    # === 詳細ページ (全機能復活) ===
-    selected_lesson = next((l for l in st.session_state.lesson_data if l['id'] == st.session_state.current_lesson_id), None)
+    # === 詳細ページ (機能完全版 + デザイン強化) ===
+    lesson = next((l for l in st.session_state.lesson_data if l['id'] == st.session_state.current_lesson_id), None)
     
-    if selected_lesson:
+    if lesson:
+        # トップに戻るボタン
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_top")
         
-        # ヘッダー
-        st.markdown(f"<h1 class='detail-header'>{selected_lesson.get('unit_name')}</h1>", unsafe_allow_html=True)
-        if selected_lesson.get('catch_copy'):
-            st.markdown(f"<h3 style='color:#64748b; margin-bottom:20px;'>{selected_lesson['catch_copy']}</h3>", unsafe_allow_html=True)
+        # 白背景のボックスで詳細を囲む
+        with st.container():
+            st.markdown("<div class='detail-box'>", unsafe_allow_html=True)
             
-        st.image(selected_lesson.get('image') or 'https://via.placeholder.com/800x400', use_container_width=True)
-        
-        # 授業の流れ (アコーディオン)
-        st.subheader("授業の流れ")
-        st.button('{} 🔃'.format('授業の流れを非表示' if st.session_state.show_all_flow else '授業の流れを表示'), on_click=toggle_all_flow_display)
-        
-        if st.session_state.show_all_flow:
-            if selected_lesson.get('introduction_flow'):
-                intro_html = "<div class='flow-section'><h4>🚀 導入</h4><ul>" + "".join(f"<li>{s}</li>" for s in selected_lesson['introduction_flow']) + "</ul></div>"
-                st.markdown(intro_html, unsafe_allow_html=True)
-            if selected_lesson.get('activity_flow'):
-                act_html = "<div class='flow-section'><h4>💡 展開</h4><ul>" + "".join(f"<li>{s}</li>" for s in selected_lesson['activity_flow']) + "</ul></div>"
-                st.markdown(act_html, unsafe_allow_html=True)
-            if selected_lesson.get('reflection_flow'):
-                ref_html = "<div class='flow-section'><h4>💭 まとめ</h4><ul>" + "".join(f"<li>{s}</li>" for s in selected_lesson['reflection_flow']) + "</ul></div>"
-                st.markdown(ref_html, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown("<h3>🎯 ねらい</h3>", unsafe_allow_html=True)
-        st.info(selected_lesson.get('goal'))
-        
-        st.markdown("<h3>ℹ️ 基本情報</h3>", unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        c1.markdown(f"**対象:** {selected_lesson.get('target_grade')}")
-        c1.markdown(f"**障害種:** {selected_lesson.get('disability_type')}")
-        c1.markdown(f"**発達段階:** {selected_lesson.get('developmental_stage', '不明')}")
-        c2.markdown(f"**時間:** {selected_lesson.get('duration')}")
-        c2.markdown(f"**ICT:** {selected_lesson.get('ict_use')}")
-        c3.markdown(f"**教科:** {selected_lesson.get('subject')}")
-        c3.markdown(f"**学習形態:** {selected_lesson.get('group_type')}")
-        
-        # ★★★ 削除してしまった「単元内の授業一覧」機能の復活 ★★★
-        if selected_lesson.get('unit_name') and selected_lesson.get('unit_name') != '単元なし':
-            unit_name_to_search = selected_lesson['unit_name']
-            target_grade_to_match = selected_lesson['target_grade']
+            # タイトルエリア
+            st.markdown(f"<div class='detail-header-title'>{lesson.get('unit_name')}</div>", unsafe_allow_html=True)
+            if lesson.get('catch_copy'):
+                st.markdown(f"<div style='color:#64748b; font-size:1.2rem; font-weight:bold; margin-bottom:20px;'>{lesson['catch_copy']}</div>", unsafe_allow_html=True)
+            
+            # メイン画像
+            if lesson.get('image'):
+                st.image(lesson['image'], use_container_width=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
 
-            # 同じ単元・学年の授業を抽出
-            all_lessons_in_unit = [
-                lesson for lesson in st.session_state.lesson_data
-                if lesson.get('unit_name') == unit_name_to_search and
-                   lesson.get('target_grade') == target_grade_to_match
-            ]
-            # unit_orderでソート
-            sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
+            # 3カラムレイアウトで基本情報
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                st.markdown("<div class='detail-label'>対象学年</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-value'>🎓 {lesson.get('target_grade')}</div>", unsafe_allow_html=True)
+                st.markdown("<div class='detail-label'>障害種別</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-value'>🧩 {lesson.get('disability_type')}</div>", unsafe_allow_html=True)
+            with c2:
+                st.markdown("<div class='detail-label'>授業時間</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-value'>⏱ {lesson.get('duration')}</div>", unsafe_allow_html=True)
+                st.markdown("<div class='detail-label'>発達段階</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-value'>🌱 {lesson.get('developmental_stage', '不明')}</div>", unsafe_allow_html=True)
+            with c3:
+                st.markdown("<div class='detail-label'>教科</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-value'>📖 {lesson.get('subject')}</div>", unsafe_allow_html=True)
+                st.markdown("<div class='detail-label'>ICT活用</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-value'>💻 {lesson.get('ict_use')}</div>", unsafe_allow_html=True)
 
-            if sorted_lessons_in_unit:
-                st.markdown(f"<h3 style='margin-top:20px;'>📚 「{unit_name_to_search}」の授業の流れ</h3>", unsafe_allow_html=True)
+            st.markdown("---")
+            
+            # ねらいと準備物
+            col_goal, col_mat = st.columns([1, 1])
+            with col_goal:
+                st.markdown("### 🎯 ねらい")
+                st.info(lesson.get('goal'))
+            with col_mat:
+                st.markdown("### ✂️ 準備物")
+                st.warning(lesson.get('materials') if lesson.get('materials') else "特になし")
+
+            st.markdown("---")
+
+            # 授業の流れ
+            st.subheader("⏳ 授業の流れ")
+            if st.button("表示 / 非表示 切り替え", key="toggle_flow"): toggle_all_flow_display()
+            
+            if st.session_state.show_all_flow:
+                if lesson.get('introduction_flow'):
+                    flow_html = "<div class='flow-step'><h4>🚀 導入</h4><ul style='margin:0; padding-left:20px;'>" + "".join(f"<li>{s}</li>" for s in lesson['introduction_flow']) + "</ul></div>"
+                    st.markdown(flow_html, unsafe_allow_html=True)
+                if lesson.get('activity_flow'):
+                    flow_html = "<div class='flow-step'><h4>💡 展開</h4><ul style='margin:0; padding-left:20px;'>" + "".join(f"<li>{s}</li>" for s in lesson['activity_flow']) + "</ul></div>"
+                    st.markdown(flow_html, unsafe_allow_html=True)
+                if lesson.get('reflection_flow'):
+                    flow_html = "<div class='flow-step'><h4>💭 まとめ</h4><ul style='margin:0; padding-left:20px;'>" + "".join(f"<li>{s}</li>" for s in lesson['reflection_flow']) + "</ul></div>"
+                    st.markdown(flow_html, unsafe_allow_html=True)
+
+            # ポイント
+            if lesson.get('points'):
+                st.markdown("### 💡 指導のポイント")
+                for p in lesson['points']:
+                    st.markdown(f"- {p}")
+
+            # 単元連携機能 (復活)
+            if lesson.get('unit_name') and lesson.get('unit_name') != '単元なし':
+                unit_name_to_search = lesson['unit_name']
+                target_grade_to_match = lesson['target_grade']
+                all_lessons_in_unit = [l for l in st.session_state.lesson_data if l.get('unit_name') == unit_name_to_search and l.get('target_grade') == target_grade_to_match]
+                sorted_lessons_in_unit = sorted(all_lessons_in_unit, key=lambda x: x.get('unit_order', 9999))
+
+                if len(sorted_lessons_in_unit) > 1:
+                    st.markdown("---")
+                    st.markdown(f"### 📚 この単元 ({unit_name_to_search}) の他の授業")
+                    cols = st.columns(len(sorted_lessons_in_unit))
+                    for idx, l_unit in enumerate(sorted_lessons_in_unit):
+                        title = l_unit.get('unit_lesson_title') or l_unit['unit_name']
+                        if l_unit['id'] == lesson['id']:
+                            st.markdown(f"**{idx+1}. {title} (表示中)**")
+                        else:
+                            if st.button(f"{idx+1}. {title} へ", key=f"go_unit_{l_unit['id']}"):
+                                set_detail_page(l_unit['id'])
+                                st.rerun()
+
+            # 教材写真 & 動画
+            if lesson.get('material_photos') or lesson.get('video_link'):
+                st.markdown("---")
+                if lesson.get('material_photos'):
+                    st.markdown("### 📸 教材写真")
+                    p_cols = st.columns(3)
+                    for i, p_url in enumerate(lesson['material_photos']):
+                        with p_cols[i % 3]:
+                            if p_url.strip(): st.image(p_url, use_container_width=True)
                 
-                for lesson_in_unit in sorted_lessons_in_unit:
-                    display_title = lesson_in_unit.get('unit_lesson_title') if lesson_in_unit.get('unit_lesson_title') else lesson_in_unit['unit_name']
-                    
-                    # 現在表示中の授業は強調表示
-                    if lesson_in_unit['id'] == selected_lesson['id']:
-                        st.markdown(f"- **{display_title} 【現在の授業】**")
-                    else:
-                        # 他の授業へ飛ぶボタン
-                        if st.button(f"📄 {display_title} へ移動", key=f"link_to_{lesson_in_unit['id']}"):
-                            set_detail_page(lesson_in_unit['id'])
-                            st.rerun()
+                if lesson.get('video_link'):
+                    st.markdown("### ▶️ 参考動画")
+                    st.video(lesson['video_link'])
 
-        st.markdown("---")
-        
-        if selected_lesson.get('materials'):
-            st.markdown("<h3>✂️ 準備物</h3>", unsafe_allow_html=True)
-            st.write(selected_lesson.get('materials'))
+            # ダウンロードボタン (リッチデザイン)
+            st.markdown("---")
+            st.subheader("📄 資料ダウンロード")
             
-        if selected_lesson.get('points'):
-            st.markdown("<h3>💡 指導のポイント</h3>", unsafe_allow_html=True)
-            for p in selected_lesson['points']: st.markdown(f"- {p}")
-
-        # 教材写真
-        if selected_lesson.get('material_photos'):
-            st.markdown("<h3>📸 教材写真</h3>", unsafe_allow_html=True)
-            p_cols = st.columns(3)
-            for i, p_url in enumerate(selected_lesson['material_photos']):
-                with p_cols[i % 3]:
-                    if p_url.strip(): st.image(p_url, use_container_width=True)
-
-        # 動画
-        if selected_lesson.get('video_link'):
-            st.markdown("<h3>▶️ 参考動画</h3>", unsafe_allow_html=True)
-            st.video(selected_lesson['video_link'])
-
-        # ★★★ 削除してしまった「ダウンロードボタン」の完全復活 ★★★
-        st.markdown("<h3>📄 詳細資料ダウンロード</h3>", unsafe_allow_html=True)
-        
-        has_files = False
-        
-        # Word
-        if selected_lesson.get('detail_word_url'):
-            st.markdown(f'''
-                <a href="{selected_lesson["detail_word_url"]}" target="_blank" style="text-decoration:none;">
-                    <button style="background-color:#2b579a; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:10px; margin-bottom:10px;">
-                        📖 指導案 (Word)
-                    </button>
-                </a>
-            ''', unsafe_allow_html=True)
-            has_files = True
-
-        # PDF
-        if selected_lesson.get('detail_pdf_url'):
-            st.markdown(f'''
-                <a href="{selected_lesson["detail_pdf_url"]}" target="_blank" style="text-decoration:none;">
-                    <button style="background-color:#b30b00; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:10px; margin-bottom:10px;">
-                        📚 指導案 (PDF)
-                    </button>
-                </a>
-            ''', unsafe_allow_html=True)
-            has_files = True
-
-        # PPT
-        if selected_lesson.get('detail_ppt_url'):
-            st.markdown(f'''
-                <a href="{selected_lesson["detail_ppt_url"]}" target="_blank" style="text-decoration:none;">
-                    <button style="background-color:#d24726; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:10px; margin-bottom:10px;">
-                        📊 授業資料 (PowerPoint)
-                    </button>
-                </a>
-            ''', unsafe_allow_html=True)
-            has_files = True
-
-        # Excel
-        if selected_lesson.get('detail_excel_url'):
-            st.markdown(f'''
-                <a href="{selected_lesson["detail_excel_url"]}" target="_blank" style="text-decoration:none;">
-                    <button style="background-color:#217346; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:10px; margin-bottom:10px;">
-                        📈 評価シート (Excel)
-                    </button>
-                </a>
-            ''', unsafe_allow_html=True)
-            has_files = True
+            dl_html = "<div class='dl-btn-container'>"
+            has_dl = False
+            if lesson.get('detail_word_url'):
+                dl_html += f'<a href="{lesson["detail_word_url"]}" target="_blank" class="custom-dl-btn" style="background-color:#2b579a;"><span>📝</span> 指導案 (Word)</a>'
+                has_dl = True
+            if lesson.get('detail_pdf_url'):
+                dl_html += f'<a href="{lesson["detail_pdf_url"]}" target="_blank" class="custom-dl-btn" style="background-color:#b30b00;"><span>📄</span> 指導案 (PDF)</a>'
+                has_dl = True
+            if lesson.get('detail_ppt_url'):
+                dl_html += f'<a href="{lesson["detail_ppt_url"]}" target="_blank" class="custom-dl-btn" style="background-color:#d24726;"><span>📊</span> 授業スライド (PPT)</a>'
+                has_dl = True
+            if lesson.get('detail_excel_url'):
+                dl_html += f'<a href="{lesson["detail_excel_url"]}" target="_blank" class="custom-dl-btn" style="background-color:#217346;"><span>📈</span> 評価シート (Excel)</a>'
+                has_dl = True
+            dl_html += "</div>"
             
-        if not has_files:
-            st.info("ダウンロード可能な資料はありません。")
+            if has_dl:
+                st.markdown(dl_html, unsafe_allow_html=True)
+            else:
+                st.info("ダウンロード可能な資料はありません。")
 
-        st.markdown("---")
+            st.markdown("</div>", unsafe_allow_html=True) # End detail-box
+
         st.button("↩️ 一覧に戻る", on_click=back_to_list, key="back_btm")
         
     else:
