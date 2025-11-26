@@ -29,9 +29,12 @@ def get_img_as_base64(file):
         app_root = script_path.parent.parent
         img_path = app_root / file
         
-        with open(img_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
+        if img_path.exists():
+            with open(img_path, "rb") as f:
+                data = f.read()
+            return base64.b64encode(data).decode()
+        else:
+            return None
     except:
         return None
 
@@ -53,11 +56,11 @@ def load_css():
         /* --- 全体フォント --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #1a1a1a !important; /* 文字色はくっきり黒 */
+            color: #1a1a1a !important;
             line-height: 1.6 !important;
         }}
 
-        /* --- 背景 (白92%透過で背景画像をうっすら残す) --- */
+        /* --- 背景 --- */
         [data-testid="stAppViewContainer"] {{
             background-color: #ffffff;
             background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
@@ -67,35 +70,27 @@ def load_css():
             padding-right: 20px;
         }}
 
-        /* --- 見出し (濃紺) --- */
+        /* --- 見出し --- */
         h1, h2, h3, h4, h5, h6 {{
             color: #0f172a !important;
             font-weight: 700 !important;
-            text-shadow: none !important;
         }}
         
-        /* 本文 */
         p, span, div, label, .stMarkdown {{
             color: #333333 !important;
-            text-shadow: none !important;
         }}
 
-        /* --- サイドバー (すりガラス効果) --- */
+        /* --- サイドバー --- */
         [data-testid="stSidebar"] {{
             background-color: rgba(255, 255, 255, 0.85) !important;
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-right: 1px solid #e2e8f0 !important;
         }}
         [data-testid="stSidebar"] * {{
             color: #333333 !important;
         }}
 
-        /* 
-           ================================================================
-           ★ アニメーション定義
-           ================================================================
-        */
+        /* --- アニメーション --- */
         @keyframes fadeInUp {{
             from {{ opacity: 0; transform: translateY(20px); }}
             to {{ opacity: 1; transform: translateY(0); }}
@@ -107,11 +102,7 @@ def load_css():
             100% {{ transform: translateY(0px); }}
         }}
 
-        /* 
-           ================================================================
-           ★ 機能カード (白背景・影付き・ヌルっと出現)
-           ================================================================
-        */
+        /* --- 機能カード --- */
         [data-testid="stBorderContainer"] {{
             background-color: #ffffff !important;
             border: 2px solid #e2e8f0 !important;
@@ -119,13 +110,10 @@ def load_css():
             padding: 25px !important;
             margin-bottom: 20px !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            
-            /* アニメーション */
             opacity: 0;
             animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }}
         
-        /* 時間差表示 */
         div[data-testid="column"]:nth-of-type(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
         div[data-testid="column"]:nth-of-type(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.2s; }}
         div[data-testid="column"]:nth-of-type(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
@@ -138,7 +126,7 @@ def load_css():
             transition: all 0.3s ease;
         }}
 
-        /* --- ボタン (サイズ・デザイン調整) --- */
+        /* --- ボタン --- */
         .stButton > button {{
             width: 100%;
             background-color: #ffffff !important;
@@ -146,8 +134,8 @@ def load_css():
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
-            padding: 0.6em 1em !important; /* パディングを少し広めに */
-            font-size: 1rem !important; /* フォントサイズを適切に */
+            padding: 0.6em 1em !important;
+            font-size: 1rem !important;
             transition: all 0.3s ease !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
         }}
@@ -159,7 +147,6 @@ def load_css():
             box-shadow: 0 6px 12px rgba(74, 144, 226, 0.2) !important;
         }}
         
-        /* Primaryボタン */
         .stButton > button[kind="primary"] {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
@@ -199,7 +186,6 @@ def load_css():
             background-color: #ffffff !important;
             border: 1px solid #e2e8f0;
             border-top: none;
-            color: #333 !important;
             padding: 15px !important;
         }}
 
@@ -223,7 +209,7 @@ def load_css():
             border-radius: 10px !important;
         }}
 
-        /* --- 戻るボタン (指定デザイン) --- */
+        /* --- 戻るボタン --- */
         .back-link {{
             margin-bottom: 20px;
         }}
@@ -269,7 +255,6 @@ def load_css():
             margin: 0;
             line-height: 1.2;
         }}
-        
         hr {{ border-color: #cbd5e1; }}
     </style>
     """
@@ -282,10 +267,10 @@ load_css()
 # 3. メインコンテンツ開始
 # ==========================================
 
-# --- ▼ 戻るボタン (★正しいリンクに変更済み) ▼ ---
-st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
+# 戻るボタン
+st.markdown('<div class="back-link"><a href="https://aspecial-education-app.onrender.com/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
-# ヘッダー (ロゴ + タイトル)
+# ヘッダー
 st.markdown(f"""
     <div class="header-container">
         {logo_html}
@@ -324,31 +309,41 @@ def load_guidance_data(_sheets_service, spreadsheet_id, sheet_name):
         return None
 
 # ==========================================
-# 5. Google API セットアップ
+# 5. Google API セットアップ (修正版)
 # ==========================================
 sheets_service = None
 drive_service = None
 SPREADSHEET_ID_UNDER7 = "1yXSXSjYBaV2jt2BNO638Y2YZ6U7rdOCv5ScozlFq_EE"
 SPREADSHEET_ID_OVER7 = "13M6lz6CFmGdZ1skJRp44TLm1DR1A4FvxdZdwaJjPJnQ"
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 
 try:
+    # 認証情報を取得 (優先順位: st.secrets -> ファイル)
+    credentials = None
+    
+    # 1. Renderなどのファイルパス ("/etc/secrets/...") を確認
     secret_file_path = "/etc/secrets/GOOGLE_SHEETS_CREDENTIALS"
-
-    if not os.path.exists(secret_file_path):
-        pass
     
-    with open(secret_file_path, "r") as f:
-        file_content = f.read() 
-        google_credentials_info = json.loads(file_content) 
+    if os.path.exists(secret_file_path):
+        with open(secret_file_path, "r") as f:
+            google_credentials_info = json.load(f)
+            credentials = Credentials.from_service_account_info(google_credentials_info, scopes=SCOPES)
+            
+    # 2. ファイルがない場合、st.secrets (ローカルやStreamlit Cloud) を確認
+    elif "gcp_service_account" in st.secrets:
+        google_credentials_info = dict(st.secrets["gcp_service_account"])
+        credentials = Credentials.from_service_account_info(google_credentials_info, scopes=SCOPES)
 
-    credentials = Credentials.from_service_account_info(
-        google_credentials_info,
-        scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    )
+    # 3. どちらも見つからない場合はエラー
+    else:
+        st.error("認証ファイル (/etc/secrets/GOOGLE_SHEETS_CREDENTIALS) が見つかりません。")
+        st.stop()
     
+    # サービス構築
     sheets_service = build('sheets', 'v4', credentials=credentials)
     drive_service = build('drive', 'v3', credentials=credentials)
     
+    # データ読み込み
     guidance_map_under7 = load_guidance_data(sheets_service, SPREADSHEET_ID_UNDER7, "シート2")
     guidance_map_over7 = load_guidance_data(sheets_service, SPREADSHEET_ID_OVER7, "シート3")
 
@@ -361,7 +356,7 @@ except Exception as e:
 # 6. アプリケーション本体
 # ==========================================
 
-# 説明文 (白背景プレート)
+# 説明文
 st.markdown("""
 <div class="info-box">
     <strong>🎯 使い方：</strong><br>
@@ -406,7 +401,6 @@ else:
 
 with st.form("chart_form"):
     selected_options = {}
-    # 3カラムレイアウト (各コンテナにCSSで白枠・アニメーションが適用される)
     cols = st.columns(3)
     for i, category in enumerate(categories):
         with cols[i % 3]:
@@ -431,8 +425,6 @@ with st.form("chart_form"):
                         st.write("データなし")
     
     st.markdown("<br>", unsafe_allow_html=True)
-    # ボタンを少し大きく見えるようにカラムで中央寄せなどの調整は可能ですが、
-    # use_container_width=True と CSS padding で十分大きくなります
     submitted = st.form_submit_button("📊 チャートを作成して書き込む", use_container_width=True, type="primary")
 
 # --- 処理実行 ---
