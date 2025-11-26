@@ -175,10 +175,12 @@ def load_css():
         /* --- 授業カードグリッド (3列狙い設定) --- */
         .lesson-card-grid {
             display: grid;
-            /* PC画面で3列になりやすいよう、最小幅を320pxに設定 */
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            /* 280px以上で自動折り返し。PCなら3列、狭い画面なら2列 */
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 25px;
             padding: 25px 0;
+            /* 中央寄せ */
+            justify-content: center;
         }
 
         /* --- 授業カード (Mirairo風カードデザイン・修正版) --- */
@@ -191,9 +193,11 @@ def load_css():
             display: flex;
             flex-direction: column;
             
-            /* グリッド幅いっぱいに広げ、高さを揃える */
+            /* ★修正点: カードの最大幅を350pxに制限し、中央寄せにする */
+            max-width: 350px; 
             width: 100%;
-            height: 100%;
+            margin: 0 auto; 
+            height: 100%; /* 高さを揃える */
 
             /* アニメーション適用 */
             opacity: 0; 
@@ -225,9 +229,9 @@ def load_css():
             display: flex;
             flex-direction: column;
             
-            /* ★変更点: コンテンツを上詰めに配置し、ボタンが下に沈まないようにする */
+            /* ★修正点: コンテンツを上詰め(flex-start)にして、ボタンが下に沈まないようにする */
             justify-content: flex-start;
-            gap: 12px; /* 要素間の間隔 */
+            gap: 12px;
         }
         
         .lesson-card-title {
@@ -241,9 +245,8 @@ def load_css():
             font-size: 0.9em;
             color: #64748b !important;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             line-height: 1.5;
-            /* 高さ制限を少し緩和 */
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -252,12 +255,11 @@ def load_css():
         .lesson-card-goal {
             font-size: 0.85em;
             color: #334155 !important;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             background-color: #f1f5f9;
             padding: 10px;
             border-radius: 8px;
             line-height: 1.5;
-            /* 高さ制限 */
             max-height: 80px;
             overflow: hidden;
             display: -webkit-box;
@@ -272,7 +274,7 @@ def load_css():
             gap: 6px;
             align-items: center;
             margin-top: 5px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .lesson-card-meta span {
             background-color: #ffffff;
@@ -285,10 +287,10 @@ def load_css():
         .lesson-card-tags {
             font-size: 0.75em;
             margin-top: 5px;
-            /* タグエリアの高さを固定せず自然に */
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
+            margin-bottom: 10px; /* ボタンとの距離 */
         }
         .tag-badge {
             display: inline-block;
@@ -311,7 +313,7 @@ def load_css():
             padding: 10px !important;
             transition: all 0.3s ease !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-            margin-top: 10px; /* 少し余白を追加 */
+            margin-top: 0; /* マージンリセット */
         }
         .stButton > button:hover {
             background-color: #4a90e2 !important;
