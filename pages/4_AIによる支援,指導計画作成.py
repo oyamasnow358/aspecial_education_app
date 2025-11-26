@@ -15,8 +15,9 @@ from io import BytesIO
 # ==========================================
 # 0. ページ設定
 # ==========================================
+
 st.set_page_config(
-    page_title="個別の支援計画・指導計画作成サポート",
+    page_title="AIエージェントによる個別の支援計画・指導計画作成サポート",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -29,14 +30,17 @@ st.set_page_config(
 # --- 画像処理 (ロゴ読み込み) ---
 def get_img_as_base64(file):
     try:
-        # 画像パスを絶対パスで解決（同じディレクトリにあると仮定）
+        # 画像パスを絶対パスで解決
         script_path = Path(__file__)
-        app_root = script_path.parent
-        img_path = app_root / file
+        # 修正: カレントディレクトリ(parent)と親ディレクトリ(parent.parent)の両方を探すように変更
+        possible_paths = [script_path.parent / file, script_path.parent.parent / file]
         
-        with open(img_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
+        for img_path in possible_paths:
+            if img_path.exists():
+                with open(img_path, "rb") as f:
+                    data = f.read()
+                return base64.b64encode(data).decode()
+        return None
     except:
         return None
 
@@ -247,10 +251,11 @@ def load_css():
             box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
         }}
 
-        /* --- ヘッダーレイアウト --- */
+        /* --- ヘッダーレイアウト (修正: 中央寄せを追加) --- */
         .header-container {{
             display: flex;
             align-items: center;
+            justify-content: center; /* ★ここを追加しました */
             gap: 20px;
             margin-bottom: 30px;
             padding-bottom: 20px;
