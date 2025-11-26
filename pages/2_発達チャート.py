@@ -18,99 +18,98 @@ st.set_page_config(
 )
 
 # ==========================================
-# 1. デザイン定義 (Mirairo共通・白枠線・ヌルっとアニメーション)
+# 1. デザイン定義 (白ベース・視認性特化・アニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
     css = """
     <style>
-        /* --- 全体 --- */
+        /* --- 全体フォント --- */
         html, body, [class*="css"] {
             font-family: 'Noto Sans JP', sans-serif !important;
+            color: #1a1a1a !important; /* 文字色はくっきり黒 */
+            line-height: 1.6 !important;
         }
 
-        /* --- 背景 (黒) --- */
+        /* --- 背景 (白95%透過で背景画像を極薄にする) --- */
         [data-testid="stAppViewContainer"] {
-            background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+            background-color: #ffffff;
+            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }
 
-        /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stRadio label {
-            color: #ffffff !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
+        /* --- 見出し (濃紺) --- */
+        h1, h2, h3, h4, h5, h6 {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            text-shadow: none !important;
+        }
+        
+        /* 本文 */
+        p, span, div, label, .stMarkdown {
+            color: #333333 !important;
+            text-shadow: none !important;
         }
 
-        /* --- サイドバー (半透明) --- */
+        /* --- サイドバー (白) --- */
         [data-testid="stSidebar"] {
-            background-color: rgba(0, 0, 0, 0.6) !important;
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
         }
-        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
+        [data-testid="stSidebarNavCollapseButton"] { color: #333 !important; }
 
         /* 
            ================================================================
-           ★ アニメーション定義 (下からヌルっと)
+           ★ 機能カード (白背景・影付き・ヌルっと出現)
            ================================================================
         */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(40px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 
-           ================================================================
-           ★ 機能カードのデザイン (白枠・アニメーション適用) 
-           ================================================================
-        */
         [data-testid="stBorderContainer"] {
-            background-color: #151515 !important;
-            border: 2px solid #ffffff !important;
-            border-radius: 16px !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
             padding: 20px !important;
             margin-bottom: 20px !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
             
-            /* アニメーション設定 */
+            /* アニメーション */
             opacity: 0;
-            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
         
-        /* 時間差表示 (Stagger) のための遅延設定 */
-        /* Streamlitの構造上、厳密なnth-child指定は難しいが、ある程度効かせる */
+        /* 時間差表示 */
         div[data-testid="column"]:nth-of-type(1) [data-testid="stBorderContainer"] { animation-delay: 0.1s; }
-        div[data-testid="column"]:nth-of-type(2) [data-testid="stBorderContainer"] { animation-delay: 0.3s; }
-        div[data-testid="column"]:nth-of-type(3) [data-testid="stBorderContainer"] { animation-delay: 0.5s; }
+        div[data-testid="column"]:nth-of-type(2) [data-testid="stBorderContainer"] { animation-delay: 0.2s; }
+        div[data-testid="column"]:nth-of-type(3) [data-testid="stBorderContainer"] { animation-delay: 0.3s; }
 
-        /* ホバー時の動き */
         [data-testid="stBorderContainer"]:hover {
             border-color: #4a90e2 !important;
-            background-color: #000000 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
+            transform: translateY(-3px);
             transition: all 0.3s ease;
         }
 
         /* --- ボタン --- */
         .stButton > button {
             width: 100%;
-            background-color: #000000 !important;
-            border: 2px solid #ffffff !important;
+            background-color: #ffffff !important;
+            border: 2px solid #4a90e2 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
             transition: all 0.3s ease !important;
         }
         .stButton > button:hover {
-            border-color: #4a90e2 !important;
-            color: #ffffff !important;
             background-color: #4a90e2 !important;
+            color: #ffffff !important;
         }
         
         /* Primaryボタン */
@@ -118,70 +117,83 @@ def load_css():
             background-color: #4a90e2 !important;
             color: #ffffff !important;
             border: 2px solid #4a90e2 !important;
+            box-shadow: 0 4px 6px rgba(74, 144, 226, 0.3);
         }
         .stButton > button[kind="primary"]:hover {
-            background-color: #ffffff !important;
-            color: #4a90e2 !important;
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+            transform: scale(1.02);
         }
 
         /* --- ラジオボタン --- */
         div[role="radiogroup"] label {
-            background-color: rgba(255,255,255,0.05) !important;
+            background-color: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
             padding: 10px !important;
-            border-radius: 8px !important;
-            margin-bottom: 5px !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            transition: all 0.2s !important;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
         }
         div[role="radiogroup"] label:hover {
-            background-color: rgba(74, 144, 226, 0.2) !important;
+            background-color: #e0f2fe !important;
             border-color: #4a90e2 !important;
+            color: #0284c7 !important;
         }
 
         /* --- エキスパンダー --- */
         .streamlit-expanderHeader {
-            background-color: rgba(255,255,255,0.1) !important;
-            color: #fff !important;
-            border-radius: 8px !important;
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
         }
         .streamlit-expanderContent {
-            background-color: rgba(0,0,0,0.5) !important;
-            color: #ddd !important;
-            border: 1px solid #444;
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0;
             border-top: none;
-            border-radius: 0 0 8px 8px;
+            color: #333 !important;
         }
 
-        /* --- 説明文プレート (アニメーション付き) --- */
-        .glass-plate {
-            background-color: rgba(20, 20, 20, 0.95);
-            border: 2px solid #4a90e2;
-            border-radius: 15px;
+        /* --- 説明文ボックス --- */
+        .info-box {
+            background-color: #f0f9ff;
+            border-left: 6px solid #4a90e2;
             padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            opacity: 0;
-            animation: fadeInUp 1s ease-in-out forwards;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            color: #0c4a6e;
+        }
+
+        /* --- infoアラート --- */
+        [data-testid="stAlert"] {
+            background-color: #f0f9ff !important;
+            border: 1px solid #bae6fd !important;
+            color: #0369a1 !important;
         }
 
         /* --- 戻るボタン --- */
         .back-link a {
             display: inline-block;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #fff;
-            border-radius: 20px;
-            color: #fff !important;
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 1px solid #4a90e2;
+            border-radius: 25px;
+            color: #4a90e2 !important;
             text-decoration: none;
             margin-bottom: 20px;
             transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .back-link a:hover {
-            background: #fff;
-            color: #000 !important;
+            background: #4a90e2;
+            color: #ffffff !important;
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
         }
         
-        hr { border-color: #666; }
+        hr { border-color: #cbd5e1; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -263,9 +275,9 @@ except Exception as e:
 
 st.title("📊 発達チャート作成")
 
-# 説明文 (アニメーション付きプレート)
+# 説明文 (白背景プレート)
 st.markdown("""
-<div class="glass-plate">
+<div class="info-box">
     お子さんの現在の発達段階を選択し、状態と次のステップをまとめたチャートを作成・保存します。
 </div>
 """, unsafe_allow_html=True)
@@ -287,7 +299,7 @@ with col_over7:
 st.info(f"現在、**{'7歳以下用' if st.session_state.display_mode == 'under7' else '8歳以上用'}**の発達段階表が表示されています。")
 
 # --- 入力フォーム ---
-st.markdown("### 発達段階の入力")
+st.markdown("### 📝 発達段階の入力")
 st.caption("各項目の「▼ 目安を見る」を開いて内容を確認し、選択してください。")
 
 if st.session_state.display_mode == "under7":
@@ -414,7 +426,7 @@ if submitted:
 # --- 結果表示 ---
 if st.session_state.get('chart_created', False):
     st.markdown("---")
-    st.subheader("結果の確認と保存")
+    st.subheader("📥 結果の確認と保存")
 
     with st.container(border=True):
         c1, c2 = st.columns(2)
