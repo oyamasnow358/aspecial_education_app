@@ -2,7 +2,9 @@ import streamlit as st
 import base64
 import time
 
-# --- 1. ページ設定 ---
+# ==========================================
+# 1. ページ設定
+# ==========================================
 st.set_page_config(
     page_title="Mirairo",
     page_icon="🌟",
@@ -10,7 +12,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 画像処理 ---
+# ==========================================
+# 2. 画像処理
+# ==========================================
 def get_img_as_base64(file):
     try:
         with open(file, "rb") as f:
@@ -21,10 +25,13 @@ def get_img_as_base64(file):
 
 logo_path = "mirairo.png"
 logo_b64 = get_img_as_base64(logo_path)
+# ロゴ画像がない場合はプレースホルダー
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
-# --- 2. CSSデザイン (サイドバー半透明化・修正版) ---
+# ==========================================
+# 3. CSSデザイン (白ベース・視認性特化・アニメーション維持)
+# ==========================================
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -32,56 +39,54 @@ def load_css():
     
     css = f"""
     <style>
-        /* --- 全体 --- */
+        /* --- 全体フォント --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
         }}
 
-        /* --- 背景 (黒) --- */
+        /* --- 背景 (白95%透過で画像をうっすら表示) --- */
         [data-testid="stAppViewContainer"] {{
-            background-color: #000000;
-            background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
+            background-color: #ffffff;
+            background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label {{
-            color: #ffffff !important;
-            text-shadow: 0 2px 4px #000000 !important;
+        /* --- 文字色 (黒・くっきり) --- */
+        h1, h2, h3, h4, h5, h6 {{
+            color: #0f172a !important; /* 濃いネイビーブラック */
+            text-shadow: none !important;
+        }}
+        p, span, div, label {{
+            color: #333333 !important;
+            text-shadow: none !important;
         }}
 
         /* 
            ================================================================
-           ★ サイドバーのデザイン (確実に半透明にする修正) ★
+           ★ サイドバーのデザイン (白半透明) ★
            ================================================================
         */
         [data-testid="stSidebar"] {{
-            /* 背景色を透過させる */
-            background-color: rgba(0, 0, 0, 0.6) !important;
+            /* 背景: 白の半透明 */
+            background-color: rgba(255, 255, 255, 0.85) !important;
             
             /* すりガラス効果 */
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             
             /* 境界線 */
-            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }}
-        
-        /* サイドバー内の要素の背景も透明にする必要がある場合への対策 */
-        [data-testid="stSidebar"] > div {{
-            background-color: transparent !important;
-        }}
-
-        /* サイドバーの閉じるボタン */
-        [data-testid="stSidebarNavCollapseButton"] {{
-            color: #ffffff !important;
+            border-right: 1px solid #e2e8f0 !important;
         }}
         
         /* サイドバー内の文字 */
         [data-testid="stSidebar"] * {{
-            color: #ffffff !important;
-            text-shadow: 0 1px 3px #000000 !important;
+            color: #333333 !important;
+            text-shadow: none !important;
+        }}
+        /* サイドバーの閉じるボタン */
+        [data-testid="stSidebarNavCollapseButton"] {{
+            color: #333333 !important;
         }}
 
         /* 
@@ -96,20 +101,21 @@ def load_css():
 
         /* 
            ================================================================
-           ★ カードデザイン (アニメーション適用)
+           ★ カードデザイン (白背景・影付き)
            ================================================================
         */
         .mirairo-card {{
-            background-color: #151515;
-            border: 2px solid #ffffff;
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0; /* 薄いグレーの枠線 */
             border-radius: 15px 15px 0 0;
             padding: 25px;
             margin-top: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.8);
             
-            /* 初期状態は透明 */
-            opacity: 0; 
+            /* 影をつけて浮き上がらせる */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            
             /* アニメーション設定 */
+            opacity: 0; 
             animation-name: fadeInUp;
             animation-duration: 0.8s;
             animation-fill-mode: forwards;
@@ -122,32 +128,33 @@ def load_css():
         }}
         
         .mirairo-card:hover {{
-            border-color: #4a90e2;
-            background-color: #000000;
+            border-color: #4a90e2; /* ホバーで青枠 */
+            background-color: #f8fafc; /* ホバーでわずかに色を変える */
             transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15); /* 青い影 */
             transition: all 0.3s ease;
         }}
 
         .card-title {{
             font-size: 1.4rem;
             font-weight: 900;
-            border-bottom: 1px solid #555;
+            border-bottom: 1px solid #e2e8f0;
             padding-bottom: 10px;
             margin-bottom: 10px;
-            color: #fff;
+            color: #0f172a;
         }}
         
         .card-desc {{
             font-size: 1rem;
             line-height: 1.6;
-            color: #ddd;
+            color: #475569;
         }}
 
         /* --- ボタン --- */
         .stButton > button {{
             width: 100%;
-            background-color: #000000 !important;
-            border: 2px solid #ffffff !important;
+            background-color: #ffffff !important;
+            border: 2px solid #e2e8f0 !important;
             border-top: none !important;
             border-radius: 0 0 15px 15px !important;
             color: #4a90e2 !important;
@@ -188,7 +195,7 @@ def load_css():
         .logo-img {{
             width: 180px;
             height: auto;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
             margin-right: 30px;
         }}
         
@@ -197,13 +204,13 @@ def load_css():
             font-weight: 900;
             line-height: 1;
             margin: 0;
-            color: #ffffff;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.7);
+            color: #0f172a; /* 濃紺 */
+            text-shadow: none;
         }}
         
         .sub-title {{
             font-size: 1.5rem;
-            color: #ffffff;
+            color: #475569;
             letter-spacing: 0.2em;
             font-weight: 700;
             margin-top: 10px;
@@ -211,12 +218,12 @@ def load_css():
 
         /* --- 説明文プレート --- */
         .glass-plate {{
-            background-color: rgba(20, 20, 20, 0.95);
+            background-color: #f0f9ff; /* 薄い青 */
             border: 2px solid #4a90e2;
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             opacity: 0;
             animation: fadeInUp 1s ease-in-out forwards;
             animation-delay: 0.2s;
@@ -224,42 +231,44 @@ def load_css():
 
         /* --- ダイアログ(マニュアル) --- */
         div[role="dialog"] {{
-            background-color: #222222 !important;
-            border: 1px solid #555 !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
             border-radius: 15px !important;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9) !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
         }}
         div[role="dialog"] p, div[role="dialog"] li, div[role="dialog"] span, div[role="dialog"] div {{
-            color: #f0f0f0 !important;
+            color: #333333 !important;
             text-shadow: none !important;
             font-weight: 400 !important;
             line-height: 1.8 !important;
         }}
         div[role="dialog"] h3 {{
-            color: #4a90e2 !important;
+            color: #0f172a !important;
             text-shadow: none !important;
             border-bottom: 1px solid #4a90e2 !important;
             padding-bottom: 10px !important;
             margin-bottom: 15px !important;
         }}
         div[role="dialog"] strong {{
-            color: #ffffff !important;
+            color: #0f172a !important;
             font-weight: 900 !important;
-            background-color: rgba(255,255,255,0.1);
+            background-color: #f1f5f9;
             padding: 2px 5px;
             border-radius: 4px;
         }}
 
-        hr {{ border-color: #666; }}
-        a {{ color: #63b3ed !important; font-weight: bold; text-decoration: none; }}
-        a:hover {{ text-decoration: underline; color: #fff !important; }}
+        hr {{ border-color: #cbd5e1; }}
+        a {{ color: #2563eb !important; font-weight: bold; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; color: #1e40af !important; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
 load_css()
 
-# --- 3. マニュアルデータ ---
+# ==========================================
+# 4. マニュアルデータ
+# ==========================================
 manuals = {
     "guidance": """
     ### 📚 指導支援内容 マニュアル
@@ -335,12 +344,16 @@ manuals = {
     """
 }
 
-# --- 4. マニュアル表示用ダイアログ ---
+# ==========================================
+# 5. マニュアル表示用ダイアログ
+# ==========================================
 @st.dialog("📖 マニュアル")
 def show_manual(key):
     st.markdown(manuals[key])
 
-# --- 5. ページ遷移ロジック ---
+# ==========================================
+# 6. ページ遷移ロジック
+# ==========================================
 def set_page(page):
     st.session_state.page_to_visit = page
 
@@ -357,9 +370,11 @@ if 'show_create_form' not in st.session_state:
     st.session_state.show_create_form = False
 
   
-# --- 6. メインコンテンツ ---
+# ==========================================
+# 7. メインコンテンツ
+# ==========================================
 
-# ヘッダー
+# ヘッダー (ロゴ+タイトル)
 st.markdown(f"""
     <div class="header-wrapper">
         {logo_html}
@@ -370,7 +385,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 説明文
+# 説明文 (青枠プレート)
 st.markdown("""
 <div class="glass-plate">
     <h3>ようこそ！</h3>
@@ -379,7 +394,7 @@ st.markdown("""
         子どもたち一人ひとりのニーズに合わせた指導や支援のヒントを見つけたり、
         発達段階を記録・分析したり、AIによる計画作成の補助を受けることができます。
     </p>
-    <p style="color: #4a90e2; font-weight: bold; margin-top: 15px;">
+    <p style="color: #4a90e2; font-weight: bold; margin-top: 15px; font-size: 1rem;">
         ▼ 下の各機能パネル、またはサイドバーのメニューから利用したい機能を選択してください。
     </p>
 </div>
@@ -499,7 +514,7 @@ st.markdown("---")
 # アンケート
 st.markdown("""
 <div class="glass-plate" style="text-align: center; animation-delay: 1.5s;">
-    <h5 style="color: #fff;">🗨️ ご意見・ご感想</h5>
+    <h5 style="color: #0f172a;">🗨️ ご意見・ご感想</h5>
     <p>自立活動の参考指導、各分析ツールにご意見がある方は以下のフォームから送ってください。<br>
     (埼玉県の学校教育関係者のみＳＴアカウントで回答できます)</p>
     <a href="https://docs.google.com/forms/d/1dKzh90OkxMoWDZXV31FgPvXG5EvNlMFOrvSPGvYTSC8/preview" target="_blank" 
