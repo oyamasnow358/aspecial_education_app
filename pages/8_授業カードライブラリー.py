@@ -172,11 +172,11 @@ def load_css():
             margin-top: 5px;
         }
 
-        /* --- 授業カードグリッド (修正版) --- */
+        /* --- 授業カードグリッド (3列狙い設定) --- */
         .lesson-card-grid {
             display: grid;
-            /* 最小幅を260pxにして列数を確保しやすくする */
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            /* PC画面で3列になりやすいよう、最小幅を320pxに設定 */
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 25px;
             padding: 25px 0;
         }
@@ -191,10 +191,9 @@ def load_css():
             display: flex;
             flex-direction: column;
             
-            /* ★ここを追加：最大幅を350pxに制限し、中央寄せにする */
-            max-width: 350px;
+            /* グリッド幅いっぱいに広げ、高さを揃える */
             width: 100%;
-            margin: 0 auto;
+            height: 100%;
 
             /* アニメーション適用 */
             opacity: 0; 
@@ -214,31 +213,37 @@ def load_css():
 
         .lesson-card-image {
             width: 100%;
-            height: 180px; /* 高さを少し調整 */
+            height: 180px; 
             object-fit: cover; 
             border-bottom: 1px solid #e2e8f0;
         }
+        
+        /* カード内容エリア (ボタン位置修正) */
         .lesson-card-content {
-            padding: 20px; /* パディングを少し調整 */
+            padding: 20px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            
+            /* ★変更点: コンテンツを上詰めに配置し、ボタンが下に沈まないようにする */
+            justify-content: flex-start;
+            gap: 12px; /* 要素間の間隔 */
         }
+        
         .lesson-card-title {
-            font-size: 1.2em; /* フォントサイズを微調整 */
+            font-size: 1.2em; 
             font-weight: 900;
             color: #0f172a;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             line-height: 1.4;
         }
         .lesson-card-catchcopy {
             font-size: 0.9em;
             color: #64748b !important;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.5;
-            min-height: 2.8em;
+            /* 高さ制限を少し緩和 */
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -247,16 +252,17 @@ def load_css():
         .lesson-card-goal {
             font-size: 0.85em;
             color: #334155 !important;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             background-color: #f1f5f9;
             padding: 10px;
             border-radius: 8px;
             line-height: 1.5;
-            min-height: 55px;
+            /* 高さ制限 */
+            max-height: 80px;
+            overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
-            overflow: hidden;
         }
         .lesson-card-meta {
             font-size: 0.8em;
@@ -265,8 +271,8 @@ def load_css():
             flex-wrap: wrap;
             gap: 6px;
             align-items: center;
-            margin-top: 8px;
-            margin-bottom: 12px;
+            margin-top: 5px;
+            margin-bottom: 10px;
         }
         .lesson-card-meta span {
             background-color: #ffffff;
@@ -278,8 +284,8 @@ def load_css():
         }
         .lesson-card-tags {
             font-size: 0.75em;
-            margin-top: 8px;
-            min-height: 30px; 
+            margin-top: 5px;
+            /* タグエリアの高さを固定せず自然に */
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
@@ -305,6 +311,7 @@ def load_css():
             padding: 10px !important;
             transition: all 0.3s ease !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+            margin-top: 10px; /* 少し余白を追加 */
         }
         .stButton > button:hover {
             background-color: #4a90e2 !important;
