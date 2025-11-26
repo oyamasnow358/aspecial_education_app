@@ -209,6 +209,7 @@ def load_css():
         .header-container {{
             display: flex;
             align-items: center;
+            justify-content: center; /* ここを追加 */
             gap: 20px;
             margin-bottom: 30px;
             padding-bottom: 20px;
