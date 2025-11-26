@@ -1,5 +1,5 @@
 import streamlit as st
-# guideline_data.pyをインポート (ファイル名が違う場合は修正してください)
+# guideline_data.pyをインポート
 from guideline_data import data
 
 # ==========================================
@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 1. デザイン定義 (ライトモード・白背景・視認性重視)
+# 1. デザイン定義 (視認性特化・ライトモード)
 # ==========================================
 def load_css():
     st.markdown("""
@@ -25,58 +25,60 @@ def load_css():
         /* --- 全体フォント --- */
         html, body, [class*="css"] {
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #333333 !important; /* 文字色は濃いグレー（ほぼ黒） */
+            color: #1a1a1a !important; /* 文字色はほぼ黒でくっきり */
+            line-height: 1.8 !important; /* 行間を広げて読みやすく */
         }
 
-        /* --- 背景 (白ベース + 画像透過) --- */
+        /* --- 背景 (白95%透過で背景画像を極薄にする) --- */
         [data-testid="stAppViewContainer"] {
             background-color: #ffffff;
-            /* 白の透過グラデーションを重ねて背景画像をうっすら表示 */
-            background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url("https://i.imgur.com/AbUxfxP.png");
+            /* 0.95 (95%) の白を重ねて、背景画像をうっすら残す */
+            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }
 
-        /* --- 文字色 (黒・視認性重視) --- */
+        /* --- 見出し (濃紺で引き締める) --- */
         h1, h2, h3, h4, h5, h6 {
-            color: #2c3e50 !important; /* 見出しは少し青みがかった黒 */
+            color: #0f172a !important; /* 濃いネイビーブラック */
             font-weight: 700 !important;
-            text-shadow: none !important; /* 影は削除してくっきりさせる */
+            margin-bottom: 0.5em !important;
         }
+        
+        /* 本文 */
         p, span, div, label, .stMarkdown {
             color: #333333 !important;
-            text-shadow: none !important;
         }
 
-        /* --- サイドバー (白系) --- */
+        /* --- サイドバー (完全な白) --- */
         [data-testid="stSidebar"] {
-            background-color: rgba(245, 247, 250, 0.9) !important; /* 薄いグレー */
-            border-right: 1px solid #e0e0e0;
+            background-color: #ffffff !important;
+            border-right: 1px solid #e2e8f0;
         }
         [data-testid="stSidebarNavCollapseButton"] { color: #333 !important; }
 
-        /* --- 機能カード (白背景・影付き) --- */
+        /* --- 機能カード (白背景・影を少し強調) --- */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         [data-testid="stBorderContainer"] {
-            background-color: #ffffff !important; /* 真っ白なカード */
-            border: 1px solid #e0e0e0 !important; /* 薄いグレーの枠線 */
+            background-color: #ffffff !important; /* 完全な白 */
+            border: 1px solid #cbd5e1 !important; /* 境界線を少し濃く */
             border-radius: 12px !important;
-            padding: 20px !important;
-            margin-bottom: 20px !important;
-            /* 浮き上がるような影 */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
+            padding: 25px !important; /* 余白を広めに */
+            margin-bottom: 25px !important;
+            /* 影をつけて浮き上がらせる */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
             
             animation: fadeInUp 0.6s ease-out forwards;
         }
         
         [data-testid="stBorderContainer"]:hover {
-            border-color: #4a90e2 !important; /* ホバーで青枠 */
-            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.15) !important; /* 青い影 */
-            transform: translateY(-3px);
+            border-color: #4a90e2 !important;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
+            transform: translateY(-2px);
             transition: all 0.3s ease;
         }
 
@@ -88,6 +90,7 @@ def load_css():
             color: #4a90e2 !important;
             font-weight: bold !important;
             border-radius: 30px !important;
+            padding: 0.5em 1em !important;
             transition: all 0.3s ease !important;
         }
         .stButton > button:hover {
@@ -95,85 +98,91 @@ def load_css():
             color: #ffffff !important;
         }
         
-        /* Primaryボタン */
+        /* Primaryボタン (塗りつぶし) */
         .stButton > button[kind="primary"] {
             background-color: #4a90e2 !important;
             color: #ffffff !important;
-            border: none !important;
-            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+            border: 2px solid #4a90e2 !important;
+            box-shadow: 0 4px 6px rgba(74, 144, 226, 0.3);
         }
         .stButton > button[kind="primary"]:hover {
-            background-color: #357abd !important; /* 濃い青 */
+            background-color: #2563eb !important; /* さらに濃い青 */
+            border-color: #2563eb !important;
             transform: scale(1.02);
         }
 
-        /* --- セレクトボックス・ラジオボタン --- */
-        /* 入力エリアの背景を白に */
+        /* --- 入力フォーム (白背景ではっきり) --- */
         div[data-baseweb="select"] > div {
             background-color: #ffffff !important;
-            border-color: #d1d5db !important;
-            color: #333 !important;
+            border-color: #94a3b8 !important; /* 枠線を少し濃く */
+            color: #1a1a1a !important;
         }
         
-        /* ラジオボタンの選択肢 */
+        /* ラジオボタン */
         div[role="radiogroup"] label {
-            background-color: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            color: #333 !important;
-            padding: 10px;
+            background-color: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #334155 !important;
+            padding: 12px !important;
             border-radius: 8px;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             transition: all 0.2s;
         }
         div[role="radiogroup"] label:hover {
-            background-color: #f0f9ff !important; /* 薄い青 */
+            background-color: #e0f2fe !important;
             border-color: #4a90e2 !important;
+            color: #0284c7 !important;
         }
 
-        /* --- エキスパンダー --- */
+        /* --- エキスパンダー (背景色をつけて区別) --- */
         .streamlit-expanderHeader {
-            background-color: #f8f9fa !important;
-            color: #333 !important;
+            background-color: #f1f5f9 !important; /* 薄いグレー */
+            color: #0f172a !important;
+            font-weight: 600 !important;
             border-radius: 8px !important;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #e2e8f0;
         }
         .streamlit-expanderContent {
             background-color: #ffffff !important;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #e2e8f0;
             border-top: none;
             border-radius: 0 0 8px 8px;
             color: #333 !important;
+            padding: 20px !important;
         }
 
-        /* --- 説明文ボックス --- */
+        /* --- 説明文ボックス (視認性向上) --- */
         .info-box {
-            background-color: #ffffff;
-            border-left: 5px solid #4a90e2;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            background-color: #f0f9ff; /* 非常に薄い青 */
+            border-left: 6px solid #4a90e2;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            color: #0c4a6e;
         }
 
         /* --- 戻るボタン --- */
         .back-link a {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: #ffffff;
             border: 1px solid #4a90e2;
-            border-radius: 20px;
+            border-radius: 25px;
             color: #4a90e2 !important;
             text-decoration: none;
             margin-bottom: 20px;
             transition: all 0.3s;
             font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .back-link a:hover {
             background: #4a90e2;
             color: #ffffff !important;
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
         }
         
-        hr { border-color: #e0e0e0; }
+        hr { border-color: #cbd5e1; }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -188,6 +197,7 @@ st.markdown('<div class="back-link"><a href="Home" target="_self">« TOPペー�
 # ==========================================
 def format_guideline_text(text):
     if not isinstance(text, str): return ""
+    # 見やすくするために全角スペースを調整し、改行を反映
     processed_text = text.replace("　", "&nbsp;&nbsp;")
     processed_text = processed_text.replace("\n", "  \n")
     return processed_text
@@ -202,31 +212,32 @@ def reset_display_state():
 # ==========================================
 st.title("📜 知的段階　早引き学習指導要領")
 
-# 説明文エリア（白背景で見やすく）
+# 説明文エリア
 st.markdown("""
 <div class="info-box">
-    学習指導要領の内容を一瞬でピンポイント検索。<br>
-    学部、段階（障害種別）、教科を選択すると、関連する学習指導要領の内容が表示されます。
+    <strong>使い方：</strong><br>
+    学習指導要領の内容を一瞬でピンポイント検索できます。<br>
+    下のボックスから「学部」「段階（障害種別）」「教科」を選択してください。
 </div>
 """, unsafe_allow_html=True)
 
 # --- 選択肢 (カード内) ---
 with st.container(border=True):
-    st.subheader("検索条件の選択")
+    st.subheader("🔍 検索条件の選択")
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        selected_gakubu = st.selectbox("**1. 学部を選択**", options=list(data.keys()), on_change=reset_display_state)
+        selected_gakubu = st.selectbox("1. 学部を選択", options=list(data.keys()), on_change=reset_display_state)
 
     with col2:
         shubetsu_options = list(data[selected_gakubu].keys())
-        selected_shubetsu = st.selectbox("**2. 段階（障害種別）を選択**", options=shubetsu_options, on_change=reset_display_state)
+        selected_shubetsu = st.selectbox("2. 段階（障害種別）を選択", options=shubetsu_options, on_change=reset_display_state)
 
     is_chiteki = "知的障害者" in selected_shubetsu
     if is_chiteki:
         with col3:
             kyoka_options = ["選択してください"] + list(data[selected_gakubu][selected_shubetsu].keys())
-            selected_kyoka = st.selectbox("**3. 教科を選択**", options=kyoka_options, on_change=reset_display_state)
+            selected_kyoka = st.selectbox("3. 教科を選択", options=kyoka_options, on_change=reset_display_state)
     else:
         selected_kyoka = None
 
@@ -239,12 +250,12 @@ with st.container(border=True):
         if st.button("表示する", type="primary", use_container_width=True):
             st.session_state.show_results = True
     else:
-        st.warning("ステップ3で教科を選択してください。")
+        st.warning("⚠️ ステップ3で教科を選択してください。")
 
 # --- 結果表示エリア ---
 if st.session_state.get('show_results', False):
     st.markdown("---")
-    st.header(f"表示結果：{selected_gakubu} - {selected_shubetsu}" + (f" - {selected_kyoka}" if is_chiteki and selected_kyoka else ""))
+    st.header(f"📄 表示結果：{selected_gakubu} - {selected_shubetsu}" + (f" - {selected_kyoka}" if is_chiteki and selected_kyoka else ""))
     
     # 結果をカードで表示
     with st.container(border=True):
