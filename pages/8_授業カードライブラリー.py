@@ -172,7 +172,7 @@ def load_css():
         /* --- 授業カードグリッド --- */
         .lesson-card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 30px;
             padding: 25px 0;
         }
@@ -204,7 +204,7 @@ def load_css():
         }
 
         .lesson-card-image {
-            width: 50%;
+            width: 100%;
             height: 200px;
             object-fit: cover; 
             border-bottom: 1px solid #e2e8f0;
