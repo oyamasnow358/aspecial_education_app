@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import base64
 from pathlib import Path
 
 # ==========================================
@@ -13,50 +14,72 @@ st.set_page_config(
 )
 
 # ==========================================
-# 1. デザイン定義 (Mirairo共通・白枠・アニメーション)
+# 1. 画像処理 (ロゴ読み込み)
+# ==========================================
+def get_img_as_base64(file):
+    try:
+        # 画像パスを絶対パスで解決 (pagesフォルダの親にあると仮定)
+        script_path = Path(__file__)
+        app_root = script_path.parent.parent
+        img_path = app_root / file
+        
+        with open(img_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
+
+# ロゴ画像 (★ご指定のファイル名に変更)
+logo_path = "mirairo2.png" 
+logo_b64 = get_img_as_base64(logo_path)
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
+
+
+# ==========================================
+# 2. デザイン定義 (Mirairo共通・白枠・アニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
     
-    css = """
+    css = f"""
     <style>
         /* --- 全体 --- */
-        html, body, [class*="css"] {
+        html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-        }
+        }}
 
         /* --- 背景 (黒) --- */
-        [data-testid="stAppViewContainer"] {
+        [data-testid="stAppViewContainer"] {{
             background-color: #000000;
             background-image: linear-gradient(rgba(0,0,0,0.92), rgba(0,0,0,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
-        }
+        }}
 
         /* --- 文字色 (白・影付き) --- */
-        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stSelectbox label {
+        h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown, .stSelectbox label {{
             color: #ffffff !important;
             text-shadow: 0 1px 3px rgba(0,0,0,0.9) !important;
-        }
+        }}
 
         /* --- サイドバー (半透明・すりガラス) --- */
-        [data-testid="stSidebar"] {
+        [data-testid="stSidebar"] {{
             background-color: rgba(0, 0, 0, 0.6) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        [data-testid="stSidebarNavCollapseButton"] { color: #fff !important; }
+        }}
+        [data-testid="stSidebarNavCollapseButton"] {{ color: #fff !important; }}
 
         /* --- 機能カード (白枠・アニメーション) --- */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
 
-        [data-testid="stBorderContainer"] {
+        [data-testid="stBorderContainer"] {{
             background-color: #151515 !important;
             border: 2px solid #ffffff !important;
             border-radius: 16px !important;
@@ -64,18 +87,18 @@ def load_css():
             margin-bottom: 20px !important;
             box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;
             animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
+        }}
         
-        [data-testid="stBorderContainer"]:hover {
+        [data-testid="stBorderContainer"]:hover {{
             border-color: #4a90e2 !important;
             background-color: #000000 !important;
             transform: translateY(-5px);
             box-shadow: 0 0 20px rgba(74, 144, 226, 0.4) !important;
             transition: all 0.3s ease;
-        }
+        }}
 
         /* --- ボタン --- */
-        .stButton > button {
+        .stButton > button {{
             width: 100%;
             background-color: #000000 !important;
             border: 2px solid #ffffff !important;
@@ -83,58 +106,58 @@ def load_css():
             font-weight: bold !important;
             border-radius: 30px !important;
             transition: all 0.3s ease !important;
-        }
-        .stButton > button:hover {
+        }}
+        .stButton > button:hover {{
             border-color: #4a90e2 !important;
             color: #ffffff !important;
             background-color: #4a90e2 !important;
-        }
+        }}
         
         /* Primaryボタン */
-        .stButton > button[kind="primary"] {
+        .stButton > button[kind="primary"] {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
             border: 2px solid #4a90e2 !important;
-        }
-        .stButton > button[kind="primary"]:hover {
+        }}
+        .stButton > button[kind="primary"]:hover {{
             background-color: #ffffff !important;
             color: #4a90e2 !important;
-        }
+        }}
 
         /* --- セレクトボックス (黒背景に) --- */
-        div[data-baseweb="select"] > div {
+        div[data-baseweb="select"] > div {{
             background-color: #222 !important;
             color: #fff !important;
             border-color: #555 !important;
-        }
-        div[data-baseweb="popover"] div {
+        }}
+        div[data-baseweb="popover"] div {{
             background-color: #111 !important;
             color: #fff !important;
-        }
+        }}
         
         /* --- エキスパンダー --- */
-        .streamlit-expanderHeader {
+        .streamlit-expanderHeader {{
             background-color: rgba(255,255,255,0.1) !important;
             color: #fff !important;
             border-radius: 8px !important;
             border: 1px solid #555;
-        }
-        .streamlit-expanderContent {
+        }}
+        .streamlit-expanderContent {{
             background-color: rgba(0,0,0,0.5) !important;
             border: 1px solid #444;
             border-top: none;
             border-radius: 0 0 8px 8px;
-        }
+        }}
 
         /* --- infoボックス --- */
-        [data-testid="stAlert"] {
+        [data-testid="stAlert"] {{
             background-color: rgba(74, 144, 226, 0.1) !important;
             border: 1px solid #4a90e2 !important;
             color: #fff !important;
-        }
+        }}
 
         /* --- 戻るボタン --- */
-        .back-link a {
+        .back-link a {{
             display: inline-block;
             padding: 8px 16px;
             background: rgba(255,255,255,0.1);
@@ -144,13 +167,26 @@ def load_css():
             text-decoration: none;
             margin-bottom: 20px;
             transition: all 0.3s;
-        }
-        .back-link a:hover {
+        }}
+        .back-link a:hover {{
             background: #fff;
             color: #000 !important;
-        }
+        }}
         
-        hr { border-color: #666; }
+        /* --- ヘッダー (ロゴ) --- */
+        .header-container {{
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }}
+        .logo-img {{
+            width: 60px;
+            height: auto;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }}
+        
+        hr {{ border-color: #666; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -158,7 +194,7 @@ def load_css():
 load_css()
 
 # ==========================================
-# 2. データ読み込み (パス自動解決版)
+# 3. データ読み込み (パス自動解決版)
 # ==========================================
 @st.cache_data
 def load_guidance_data():
@@ -190,13 +226,20 @@ def load_guidance_data():
 guidance_data = load_guidance_data()
 
 # ==========================================
-# 3. メインコンテンツ
+# 4. メインコンテンツ
 # ==========================================
 
-# --- 戻るボタン ---
-st.page_link("tokusi_app.py", label="« TOPページに戻る", icon="🏠")
+# --- 戻るボタン (★正しいリンクに変更済み) ---
+st.page_link("https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/", label="« TOPページに戻る", icon="🏠")
 
-st.title("📚 指導支援内容の参照")
+# ヘッダー (ロゴ + タイトル)
+st.markdown(f"""
+    <div class="header-container">
+        {logo_html}
+        <h1 style="margin:0; padding:0;">📚 指導支援内容の参照</h1>
+    </div>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <div style="background: rgba(255,255,255,0.05); border: 1px solid #fff; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
     日常生活における実態や障害の状況から、適した指導支援の方法を探すことができます。
