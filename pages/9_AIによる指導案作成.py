@@ -35,13 +35,14 @@ def get_img_as_base64(file):
     except:
         return None
 
+# ロゴファイル設定 (参考コードに合わせて配置)
 logo_path = "mirairo2.png" 
 logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
 # ==========================================
-# 2. デザイン定義 (白背景・視認性特化・アニメーション)
+# 2. デザイン定義 (Mirairoデザイン + ぬるっと動くアニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
@@ -53,35 +54,37 @@ def load_css():
         /* --- 全体フォント --- */
         html, body, [class*="css"] {{
             font-family: 'Noto Sans JP', sans-serif !important;
-            color: #1a1a1a !important; /* くっきり黒 */
-            line-height: 1.6 !important;
+            color: #333333 !important;
         }}
 
-        /* --- 背景 (白95%透過) --- */
+        /* --- 背景 (白92%透過・画像あり) --- */
         [data-testid="stAppViewContainer"] {{
             background-color: #ffffff;
-            background-image: linear-gradient(rgba(255,255,255,0.95), rgba(255,255,255,0.95)), url("https://i.imgur.com/AbUxfxP.png");
+            background-image: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url("https://i.imgur.com/AbUxfxP.png");
             background-size: cover;
             background-attachment: fixed;
         }}
 
-        /* --- 文字色 --- */
+        /* --- 文字色 (濃紺・くっきり) --- */
         h1, h2, h3, h4, h5, h6 {{
-            color: #0f172a !important;
-            font-weight: 700 !important;
+            color: #0f172a !important; /* 濃いネイビーブラック */
             text-shadow: none !important;
         }}
-        p, span, div, label, .stMarkdown {{
+        p, span, div, label {{
             color: #333333 !important;
             text-shadow: none !important;
         }}
 
-        /* --- サイドバー --- */
+        /* --- サイドバー (すりガラス効果) --- */
         [data-testid="stSidebar"] {{
-            background-color: #ffffff !important;
-            border-right: 1px solid #e2e8f0;
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid #e2e8f0 !important;
         }}
-        [data-testid="stSidebarNavCollapseButton"] {{ color: #333 !important; }}
+        [data-testid="stSidebar"] * {{
+            color: #333333 !important;
+        }}
 
         /* 
            ================================================================
@@ -95,31 +98,36 @@ def load_css():
 
         /* 
            ================================================================
-           ★ 機能カード (白背景・影付き・時間差アニメーション)
+           ★ コンテナデザイン (白背景・影付き・アニメーション)
            ================================================================
+           st.container(border=True) のスタイルをオーバーライド
         */
         [data-testid="stBorderContainer"] {{
             background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 12px !important;
-            padding: 20px !important;
+            border: 2px solid #e2e8f0 !important; /* 薄いグレーの枠線 */
+            border-radius: 15px !important;
+            padding: 25px !important;
             margin-bottom: 20px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
             
-            /* アニメーション設定 */
-            opacity: 0;
-            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            /* アニメーション適用 */
+            opacity: 0; 
+            animation-name: fadeInUp;
+            animation-duration: 0.8s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
         }}
         
-        /* 遅延設定 (上から順に出るように) */
-        div.element-container:nth-child(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
-        div.element-container:nth-child(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
-        div.element-container:nth-child(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.5s; }}
+        /* コンテナの出現タイミングをずらす */
+        div.element-container:nth-of-type(1) [data-testid="stBorderContainer"] {{ animation-delay: 0.1s; }}
+        div.element-container:nth-of-type(2) [data-testid="stBorderContainer"] {{ animation-delay: 0.3s; }}
+        div.element-container:nth-of-type(3) [data-testid="stBorderContainer"] {{ animation-delay: 0.5s; }}
 
         [data-testid="stBorderContainer"]:hover {{
             border-color: #4a90e2 !important;
-            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.15) !important;
+            background-color: #f8fafc !important;
             transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(74, 144, 226, 0.15) !important;
             transition: all 0.3s ease;
         }}
 
@@ -127,19 +135,20 @@ def load_css():
         .stButton > button {{
             width: 100%;
             background-color: #ffffff !important;
-            border: 2px solid #4a90e2 !important;
+            border: 2px solid #e2e8f0 !important;
             color: #4a90e2 !important;
             font-weight: bold !important;
-            border-radius: 30px !important;
+            border-radius: 30px !important; /* 丸みを強く */
+            padding: 10px !important;
             transition: all 0.3s ease !important;
-            height: 3em !important;
         }}
         .stButton > button:hover {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
+            border-color: #4a90e2 !important;
         }}
         
-        /* Primaryボタン */
+        /* Primaryボタン (強調) */
         .stButton > button[kind="primary"] {{
             background-color: #4a90e2 !important;
             color: #ffffff !important;
@@ -147,60 +156,76 @@ def load_css():
         }}
         .stButton > button[kind="primary"]:hover {{
             background-color: #2563eb !important;
-            color: #ffffff !important;
+            border-color: #2563eb !important;
         }}
 
-        /* --- 入力フォーム (白背景) --- */
+        /* --- 入力フォーム --- */
         .stTextInput input, .stTextArea textarea {{
             background-color: #ffffff !important;
-            color: #1a1a1a !important;
-            border-color: #cbd5e1 !important;
-        }}
-
-        /* --- エキスパンダー --- */
-        .streamlit-expanderHeader {{
-            background-color: #f1f5f9 !important;
-            color: #334155 !important;
+            color: #333333 !important;
+            border: 1px solid #cbd5e1 !important;
             border-radius: 8px !important;
-            border: 1px solid #e2e8f0;
         }}
-        .streamlit-expanderContent {{
-            background-color: #ffffff !important;
-            border: 1px solid #e2e8f0;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            color: #333 !important;
+        .stTextInput input:focus, .stTextArea textarea:focus {{
+            border-color: #4a90e2 !important;
+            box-shadow: 0 0 0 2px rgba(74,144,226,0.2) !important;
         }}
 
         /* --- ステップヘッダー --- */
         .step-header {{
-            color: #4a90e2 !important;
-            border-bottom: 2px solid #4a90e2;
-            padding-bottom: 10px;
+            color: #0f172a !important;
+            border-left: 5px solid #4a90e2;
+            padding-left: 15px;
             margin-top: 40px;
+            margin-bottom: 20px;
             font-weight: 900;
             font-size: 1.5em;
-            text-shadow: none !important;
         }}
 
-        /* --- 戻るボタン --- */
+        /* --- 戻るボタン (リクエスト指定) --- */
+        .back-link {{
+            margin-bottom: 20px;
+        }}
         .back-link a {{
             display: inline-block;
             padding: 10px 20px;
             background: #ffffff;
-            border: 1px solid #4a90e2;
+            border: 2px solid #e2e8f0;
             border-radius: 25px;
             color: #4a90e2 !important;
             text-decoration: none;
-            margin-bottom: 20px;
-            transition: all 0.3s;
             font-weight: bold;
+            transition: all 0.3s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }}
         .back-link a:hover {{
             background: #4a90e2;
             color: #ffffff !important;
-            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.2);
+            border-color: #4a90e2;
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+        }}
+
+        /* --- ヘッダーレイアウト --- */
+        .header-container {{
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }}
+        .logo-img {{
+            width: 80px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }}
+        .page-title {{
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.2;
         }}
         
         /* コードブロック */
@@ -208,30 +233,8 @@ def load_css():
             background-color: #f1f5f9 !important;
             color: #0f172a !important;
             border: 1px solid #e2e8f0;
+            border-radius: 8px;
         }}
-        
-        /* --- ヘッダー (ロゴ) --- */
-        .header-container {{
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f1f5f9;
-        }}
-        .logo-img {{
-            width: 70px;
-            height: auto;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-        }}
-        .page-title {{
-            font-size: 2rem;
-            font-weight: 900;
-            color: #0f172a;
-            margin: 0;
-        }}
-        
-        hr {{ border-color: #cbd5e1; }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -358,21 +361,21 @@ def create_excel(template_path, json_data):
 # 4. メイン画面 UI
 # ==========================================
 
-# --- 戻るボタン ---
+# --- 戻るボタン (★正しいリンクに変更済み) ---
 st.markdown('<div class="back-link"><a href="https://aspecialeducationapp-6iuvpdfjbflp4wyvykmzey.streamlit.app/" target="_self">« TOPページに戻る</a></div>', unsafe_allow_html=True)
 
-# --- ヘッダーエリア (ロゴ入り) ---
+# --- ヘッダーエリア ---
 st.markdown(f"""
     <div class="header-container">
         {logo_html}
         <div>
-            <h1 class="page-title">📝 指導案作成 AIエージェント</h1>
-            <p style="color:#64748b; margin:0;">入力情報を元にプロンプトを作成し、AIとの連携で指導案Excelを完成させます。</p>
+            <h1 class="page-title">AI指導案作成エージェント</h1>
+            <p style="color:#475569; margin:0; font-weight:bold;">プロンプト生成 ➡ AIに入力 ➡ Excel出力 の3ステップ</p>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
-# --- AIリンクボタン (白枠カード内) ---
+# --- AIリンクボタン ---
 with st.container(border=True):
     st.markdown("### 🔗 まずはAIを開く")
     col_btn1, col_btn2 = st.columns(2)
@@ -381,12 +384,9 @@ with st.container(border=True):
     with col_btn2:
         st.link_button("✨ Gemini を開く ↗", "https://gemini.google.com/", type="primary", use_container_width=True)
 
-st.markdown("---")
-
 # --- Step 1: 情報入力 ---
 st.markdown("<h3 class='step-header'>Step 1. 基本情報を入力</h3>", unsafe_allow_html=True)
 
-# 白枠コンテナで囲む
 with st.container(border=True):
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -400,7 +400,7 @@ with st.container(border=True):
         in_content = st.text_input("📝 本時の内容", "模擬店の商品作り")
 
     st.markdown("---")
-    # 詳細設定（アコーディオン）
+    # 詳細設定
     with st.expander("⚙️ 詳細設定（目標・評価・備考など） ※空欄でもAIが補完します", expanded=False):
         col_ex1, col_ex2 = st.columns(2)
         with col_ex1:
