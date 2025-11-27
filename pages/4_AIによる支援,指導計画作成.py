@@ -32,19 +32,18 @@ def get_img_as_base64(file):
     try:
         # 画像パスを絶対パスで解決
         script_path = Path(__file__)
-        # 修正: カレントディレクトリ(parent)と親ディレクトリ(parent.parent)の両方を探すように変更
-        possible_paths = [script_path.parent / file, script_path.parent.parent / file]
+        app_root = script_path.parent.parent
+        img_path = app_root / file
         
-        for img_path in possible_paths:
-            if img_path.exists():
-                with open(img_path, "rb") as f:
-                    data = f.read()
-                return base64.b64encode(data).decode()
-        return None
+        if img_path.exists():
+            with open(img_path, "rb") as f:
+                data = f.read()
+            return base64.b64encode(data).decode()
+        else:
+            return None
     except:
         return None
 
-# ロゴファイル設定 (あれば表示、なければプレースホルダー)
 logo_path = "MieeL2.png" 
 logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🤖</div>'
