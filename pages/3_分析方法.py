@@ -23,13 +23,16 @@ def get_img_as_base64(file):
         app_root = script_path.parent.parent
         img_path = app_root / file
         
-        with open(img_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
+        if img_path.exists():
+            with open(img_path, "rb") as f:
+                data = f.read()
+            return base64.b64encode(data).decode()
+        else:
+            return None
     except:
         return None
 
-logo_path = "mirairo2.png" 
+logo_path = "MieeL2.png" 
 logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">📈</div>'
 
