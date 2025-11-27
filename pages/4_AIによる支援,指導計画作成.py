@@ -45,7 +45,7 @@ def get_img_as_base64(file):
         return None
 
 # ロゴファイル設定 (あれば表示、なければプレースホルダー)
-logo_path = "mirairo2.png" 
+logo_path = "MieeL2.png" 
 logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🤖</div>'
 
@@ -74,7 +74,7 @@ def safe_write(ws, cell_address, value):
         st.warning(f"⚠️ セル {cell_address} への書き込み中に警告: {e}")
 
 # ==========================================
-# 2. デザイン定義 (Mirairoスタイル)
+# 2. デザイン定義 (MieeLスタイル)
 # ==========================================
 def load_css():
     st.markdown("""

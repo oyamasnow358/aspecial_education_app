@@ -6,7 +6,7 @@ import time
 # 1. ページ設定
 # ==========================================
 st.set_page_config(
-    page_title="Mirairo",
+    page_title="MieeL",
     page_icon="🌟",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,7 +23,7 @@ def get_img_as_base64(file):
     except:
         return None
 
-logo_path = "mirairo.png"
+logo_path = "MieeL.png"
 logo_b64 = get_img_as_base64(logo_path)
 # ロゴ画像がない場合はプレースホルダー
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
@@ -104,7 +104,7 @@ def load_css():
            ★ カードデザイン (白背景・影付き)
            ================================================================
         */
-        .mirairo-card {{
+        .MieeL-card {{
             background-color: #ffffff;
             border: 2px solid #e2e8f0; /* 薄いグレーの枠線 */
             border-radius: 15px 15px 0 0;
@@ -127,7 +127,7 @@ def load_css():
             justify-content: flex-start;
         }}
         
-        .mirairo-card:hover {{
+        .MieeL-card:hover {{
             border-color: #4a90e2; /* ホバーで青枠 */
             background-color: #f8fafc; /* ホバーでわずかに色を変える */
             transform: translateY(-5px);
@@ -379,7 +379,7 @@ st.markdown(f"""
     <div class="header-wrapper">
         {logo_html}
         <div class="title-group">
-            <h1 class="main-title">Mirairo</h1>
+            <h1 class="main-title">MieeL</h1>
             <div class="sub-title">Data-Driven Education Platform</div>
         </div>
     </div>
@@ -405,7 +405,7 @@ st.markdown("### 📂 各機能の紹介")
 # カードを描画する関数 (アニメーション遅延つき)
 def render_card(title, desc, delay):
     st.markdown(f"""
-    <div class="mirairo-card" style="animation-delay: {delay}s;">
+    <div class="MieeL-card" style="animation-delay: {delay}s;">
         <div class="card-title">{title}</div>
         <div class="card-desc">{desc}</div>
     </div>
@@ -481,7 +481,7 @@ st.markdown("""
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("""
-    <div class="mirairo-card" style="min-height: auto; animation-delay: 1.3s;">
+    <div class="MieeL-card" style="min-height: auto; animation-delay: 1.3s;">
         <div class="card-title" style="font-size: 1.2rem;">📁 教育・心理分析</div>
         <div class="card-desc">
             <ul style="padding-left: 20px; margin: 0;">
@@ -494,7 +494,7 @@ with c1:
 
 with c2:
     st.markdown("""
-    <div class="mirairo-card" style="min-height: auto; animation-delay: 1.4s;">
+    <div class="MieeL-card" style="min-height: auto; animation-delay: 1.4s;">
         <div class="card-title" style="font-size: 1.2rem;">📁 統計学分析</div>
         <div class="card-desc">
             <ul style="padding-left: 20px; margin: 0;">

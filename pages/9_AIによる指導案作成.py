@@ -13,7 +13,7 @@ from pathlib import Path
 # 0. ページ設定
 # ==========================================
 st.set_page_config(
-    page_title="Mirairo - 指導案作成",
+    page_title="MieeL - 指導案作成",
     page_icon="📝",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -36,13 +36,13 @@ def get_img_as_base64(file):
         return None
 
 # ロゴファイル設定 (参考コードに合わせて配置)
-logo_path = "mirairo2.png" 
+logo_path = "MieeL2.png" 
 logo_b64 = get_img_as_base64(logo_path)
 logo_html = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img">' if logo_b64 else '<div class="logo-placeholder">🌟</div>'
 
 
 # ==========================================
-# 2. デザイン定義 (Mirairoデザイン + ぬるっと動くアニメーション)
+# 2. デザイン定義 (MieeLデザイン + ぬるっと動くアニメーション)
 # ==========================================
 def load_css():
     st.markdown("""
