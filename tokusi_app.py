@@ -23,6 +23,7 @@ def get_img_as_base64(file):
     except:
         return None
 
+
 logo_path = "MieeL.png"
 logo_b64 = get_img_as_base64(logo_path)
 # ロゴ画像がない場合はプレースホルダー
